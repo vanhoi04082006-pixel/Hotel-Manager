@@ -2123,6 +2123,73 @@
             }
         }
 
+        // Thêm vào hàm initializeDatabase sau khi tạo các collection khác
+
+        // Sample Bookings
+        const bookingsSnap = await getDocs(collection(db, 'bookings'));
+        if (bookingsSnap.empty && currentUser) {
+            const batch = writeBatch(db);
+
+            // Tạo sample bookings cho user hiện tại nếu có
+            const sampleBookings = [
+                {
+                    roomId: 'sample-room-id-1',
+                    roomCode: 'P101',
+                    userId: currentUser?.uid || 'sample-user-id',
+                    userEmail: currentUser?.email || 'user@example.com',
+                    userName: currentUser?.displayName || 'Nguyễn Văn A',
+                    userPhone: '0901234567',
+                    checkIn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    checkOut: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    nights: 3,
+                    adultCount: 2,
+                    childCount: 0,
+                    services: [],
+                    roomPrice: 1500000,
+                    roomTotal: 4500000,
+                    serviceTotal: 0,
+                    serviceFee: 450000,
+                    totalPrice: 4950000,
+                    specialRequests: 'Phòng view biển',
+                    status: 'confirmed',
+                    createdAt: Timestamp.now()
+                },
+                {
+                    roomId: 'sample-room-id-2',
+                    roomCode: 'P201',
+                    userId: currentUser?.uid || 'sample-user-id',
+                    userEmail: currentUser?.email || 'user@example.com',
+                    userName: currentUser?.displayName || 'Nguyễn Văn A',
+                    userPhone: '0901234567',
+                    checkIn: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    checkOut: new Date(Date.now() - 27 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    nights: 3,
+                    adultCount: 2,
+                    childCount: 1,
+                    services: [
+                        { id: 'service1', name: 'Buffet sáng', price: 250000 },
+                        { id: 'service2', name: 'Massage Thái', price: 600000 }
+                    ],
+                    roomPrice: 3500000,
+                    roomTotal: 10500000,
+                    serviceTotal: 850000,
+                    serviceFee: 1135000,
+                    totalPrice: 12485000,
+                    specialRequests: '',
+                    status: 'completed',
+                    createdAt: Timestamp.now()
+                }
+            ];
+
+            for (const booking of sampleBookings) {
+                const docRef = doc(collection(db, 'bookings'));
+                batch.set(docRef, booking);
+            }
+
+            await batch.commit();
+            console.log('Sample bookings added');
+        }
+
         // ==================== AUTH FUNCTIONS ====================
         window.toggleAuthMode = () => {
             isLoginMode = !isLoginMode;
@@ -5883,6 +5950,8 @@
             }
         };
 
+        // Thay thế hàm submitBooking hiện tại bằng code này:
+
         window.submitBooking = async (e) => {
             e.preventDefault();
 
@@ -5899,13 +5968,30 @@
             const childCount = parseInt(document.getElementById('childCount')?.value || 0);
             const specialRequests = document.getElementById('specialRequests')?.value || '';
 
+            // Validate dates
+            if (!checkIn || !checkOut) {
+                showToast('Vui lòng chọn ngày nhận và trả phòng', 'warning');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
             const start = new Date(checkIn);
             const end = new Date(checkOut);
+
+            if (end <= start) {
+                showToast('Ngày trả phòng phải sau ngày nhận phòng', 'warning');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
             const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
             const basePrice = parseInt(document.getElementById('book-room-base-price').value);
             const roomTotal = basePrice * nights;
 
+            // Get selected services
             const selectedServices = [];
             document.querySelectorAll('.service-checkbox:checked').forEach(cb => {
                 selectedServices.push({
@@ -5918,12 +6004,13 @@
             const serviceTotal = selectedServices.reduce((sum, s) => sum + s.price, 0);
             const serviceFee = Math.round((roomTotal + serviceTotal) * 0.1);
 
+            // Create booking data
             const bookingData = {
                 roomId: roomId,
                 roomCode: roomCode,
                 userId: currentUser.uid,
                 userEmail: currentUser.email,
-                userName: currentUserData.name || '',
+                userName: currentUserData.name || currentUser.email.split('@')[0] || '',
                 userPhone: currentUserData.phone || '',
                 checkIn: checkIn,
                 checkOut: checkOut,
@@ -5941,9 +6028,14 @@
                 createdAt: Timestamp.now()
             };
 
-            try {
-                await addDoc(collection(db, 'bookings'), bookingData);
+            console.log('Submitting booking:', bookingData); // Debug log
 
+            try {
+                // Add to Firestore
+                const docRef = await addDoc(collection(db, 'bookings'), bookingData);
+                console.log('Booking created with ID:', docRef.id); // Debug log
+
+                // Update room booking count
                 const room = localRooms.find(r => r.id === roomId);
                 if (room) {
                     await updateDoc(doc(db, 'rooms', roomId), {
@@ -5953,8 +6045,13 @@
 
                 showToast('Đặt phòng thành công! Vui lòng chờ xác nhận.');
                 closeModal('bookingModal');
-                navigateUser('my-bookings');
 
+                // Navigate to my bookings after a short delay
+                setTimeout(() => {
+                    navigateUser('my-bookings');
+                }, 1500);
+
+                // Add log
                 await addDoc(collection(db, 'logs'), {
                     type: 'success',
                     message: `Đặt phòng mới: ${roomCode}`,
@@ -5967,6 +6064,14 @@
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
+        };
+
+        // Thêm hàm này để debug
+        window.checkBookings = () => {
+            console.log('Current user:', currentUser?.uid);
+            console.log('All bookings:', localBookings);
+            console.log('User bookings:', localBookings.filter(b => b.userId === currentUser?.uid));
+            showToast('Đã ghi log console', 'info');
         };
 
         window.updateBookingStatus = async (bookingId, newStatus, roomId) => {
