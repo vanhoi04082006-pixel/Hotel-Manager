@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "hotel-manager-2442d"
+  },
+  "targets": {
+    "hotel-manager-2442d": {
+      "hosting": {
+        "luna-site": [
+          "lunahotel-777"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
