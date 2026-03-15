@@ -14,7 +14,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <style>
-        /* Copy toàn bộ CSS từ code gốc giữ nguyên */
+        /* CSS giữ nguyên từ code gốc */
         * {
             margin: 0;
             padding: 0;
@@ -1616,28 +1616,47 @@
         const facebookProvider = new FacebookAuthProvider();
 
         // ==================== GLOBAL STATE ====================
-        let currentUser = null;
-        let currentUserData = {};
-        let userRole = null;
-        let isLoginMode = true;
+        const store = {
+            currentUser: null,
+            currentUserData: {},
+            userRole: null,
+            isLoginMode: true,
+            localRooms: [],
+            localBookings: [],
+            localServices: [],
+            localUsers: [],
+            localPromotions: [],
+            localStaff: [],
+            localReviews: [],
+            localGallery: [],
+            localInvoices: [],
+            localLogs: [],
+            localMessages: [],
+            unsubRooms: null,
+            unsubBookings: null,
+            unsubServices: null,
+            unsubUsers: null,
+            unsubPromotions: null,
+            unsubStaff: null,
+            unsubReviews: null,
+            unsubGallery: null,
+            unsubInvoices: null,
+            unsubLogs: null,
+            unsubMessages: null,
+            currentAdminRoute: 'dashboard',
+            currentUserRoute: 'home',
+            currentRoomFilter: 'All',
+            currentServiceCategory: 'All',
+            adminBookingsPage: 0,
+            adminBookingsLimit: 10,
+            userRoomsPage: 0,
+            userRoomsLimit: 6,
+            userServicesPage: 0,
+            userServicesLimit: 6,
+            appliedPromo: null
+        };
+
         const ADMIN_EMAIL = 'lunanewyear@gmail.com';
-
-        // Data stores
-        let localRooms = [];
-        let localBookings = [];
-        let localServices = [];
-        let localUsers = [];
-        let localPromotions = [];
-        let localStaff = [];
-        let localReviews = [];
-        let localGallery = [];
-        let localInvoices = [];
-        let localLogs = [];
-        let localMessages = [];
-
-        // Unsubscribers
-        let unsubRooms, unsubBookings, unsubServices, unsubUsers, unsubPromotions;
-        let unsubStaff, unsubReviews, unsubGallery, unsubInvoices, unsubLogs, unsubMessages;
 
         // Sample Data
         const SAMPLE_ROOMS = [
@@ -2028,7 +2047,7 @@
             try {
                 console.log('Initializing database...');
 
-                // Check if collections exist and add sample data if empty
+                // Rooms
                 const roomsSnap = await getDocs(collection(db, 'rooms'));
                 if (roomsSnap.empty) {
                     const batch = writeBatch(db);
@@ -2044,6 +2063,7 @@
                     console.log('Sample rooms added');
                 }
 
+                // Services
                 const servicesSnap = await getDocs(collection(db, 'services'));
                 if (servicesSnap.empty) {
                     const batch = writeBatch(db);
@@ -2059,6 +2079,7 @@
                     console.log('Sample services added');
                 }
 
+                // Promotions
                 const promotionsSnap = await getDocs(collection(db, 'promotions'));
                 if (promotionsSnap.empty) {
                     const batch = writeBatch(db);
@@ -2074,6 +2095,7 @@
                     console.log('Sample promotions added');
                 }
 
+                // Staff
                 const staffSnap = await getDocs(collection(db, 'staff'));
                 if (staffSnap.empty) {
                     const batch = writeBatch(db);
@@ -2089,6 +2111,7 @@
                     console.log('Sample staff added');
                 }
 
+                // Reviews
                 const reviewsSnap = await getDocs(collection(db, 'reviews'));
                 if (reviewsSnap.empty) {
                     const batch = writeBatch(db);
@@ -2103,6 +2126,7 @@
                     console.log('Sample reviews added');
                 }
 
+                // Gallery
                 const gallerySnap = await getDocs(collection(db, 'gallery'));
                 if (gallerySnap.empty) {
                     const batch = writeBatch(db);
@@ -2123,87 +2147,20 @@
             }
         }
 
-        // Thêm vào hàm initializeDatabase sau khi tạo các collection khác
-
-        // Sample Bookings
-        const bookingsSnap = await getDocs(collection(db, 'bookings'));
-        if (bookingsSnap.empty && currentUser) {
-            const batch = writeBatch(db);
-
-            // Tạo sample bookings cho user hiện tại nếu có
-            const sampleBookings = [
-                {
-                    roomId: 'sample-room-id-1',
-                    roomCode: 'P101',
-                    userId: currentUser?.uid || 'sample-user-id',
-                    userEmail: currentUser?.email || 'user@example.com',
-                    userName: currentUser?.displayName || 'Nguyễn Văn A',
-                    userPhone: '0901234567',
-                    checkIn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    checkOut: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    nights: 3,
-                    adultCount: 2,
-                    childCount: 0,
-                    services: [],
-                    roomPrice: 1500000,
-                    roomTotal: 4500000,
-                    serviceTotal: 0,
-                    serviceFee: 450000,
-                    totalPrice: 4950000,
-                    specialRequests: 'Phòng view biển',
-                    status: 'confirmed',
-                    createdAt: Timestamp.now()
-                },
-                {
-                    roomId: 'sample-room-id-2',
-                    roomCode: 'P201',
-                    userId: currentUser?.uid || 'sample-user-id',
-                    userEmail: currentUser?.email || 'user@example.com',
-                    userName: currentUser?.displayName || 'Nguyễn Văn A',
-                    userPhone: '0901234567',
-                    checkIn: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    checkOut: new Date(Date.now() - 27 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    nights: 3,
-                    adultCount: 2,
-                    childCount: 1,
-                    services: [
-                        { id: 'service1', name: 'Buffet sáng', price: 250000 },
-                        { id: 'service2', name: 'Massage Thái', price: 600000 }
-                    ],
-                    roomPrice: 3500000,
-                    roomTotal: 10500000,
-                    serviceTotal: 850000,
-                    serviceFee: 1135000,
-                    totalPrice: 12485000,
-                    specialRequests: '',
-                    status: 'completed',
-                    createdAt: Timestamp.now()
-                }
-            ];
-
-            for (const booking of sampleBookings) {
-                const docRef = doc(collection(db, 'bookings'));
-                batch.set(docRef, booking);
-            }
-
-            await batch.commit();
-            console.log('Sample bookings added');
-        }
-
         // ==================== AUTH FUNCTIONS ====================
         window.toggleAuthMode = () => {
-            isLoginMode = !isLoginMode;
-            document.getElementById('auth-title').textContent = isLoginMode ? 'Đăng Nhập' : 'Đăng Ký Tài Khoản';
-            document.getElementById('auth-subtitle').textContent = isLoginMode
+            store.isLoginMode = !store.isLoginMode;
+            document.getElementById('auth-title').textContent = store.isLoginMode ? 'Đăng Nhập' : 'Đăng Ký Tài Khoản';
+            document.getElementById('auth-subtitle').textContent = store.isLoginMode
                 ? 'Đăng nhập để trải nghiệm dịch vụ 5 sao'
                 : 'Tạo tài khoản để nhận nhiều ưu đãi đặc biệt';
-            document.getElementById('auth-submit-btn').innerHTML = `<span>${isLoginMode ? 'Đăng Nhập' : 'Đăng Ký'}</span>`;
-            document.getElementById('auth-toggle-text').textContent = isLoginMode ? 'Chưa có tài khoản?' : 'Đã có tài khoản?';
-            document.getElementById('auth-toggle-btn').textContent = isLoginMode ? 'Đăng ký ngay' : 'Đăng nhập';
+            document.getElementById('auth-submit-btn').innerHTML = `<span>${store.isLoginMode ? 'Đăng Nhập' : 'Đăng Ký'}</span>`;
+            document.getElementById('auth-toggle-text').textContent = store.isLoginMode ? 'Chưa có tài khoản?' : 'Đã có tài khoản?';
+            document.getElementById('auth-toggle-btn').textContent = store.isLoginMode ? 'Đăng ký ngay' : 'Đăng nhập';
 
             const confirmField = document.getElementById('confirm-password-field');
             if (confirmField) {
-                if (isLoginMode) {
+                if (store.isLoginMode) {
                     confirmField.classList.add('hidden');
                     document.getElementById('auth-confirm-password').removeAttribute('required');
                 } else {
@@ -2296,7 +2253,7 @@
             const btn = document.getElementById('auth-submit-btn');
             const errorDiv = document.getElementById('password-error');
 
-            if (!isLoginMode && password !== confirmPassword) {
+            if (!store.isLoginMode && password !== confirmPassword) {
                 errorDiv.textContent = 'Mật khẩu xác nhận không khớp';
                 errorDiv.classList.remove('hidden');
                 return;
@@ -2308,7 +2265,7 @@
             btn.disabled = true;
 
             try {
-                if (isLoginMode) {
+                if (store.isLoginMode) {
                     await signInWithEmailAndPassword(auth, email, password);
                     showToast('Đăng nhập thành công!');
                 } else {
@@ -2349,7 +2306,7 @@
                 }
 
                 showToast(message, 'error');
-                btn.innerHTML = `<span>${isLoginMode ? 'Đăng Nhập' : 'Đăng Ký'}</span>`;
+                btn.innerHTML = `<span>${store.isLoginMode ? 'Đăng Nhập' : 'Đăng Ký'}</span>`;
                 btn.disabled = false;
             }
         });
@@ -2359,29 +2316,30 @@
                 await signOut(auth);
                 showToast('Đã đăng xuất', 'info');
 
-                localRooms = [];
-                localBookings = [];
-                localServices = [];
-                localUsers = [];
-                localPromotions = [];
-                localStaff = [];
-                localReviews = [];
-                localGallery = [];
-                localInvoices = [];
-                localLogs = [];
-                localMessages = [];
+                // Clear local data
+                store.localRooms = [];
+                store.localBookings = [];
+                store.localServices = [];
+                store.localUsers = [];
+                store.localPromotions = [];
+                store.localStaff = [];
+                store.localReviews = [];
+                store.localGallery = [];
+                store.localInvoices = [];
+                store.localLogs = [];
+                store.localMessages = [];
 
-                if (unsubRooms) unsubRooms();
-                if (unsubBookings) unsubBookings();
-                if (unsubServices) unsubServices();
-                if (unsubUsers) unsubUsers();
-                if (unsubPromotions) unsubPromotions();
-                if (unsubStaff) unsubStaff();
-                if (unsubReviews) unsubReviews();
-                if (unsubGallery) unsubGallery();
-                if (unsubInvoices) unsubInvoices();
-                if (unsubLogs) unsubLogs();
-                if (unsubMessages) unsubMessages();
+                if (store.unsubRooms) store.unsubRooms();
+                if (store.unsubBookings) store.unsubBookings();
+                if (store.unsubServices) store.unsubServices();
+                if (store.unsubUsers) store.unsubUsers();
+                if (store.unsubPromotions) store.unsubPromotions();
+                if (store.unsubStaff) store.unsubStaff();
+                if (store.unsubReviews) store.unsubReviews();
+                if (store.unsubGallery) store.unsubGallery();
+                if (store.unsubInvoices) store.unsubInvoices();
+                if (store.unsubLogs) store.unsubLogs();
+                if (store.unsubMessages) store.unsubMessages();
             } catch (error) {
                 showToast('Lỗi khi đăng xuất: ' + error.message, 'error');
             }
@@ -2390,93 +2348,92 @@
         // ==================== DATA LISTENERS ====================
         async function initDataListeners() {
             try {
-                // Initialize database first
                 await initializeDatabase();
 
                 // Rooms listener
-                unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
-                    localRooms = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
+                    store.localRooms = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshCurrentView();
                 }, (error) => {
                     console.error('Rooms listener error:', error);
                 });
 
                 // Services listener
-                unsubServices = onSnapshot(collection(db, 'services'), (snap) => {
-                    localServices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubServices = onSnapshot(collection(db, 'services'), (snap) => {
+                    store.localServices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshCurrentView();
                 }, (error) => {
                     console.error('Services listener error:', error);
                 });
 
                 // Promotions listener
-                unsubPromotions = onSnapshot(collection(db, 'promotions'), (snap) => {
-                    localPromotions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubPromotions = onSnapshot(collection(db, 'promotions'), (snap) => {
+                    store.localPromotions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshCurrentView();
                 }, (error) => {
                     console.error('Promotions listener error:', error);
                 });
 
                 // Staff listener
-                unsubStaff = onSnapshot(collection(db, 'staff'), (snap) => {
-                    localStaff = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubStaff = onSnapshot(collection(db, 'staff'), (snap) => {
+                    store.localStaff = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshCurrentView();
                 }, (error) => {
                     console.error('Staff listener error:', error);
                 });
 
                 // Reviews listener
-                unsubReviews = onSnapshot(collection(db, 'reviews'), (snap) => {
-                    localReviews = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubReviews = onSnapshot(collection(db, 'reviews'), (snap) => {
+                    store.localReviews = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshCurrentView();
                 }, (error) => {
                     console.error('Reviews listener error:', error);
                 });
 
                 // Gallery listener
-                unsubGallery = onSnapshot(collection(db, 'gallery'), (snap) => {
-                    localGallery = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubGallery = onSnapshot(collection(db, 'gallery'), (snap) => {
+                    store.localGallery = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshCurrentView();
                 }, (error) => {
                     console.error('Gallery listener error:', error);
                 });
 
                 // Invoices listener
-                unsubInvoices = onSnapshot(collection(db, 'invoices'), (snap) => {
-                    localInvoices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubInvoices = onSnapshot(collection(db, 'invoices'), (snap) => {
+                    store.localInvoices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshCurrentView();
                 }, (error) => {
                     console.error('Invoices listener error:', error);
                 });
 
                 // Logs listener
-                unsubLogs = onSnapshot(collection(db, 'logs'), (snap) => {
-                    localLogs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubLogs = onSnapshot(collection(db, 'logs'), (snap) => {
+                    store.localLogs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 }, (error) => {
                     console.error('Logs listener error:', error);
                 });
 
                 // Messages listener
-                unsubMessages = onSnapshot(collection(db, 'messages'), (snap) => {
-                    localMessages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubMessages = onSnapshot(collection(db, 'messages'), (snap) => {
+                    store.localMessages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     updateChatBox();
                 }, (error) => {
                     console.error('Messages listener error:', error);
                 });
 
                 // Users listener
-                unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
-                    localUsers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
+                    store.localUsers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     refreshCurrentView();
                 }, (error) => {
                     console.error('Users listener error:', error);
                 });
 
                 // Bookings listener
-                unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
-                    localBookings = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                store.unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
+                    store.localBookings = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                    const pendingCount = localBookings.filter(b => b.status === 'pending').length;
+                    const pendingCount = store.localBookings.filter(b => b.status === 'pending').length;
                     const badge = document.getElementById('admin-pending-badge');
                     if (badge) {
                         if (pendingCount > 0) {
@@ -2514,15 +2471,15 @@
             const input = document.getElementById('chat-input');
             const message = input.value.trim();
 
-            if (!message || !currentUser) {
+            if (!message || !store.currentUser) {
                 showToast('Vui lòng đăng nhập để gửi tin nhắn', 'warning');
                 return;
             }
 
             try {
                 await addDoc(collection(db, 'messages'), {
-                    userId: currentUser.uid,
-                    userName: currentUserData.name || currentUser.email,
+                    userId: store.currentUser.uid,
+                    userName: store.currentUserData.name || store.currentUser.email,
                     message: message,
                     timestamp: Timestamp.now(),
                     read: false
@@ -2537,10 +2494,10 @@
 
         function updateChatBox() {
             const chatMessages = document.getElementById('chat-messages');
-            if (!chatMessages || !currentUser) return;
+            if (!chatMessages || !store.currentUser) return;
 
-            const userMessages = localMessages
-                .filter(m => m.userId === currentUser?.uid)
+            const userMessages = store.localMessages
+                .filter(m => m.userId === store.currentUser?.uid)
                 .sort((a, b) => {
                     const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
                     const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
@@ -2548,7 +2505,7 @@
                 })
                 .slice(-5);
 
-            // Clear only auto messages, keep the welcome message
+            // Clear only auto messages
             const autoMessages = Array.from(chatMessages.children).filter(
                 el => !el.dataset.messageId
             );
@@ -2578,16 +2535,11 @@
         }
 
         // ==================== NAVIGATION ====================
-        let currentAdminRoute = 'dashboard';
-        let currentUserRoute = 'home';
-        window.currentRoomFilter = 'All';
-        window.currentServiceCategory = 'All';
-
         function refreshCurrentView() {
-            if (userRole === 'admin') {
-                navigateAdmin(currentAdminRoute, true);
-            } else if (userRole === 'user') {
-                navigateUser(currentUserRoute, true);
+            if (store.userRole === 'admin') {
+                navigateAdmin(store.currentAdminRoute, true);
+            } else if (store.userRole === 'user') {
+                navigateUser(store.currentUserRoute, true);
             }
         }
 
@@ -2598,7 +2550,8 @@
 
         // Admin Navigation
         window.navigateAdmin = (route, isRefresh = false) => {
-            currentAdminRoute = route;
+            store.adminBookingsPage = 0;
+            store.currentAdminRoute = route;
 
             if (!isRefresh) {
                 document.querySelectorAll('#admin-view aside nav button').forEach(btn => {
@@ -2631,56 +2584,59 @@
             document.getElementById('admin-page-title').textContent = titles[route] || 'Dashboard';
 
             const contentDiv = document.getElementById('admin-content');
+            contentDiv.innerHTML = '<div class="flex justify-center items-center h-64"><div class="loader"></div></div>';
 
-            switch (route) {
-                case 'dashboard':
-                    renderAdminDashboard(contentDiv);
-                    break;
-                case 'bookings':
-                    renderAdminBookings(contentDiv);
-                    break;
-                case 'rooms':
-                    renderAdminRooms(contentDiv);
-                    break;
-                case 'services':
-                    renderAdminServices(contentDiv);
-                    break;
-                case 'customers':
-                    renderAdminCustomers(contentDiv);
-                    break;
-                case 'reports':
-                    renderAdminReports(contentDiv);
-                    break;
-                case 'promotions':
-                    renderAdminPromotions(contentDiv);
-                    break;
-                case 'staff':
-                    renderAdminStaff(contentDiv);
-                    break;
-                case 'reviews':
-                    renderAdminReviews(contentDiv);
-                    break;
-                case 'gallery':
-                    renderAdminGallery(contentDiv);
-                    break;
-                case 'invoices':
-                    renderAdminInvoices(contentDiv);
-                    break;
-                case 'logs':
-                    renderAdminLogs(contentDiv);
-                    break;
-                case 'settings':
-                    renderAdminSettings(contentDiv);
-                    break;
-                case 'backup':
-                    renderAdminBackup(contentDiv);
-                    break;
-            }
+            setTimeout(() => {
+                switch (route) {
+                    case 'dashboard':
+                        renderAdminDashboard(contentDiv);
+                        break;
+                    case 'bookings':
+                        renderAdminBookings(contentDiv);
+                        break;
+                    case 'rooms':
+                        renderAdminRooms(contentDiv);
+                        break;
+                    case 'services':
+                        renderAdminServices(contentDiv);
+                        break;
+                    case 'customers':
+                        renderAdminCustomers(contentDiv);
+                        break;
+                    case 'reports':
+                        renderAdminReports(contentDiv);
+                        break;
+                    case 'promotions':
+                        renderAdminPromotions(contentDiv);
+                        break;
+                    case 'staff':
+                        renderAdminStaff(contentDiv);
+                        break;
+                    case 'reviews':
+                        renderAdminReviews(contentDiv);
+                        break;
+                    case 'gallery':
+                        renderAdminGallery(contentDiv);
+                        break;
+                    case 'invoices':
+                        renderAdminInvoices(contentDiv);
+                        break;
+                    case 'logs':
+                        renderAdminLogs(contentDiv);
+                        break;
+                    case 'settings':
+                        renderAdminSettings(contentDiv);
+                        break;
+                    case 'backup':
+                        renderAdminBackup(contentDiv);
+                        break;
+                }
+            }, 100);
         };
 
         // User Navigation
         window.navigateUser = (route, isRefresh = false) => {
-            currentUserRoute = route;
+            store.currentUserRoute = route;
 
             if (!isRefresh) {
                 document.querySelectorAll('#user-view nav button').forEach(btn => {
@@ -2696,72 +2652,74 @@
 
             const nameDisplay = document.getElementById('user-name-display');
             const userAvatar = document.getElementById('user-avatar');
-            if (nameDisplay && currentUserData) {
-                const name = currentUserData.name || currentUser?.email?.split('@')[0] || 'Khách';
+            if (nameDisplay && store.currentUserData) {
+                const name = store.currentUserData.name || store.currentUser?.email?.split('@')[0] || 'Khách';
                 nameDisplay.textContent = name;
                 if (userAvatar) userAvatar.textContent = name.charAt(0).toUpperCase();
             }
 
             const contentDiv = document.getElementById('user-content');
+            contentDiv.innerHTML = '<div class="flex justify-center items-center h-64"><div class="loader"></div></div>';
 
-            switch (route) {
-                case 'home':
-                    renderUserHome(contentDiv);
-                    break;
-                case 'rooms':
-                    renderUserRooms(contentDiv);
-                    break;
-                case 'services':
-                    renderUserServices(contentDiv);
-                    break;
-                case 'my-bookings':
-                    renderUserBookings(contentDiv);
-                    break;
-                case 'profile':
-                    renderUserProfile(contentDiv);
-                    break;
-                case 'loyalty':
-                    renderUserLoyalty(contentDiv);
-                    break;
-                case 'offers':
-                    renderUserOffers(contentDiv);
-                    break;
-            }
+            setTimeout(() => {
+                switch (route) {
+                    case 'home':
+                        renderUserHome(contentDiv);
+                        break;
+                    case 'rooms':
+                        renderUserRooms(contentDiv);
+                        break;
+                    case 'services':
+                        renderUserServices(contentDiv);
+                        break;
+                    case 'my-bookings':
+                        renderUserBookings(contentDiv);
+                        break;
+                    case 'profile':
+                        renderUserProfile(contentDiv);
+                        break;
+                    case 'loyalty':
+                        renderUserLoyalty(contentDiv);
+                        break;
+                    case 'offers':
+                        renderUserOffers(contentDiv);
+                        break;
+                }
+            }, 100);
         };
 
         // ==================== ADMIN RENDER FUNCTIONS ====================
 
-        // Admin Dashboard
         function renderAdminDashboard(container) {
-            const totalRooms = localRooms.length;
-            const availableRooms = localRooms.filter(r => r.status === 'available').length;
-            const occupiedRooms = localRooms.filter(r => r.status === 'occupied').length;
-            const maintenanceRooms = localRooms.filter(r => r.status === 'maintenance').length;
+            const totalRooms = store.localRooms.length;
+            const availableRooms = store.localRooms.filter(r => r.status === 'available').length;
+            const occupiedRooms = store.localRooms.filter(r => r.status === 'occupied').length;
+            const maintenanceRooms = store.localRooms.filter(r => r.status === 'maintenance').length;
 
-            const totalBookings = localBookings.length;
-            const pendingBookings = localBookings.filter(b => b.status === 'pending').length;
-            const confirmedBookings = localBookings.filter(b => b.status === 'confirmed').length;
-            const completedBookings = localBookings.filter(b => b.status === 'completed').length;
-            const cancelledBookings = localBookings.filter(b => b.status === 'cancelled').length;
+            const totalBookings = store.localBookings.length;
+            const pendingBookings = store.localBookings.filter(b => b.status === 'pending').length;
+            const confirmedBookings = store.localBookings.filter(b => b.status === 'confirmed').length;
+            const completedBookings = store.localBookings.filter(b => b.status === 'completed').length;
+            const cancelledBookings = store.localBookings.filter(b => b.status === 'cancelled').length;
 
-            const totalRevenue = localBookings
+            const totalRevenue = store.localBookings
                 .filter(b => b.status === 'completed' || b.status === 'confirmed')
                 .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
-            const totalCustomers = localUsers.filter(u => u.role !== 'admin').length;
-            const vipCustomers = localUsers.filter(u => u.role === 'vip').length;
+            const totalCustomers = store.localUsers.filter(u => u.role !== 'admin').length;
+            const vipCustomers = store.localUsers.filter(u => u.role === 'vip').length;
 
-            const totalStaff = localStaff.length;
-            const activeStaff = localStaff.filter(s => s.status === 'active').length;
+            const totalStaff = store.localStaff.length;
+            const activeStaff = store.localStaff.filter(s => s.status === 'active').length;
 
-            const totalReviews = localReviews.length;
-            const avgRating = localReviews.length > 0
-                ? (localReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / localReviews.length).toFixed(1)
+            const totalReviews = store.localReviews.length;
+            const avgRating = store.localReviews.length > 0
+                ? (store.localReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / store.localReviews.length).toFixed(1)
                 : 0;
 
             const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
 
-            const recentBookings = [...localBookings]
+            const recentBookings = [...store.localBookings]
                 .sort((a, b) => {
                     const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
                     const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
@@ -2769,11 +2727,11 @@
                 })
                 .slice(0, 5);
 
-            const popularRooms = [...localRooms]
-                .sort((a, b) => (b.bookingsCount || 0) - (a.bookingsCount || 0))
+            const popularRooms = [...store.localRooms]
+                .sort((a, b) => ((b.bookingsCount || 0) - (a.bookingsCount || 0)))
                 .slice(0, 3);
 
-            const recentReviews = [...localReviews]
+            const recentReviews = [...store.localReviews]
                 .sort((a, b) => {
                     const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
                     const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
@@ -2826,7 +2784,7 @@
                             <div class="mt-2 flex items-center text-xs">
                                 <span class="text-purple-600">${vipCustomers} VIP</span>
                                 <span class="mx-2 text-slate-300">•</span>
-                                <span class="text-slate-600">${localUsers.filter(u => {
+                                <span class="text-slate-600">${store.localUsers.filter(u => {
                 const date = u.createdAt?.toDate ? u.createdAt.toDate() : new Date(u.createdAt || 0);
                 const today = new Date();
                 return date.toDateString() === today.toDateString();
@@ -2845,7 +2803,7 @@
                             <div class="mt-2 flex items-center text-xs">
                                 <span class="text-green-600">Công suất ${occupancyRate}%</span>
                                 <span class="mx-2 text-slate-300">•</span>
-                                <span class="text-blue-600">Tháng này: ${formatCurrency(localBookings
+                                <span class="text-blue-600">Tháng này: ${formatCurrency(store.localBookings
                 .filter(b => {
                     const date = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
                     const now = new Date();
@@ -2979,20 +2937,20 @@
                                 ${recentBookings.map(booking => {
                 const date = booking.createdAt?.toDate ? booking.createdAt.toDate() : new Date(booking.createdAt || 0);
                 return `
-                                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                        <div>
-                                            <p class="font-medium text-slate-900">${booking.userName || booking.userEmail?.split('@')[0] || 'Khách'}</p>
-                                            <p class="text-xs text-slate-500">Phòng ${booking.roomCode} • ${formatDate(date)}</p>
-                                        </div>
-                                        <span class="badge ${booking.status === 'pending' ? 'badge-warning' :
+                                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                            <div>
+                                                <p class="font-medium text-slate-900">${booking.userName || booking.userEmail?.split('@')[0] || 'Khách'}</p>
+                                                <p class="text-xs text-slate-500">Phòng ${booking.roomCode} • ${formatDate(date)}</p>
+                                            </div>
+                                            <span class="badge ${booking.status === 'pending' ? 'badge-warning' :
                         booking.status === 'confirmed' ? 'badge-info' :
                             booking.status === 'completed' ? 'badge-success' : 'badge-danger'}">
-                                                        ${booking.status === 'pending' ? 'Chờ duyệt' :
+                                                ${booking.status === 'pending' ? 'Chờ duyệt' :
                         booking.status === 'confirmed' ? 'Đã xác nhận' :
                             booking.status === 'completed' ? 'Hoàn tất' : 'Đã hủy'}
-                                                    </span>
-                                    </div>
-                                `;
+                                            </span>
+                                        </div>
+                                    `;
             }).join('')}
                                 ${recentBookings.length === 0 ? `
                                     <p class="text-center text-slate-500 py-4">Chưa có đặt phòng nào</p>
@@ -3074,9 +3032,151 @@
             `;
         }
 
-        // Admin Rooms
+        function renderAdminBookings(container) {
+            const sortedBookings = [...store.localBookings].sort((a, b) => {
+                const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return timeB - timeA;
+            });
+
+            const statusFilter = document.getElementById('bookingStatusFilter')?.value || 'All';
+            const filteredBookings = statusFilter === 'All'
+                ? sortedBookings
+                : sortedBookings.filter(b => b.status === statusFilter);
+
+            const start = store.adminBookingsPage * store.adminBookingsLimit;
+            const paginated = filteredBookings.slice(start, start + store.adminBookingsLimit);
+            const hasMore = filteredBookings.length > start + store.adminBookingsLimit;
+
+            container.innerHTML = `
+                <div class="fade-in">
+                    <div class="table-container">
+                        <div class="table-header flex flex-wrap justify-between items-center gap-4">
+                            <h3 class="font-bold text-slate-900">Danh sách đặt phòng (${filteredBookings.length})</h3>
+                            <div class="flex space-x-2">
+                                <select id="bookingStatusFilter" onchange="filterBookings()" class="form-input py-2 text-sm">
+                                    <option value="All" ${statusFilter === 'All' ? 'selected' : ''}>Tất cả trạng thái</option>
+                                    <option value="pending" ${statusFilter === 'pending' ? 'selected' : ''}>Chờ duyệt</option>
+                                    <option value="confirmed" ${statusFilter === 'confirmed' ? 'selected' : ''}>Đã xác nhận</option>
+                                    <option value="completed" ${statusFilter === 'completed' ? 'selected' : ''}>Hoàn tất</option>
+                                    <option value="cancelled" ${statusFilter === 'cancelled' ? 'selected' : ''}>Đã hủy</option>
+                                </select>
+                                <button onclick="exportBookings()" class="btn-secondary text-sm py-2">
+                                    <i class="fa-solid fa-download mr-2"></i>Xuất Excel
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left">Khách hàng</th>
+                                        <th class="px-6 py-4 text-left">Phòng</th>
+                                        <th class="px-6 py-4 text-left">Ngày đặt</th>
+                                        <th class="px-6 py-4 text-left">Check-in</th>
+                                        <th class="px-6 py-4 text-left">Check-out</th>
+                                        <th class="px-6 py-4 text-left">Số đêm</th>
+                                        <th class="px-6 py-4 text-left">Tổng tiền</th>
+                                        <th class="px-6 py-4 text-left">Trạng thái</th>
+                                        <th class="px-6 py-4 text-left">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${paginated.map(booking => {
+                const nights = booking.nights ||
+                    (booking.checkIn && booking.checkOut ?
+                        Math.ceil((new Date(booking.checkOut) - new Date(booking.checkIn)) / (1000 * 60 * 60 * 24)) : 1);
+
+                const statusClass = {
+                    pending: 'badge-warning',
+                    confirmed: 'badge-info',
+                    completed: 'badge-success',
+                    cancelled: 'badge-danger'
+                }[booking.status] || 'badge-info';
+
+                const statusText = {
+                    pending: 'Chờ duyệt',
+                    confirmed: 'Đã xác nhận',
+                    completed: 'Hoàn tất',
+                    cancelled: 'Đã hủy'
+                }[booking.status] || booking.status;
+
+                const createdAt = booking.createdAt?.toDate ? booking.createdAt.toDate() : new Date(booking.createdAt || 0);
+                const checkIn = booking.checkIn?.toDate ? booking.checkIn.toDate() : new Date(booking.checkIn || 0);
+                const checkOut = booking.checkOut?.toDate ? booking.checkOut.toDate() : new Date(booking.checkOut || 0);
+
+                return `
+                                            <tr class="table-row">
+                                                <td class="px-6 py-4">
+                                                    <div class="font-medium">${booking.userName || booking.userEmail?.split('@')[0] || 'Khách'}</div>
+                                                    <div class="text-xs text-slate-500">${booking.userPhone || 'Chưa có SĐT'}</div>
+                                                </td>
+                                                <td class="px-6 py-4 font-medium">${booking.roomCode || 'N/A'}</td>
+                                                <td class="px-6 py-4 text-slate-500">${formatDate(createdAt)}</td>
+                                                <td class="px-6 py-4">${formatDate(checkIn)}</td>
+                                                <td class="px-6 py-4">${formatDate(checkOut)}</td>
+                                                <td class="px-6 py-4">${nights}</td>
+                                                <td class="px-6 py-4 font-mono font-bold text-blue-600">${formatCurrency(booking.totalPrice || 0)}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="badge ${statusClass}">${statusText}</span>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex space-x-2">
+                                                        ${booking.status === 'pending' ? `
+                                                            <button onclick="updateBookingStatus('${booking.id}', 'confirmed', '${booking.roomId}')" 
+                                                                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Xác nhận">
+                                                                <i class="fa-solid fa-check"></i>
+                                                            </button>
+                                                            <button onclick="updateBookingStatus('${booking.id}', 'cancelled', '${booking.roomId}')" 
+                                                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Từ chối">
+                                                                <i class="fa-solid fa-xmark"></i>
+                                                            </button>
+                                                        ` : booking.status === 'confirmed' ? `
+                                                            <button onclick="updateBookingStatus('${booking.id}', 'completed', '${booking.roomId}')" 
+                                                                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Hoàn tất">
+                                                                <i class="fa-solid fa-check-double"></i>
+                                                            </button>
+                                                        ` : ''}
+                                                        <button onclick="viewBookingDetails('${booking.id}')" 
+                                                                class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Xem chi tiết">
+                                                            <i class="fa-solid fa-eye"></i>
+                                                        </button>
+                                                        <button onclick="generateInvoice('${booking.id}')" 
+                                                                class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Tạo hóa đơn">
+                                                            <i class="fa-solid fa-file-invoice"></i>
+                                                        </button>
+                                                        <button onclick="deleteBooking('${booking.id}')" 
+                                                                class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+            }).join('')}
+                                    ${paginated.length === 0 ? `
+                                        <tr>
+                                            <td colspan="9" class="px-6 py-12 text-center text-slate-500">
+                                                <i class="fa-regular fa-calendar-xmark text-4xl mb-3"></i>
+                                                <p>Chưa có đặt phòng nào</p>
+                                            </td>
+                                        </tr>
+                                    ` : ''}
+                                </tbody>
+                            </table>
+                        </div>
+                        ${hasMore ? `
+                            <div class="p-4 text-center">
+                                <button onclick="loadMoreAdminBookings()" class="btn-secondary">Xem thêm</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
         function renderAdminRooms(container) {
-            if (localRooms.length === 0) {
+            if (store.localRooms.length === 0) {
                 container.innerHTML = `
                     <div class="flex flex-col items-center justify-center h-[60vh] text-center">
                         <div class="w-24 h-24 bg-slate-100 rounded-3xl flex items-center justify-center mb-6">
@@ -3092,10 +3192,10 @@
                 return;
             }
 
-            const roomTypes = ['All', ...new Set(localRooms.map(r => r.type))];
-            const filteredRooms = window.currentRoomFilter === 'All'
-                ? localRooms
-                : localRooms.filter(r => r.type === window.currentRoomFilter);
+            const roomTypes = ['All', ...new Set(store.localRooms.map(r => r.type))];
+            const filteredRooms = store.currentRoomFilter === 'All'
+                ? store.localRooms
+                : store.localRooms.filter(r => r.type === store.currentRoomFilter);
 
             container.innerHTML = `
                 <div class="fade-in space-y-6">
@@ -3105,7 +3205,7 @@
                             <span class="text-sm font-medium text-slate-500">Lọc theo:</span>
                             <select onchange="filterRooms(this.value)" class="form-input py-2 w-auto">
                                 ${roomTypes.map(type => `
-                                    <option value="${type}" ${window.currentRoomFilter === type ? 'selected' : ''}>
+                                    <option value="${type}" ${store.currentRoomFilter === type ? 'selected' : ''}>
                                         ${type === 'All' ? 'Tất cả' : type}
                                     </option>
                                 `).join('')}
@@ -3120,19 +3220,19 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div class="bg-white p-4 rounded-xl border border-slate-200">
                             <p class="text-sm text-slate-500">Tổng phòng</p>
-                            <p class="text-2xl font-bold text-slate-900">${localRooms.length}</p>
+                            <p class="text-2xl font-bold text-slate-900">${store.localRooms.length}</p>
                         </div>
                         <div class="bg-white p-4 rounded-xl border border-slate-200">
                             <p class="text-sm text-slate-500">Còn trống</p>
-                            <p class="text-2xl font-bold text-green-600">${localRooms.filter(r => r.status === 'available').length}</p>
+                            <p class="text-2xl font-bold text-green-600">${store.localRooms.filter(r => r.status === 'available').length}</p>
                         </div>
                         <div class="bg-white p-4 rounded-xl border border-slate-200">
                             <p class="text-sm text-slate-500">Đã đặt</p>
-                            <p class="text-2xl font-bold text-blue-600">${localRooms.filter(r => r.status === 'occupied').length}</p>
+                            <p class="text-2xl font-bold text-blue-600">${store.localRooms.filter(r => r.status === 'occupied').length}</p>
                         </div>
                         <div class="bg-white p-4 rounded-xl border border-slate-200">
                             <p class="text-sm text-slate-500">Bảo trì</p>
-                            <p class="text-2xl font-bold text-yellow-600">${localRooms.filter(r => r.status === 'maintenance').length}</p>
+                            <p class="text-2xl font-bold text-yellow-600">${store.localRooms.filter(r => r.status === 'maintenance').length}</p>
                         </div>
                     </div>
 
@@ -3240,149 +3340,18 @@
             `;
         }
 
-        // Admin Bookings
-        function renderAdminBookings(container) {
-            const sortedBookings = [...localBookings].sort((a, b) => {
-                const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-                return timeB - timeA;
-            });
-
-            container.innerHTML = `
-                <div class="fade-in">
-                    <div class="table-container">
-                        <div class="table-header flex flex-wrap justify-between items-center gap-4">
-                            <h3 class="font-bold text-slate-900">Danh sách đặt phòng (${sortedBookings.length})</h3>
-                            <div class="flex space-x-2">
-                                <select id="bookingStatusFilter" onchange="filterBookings()" class="form-input py-2 text-sm">
-                                    <option value="All">Tất cả trạng thái</option>
-                                    <option value="pending">Chờ duyệt</option>
-                                    <option value="confirmed">Đã xác nhận</option>
-                                    <option value="completed">Hoàn tất</option>
-                                    <option value="cancelled">Đã hủy</option>
-                                </select>
-                                <button onclick="exportBookings()" class="btn-secondary text-sm py-2">
-                                    <i class="fa-solid fa-download mr-2"></i>Xuất Excel
-                                </button>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left">Khách hàng</th>
-                                        <th class="px-6 py-4 text-left">Phòng</th>
-                                        <th class="px-6 py-4 text-left">Ngày đặt</th>
-                                        <th class="px-6 py-4 text-left">Check-in</th>
-                                        <th class="px-6 py-4 text-left">Check-out</th>
-                                        <th class="px-6 py-4 text-left">Số đêm</th>
-                                        <th class="px-6 py-4 text-left">Tổng tiền</th>
-                                        <th class="px-6 py-4 text-left">Trạng thái</th>
-                                        <th class="px-6 py-4 text-left">Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    ${sortedBookings.map(booking => {
-                const nights = booking.nights ||
-                    (booking.checkIn && booking.checkOut ?
-                        Math.ceil((new Date(booking.checkOut) - new Date(booking.checkIn)) / (1000 * 60 * 60 * 24)) : 1);
-
-                const statusClass = {
-                    pending: 'badge-warning',
-                    confirmed: 'badge-info',
-                    completed: 'badge-success',
-                    cancelled: 'badge-danger'
-                }[booking.status] || 'badge-info';
-
-                const statusText = {
-                    pending: 'Chờ duyệt',
-                    confirmed: 'Đã xác nhận',
-                    completed: 'Hoàn tất',
-                    cancelled: 'Đã hủy'
-                }[booking.status] || booking.status;
-
-                const createdAt = booking.createdAt?.toDate ? booking.createdAt.toDate() : new Date(booking.createdAt || 0);
-                const checkIn = booking.checkIn?.toDate ? booking.checkIn.toDate() : new Date(booking.checkIn || 0);
-                const checkOut = booking.checkOut?.toDate ? booking.checkOut.toDate() : new Date(booking.checkOut || 0);
-
-                return `
-                                            <tr class="table-row">
-                                                <td class="px-6 py-4">
-                                                    <div class="font-medium">${booking.userName || booking.userEmail?.split('@')[0] || 'Khách'}</div>
-                                                    <div class="text-xs text-slate-500">${booking.userPhone || 'Chưa có SĐT'}</div>
-                                                </td>
-                                                <td class="px-6 py-4 font-medium">${booking.roomCode || 'N/A'}</td>
-                                                <td class="px-6 py-4 text-slate-500">${formatDate(createdAt)}</td>
-                                                <td class="px-6 py-4">${formatDate(checkIn)}</td>
-                                                <td class="px-6 py-4">${formatDate(checkOut)}</td>
-                                                <td class="px-6 py-4">${nights}</td>
-                                                <td class="px-6 py-4 font-mono font-bold text-blue-600">${formatCurrency(booking.totalPrice || 0)}</td>
-                                                <td class="px-6 py-4">
-                                                    <span class="badge ${statusClass}">${statusText}</span>
-                                                </td>
-                                                <td class="px-6 py-4">
-                                                    <div class="flex space-x-2">
-                                                        ${booking.status === 'pending' ? `
-                                                            <button onclick="updateBookingStatus('${booking.id}', 'confirmed', '${booking.roomId}')" 
-                                                                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Xác nhận">
-                                                                <i class="fa-solid fa-check"></i>
-                                                            </button>
-                                                            <button onclick="updateBookingStatus('${booking.id}', 'cancelled', '${booking.roomId}')" 
-                                                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Từ chối">
-                                                                <i class="fa-solid fa-xmark"></i>
-                                                            </button>
-                                                        ` : booking.status === 'confirmed' ? `
-                                                            <button onclick="updateBookingStatus('${booking.id}', 'completed', '${booking.roomId}')" 
-                                                                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Hoàn tất">
-                                                                <i class="fa-solid fa-check-double"></i>
-                                                            </button>
-                                                        ` : ''}
-                                                        <button onclick="viewBookingDetails('${booking.id}')" 
-                                                                class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Xem chi tiết">
-                                                            <i class="fa-solid fa-eye"></i>
-                                                        </button>
-                                                        <button onclick="generateInvoice('${booking.id}')" 
-                                                                class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Tạo hóa đơn">
-                                                            <i class="fa-solid fa-file-invoice"></i>
-                                                        </button>
-                                                        <button onclick="deleteBooking('${booking.id}')" 
-                                                                class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa">
-                                                            <i class="fa-solid fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        `;
-            }).join('')}
-                                    ${sortedBookings.length === 0 ? `
-                                        <tr>
-                                            <td colspan="9" class="px-6 py-12 text-center text-slate-500">
-                                                <i class="fa-regular fa-calendar-xmark text-4xl mb-3"></i>
-                                                <p>Chưa có đặt phòng nào</p>
-                                            </td>
-                                        </tr>
-                                    ` : ''}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Admin Services
         function renderAdminServices(container) {
             container.innerHTML = `
                 <div class="fade-in">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-slate-900">Quản lý dịch vụ (${localServices.length})</h3>
+                        <h3 class="text-xl font-bold text-slate-900">Quản lý dịch vụ (${store.localServices.length})</h3>
                         <button onclick="openServiceModal()" class="btn-primary">
                             <i class="fa-solid fa-plus mr-2"></i>Thêm dịch vụ
                         </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${localServices.map(service => `
+                        ${store.localServices.map(service => `
                             <div class="bg-white p-6 rounded-2xl border border-slate-200 hover-lift">
                                 <div class="flex items-start justify-between mb-4">
                                     <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
@@ -3413,7 +3382,7 @@
                                 </div>
                             </div>
                         `).join('')}
-                        ${localServices.length === 0 ? `
+                        ${store.localServices.length === 0 ? `
                             <div class="col-span-full text-center py-12">
                                 <i class="fa-solid fa-concierge-bell text-5xl text-slate-300 mb-4"></i>
                                 <p class="text-slate-500">Chưa có dịch vụ nào</p>
@@ -3425,9 +3394,8 @@
             `;
         }
 
-        // Admin Customers
         function renderAdminCustomers(container) {
-            const customers = localUsers.filter(u => u.role !== 'admin');
+            const customers = store.localUsers.filter(u => u.role !== 'admin');
 
             container.innerHTML = `
                 <div class="fade-in">
@@ -3456,7 +3424,7 @@
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     ${customers.map(customer => {
-                const customerBookings = localBookings.filter(b => b.userId === customer.id);
+                const customerBookings = store.localBookings.filter(b => b.userId === customer.id);
                 const totalSpent = customerBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
                 const loyaltyPoints = customer.loyaltyPoints || Math.floor(totalSpent / 100000);
 
@@ -3527,19 +3495,18 @@
             `;
         }
 
-        // Admin Staff
         function renderAdminStaff(container) {
             container.innerHTML = `
                 <div class="fade-in">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-slate-900">Quản lý nhân viên (${localStaff.length})</h3>
+                        <h3 class="text-xl font-bold text-slate-900">Quản lý nhân viên (${store.localStaff.length})</h3>
                         <button onclick="openStaffModal()" class="btn-primary">
                             <i class="fa-solid fa-plus mr-2"></i>Thêm nhân viên
                         </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${localStaff.map(staff => `
+                        ${store.localStaff.map(staff => `
                             <div class="bg-white p-6 rounded-2xl border border-slate-200 hover-lift">
                                 <div class="flex items-start justify-between mb-4">
                                     <div class="flex items-center">
@@ -3594,7 +3561,7 @@
                                 </div>
                             </div>
                         `).join('')}
-                        ${localStaff.length === 0 ? `
+                        ${store.localStaff.length === 0 ? `
                             <div class="col-span-full text-center py-12">
                                 <i class="fa-solid fa-user-tie text-5xl text-slate-300 mb-4"></i>
                                 <p class="text-slate-500">Chưa có nhân viên nào</p>
@@ -3606,9 +3573,8 @@
             `;
         }
 
-        // Admin Reviews
         function renderAdminReviews(container) {
-            const sortedReviews = [...localReviews].sort((a, b) => {
+            const sortedReviews = [...store.localReviews].sort((a, b) => {
                 const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
                 const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
                 return timeB - timeA;
@@ -3617,7 +3583,7 @@
             container.innerHTML = `
                 <div class="fade-in">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-slate-900">Quản lý đánh giá (${localReviews.length})</h3>
+                        <h3 class="text-xl font-bold text-slate-900">Quản lý đánh giá (${store.localReviews.length})</h3>
                         <div class="flex space-x-2">
                             <select id="reviewRatingFilter" onchange="filterReviews()" class="form-input py-2 text-sm">
                                 <option value="All">Tất cả đánh giá</option>
@@ -3634,50 +3600,50 @@
                         ${sortedReviews.map(review => {
                 const createdAt = review.createdAt?.toDate ? review.createdAt.toDate() : new Date(review.createdAt || 0);
                 return `
-                            <div class="bg-white p-6 rounded-2xl border border-slate-200">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex items-center">
-                                        <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center mr-3">
-                                            <span class="font-bold">${review.anonymous ? 'A' : (review.userName || 'U').charAt(0)}</span>
+                                <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center mr-3">
+                                                <span class="font-bold">${review.anonymous ? 'A' : (review.userName || 'U').charAt(0)}</span>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-slate-900">${review.anonymous ? 'Ẩn danh' : review.userName}</h4>
+                                                <p class="text-xs text-slate-500">Phòng ${review.roomCode} • ${formatDate(createdAt)}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 class="font-bold text-slate-900">${review.anonymous ? 'Ẩn danh' : review.userName}</h4>
-                                            <p class="text-xs text-slate-500">Phòng ${review.roomCode} • ${formatDate(createdAt)}</p>
+                                        <div class="flex text-yellow-400">
+                                            ${Array(5).fill(0).map((_, i) => `
+                                                <i class="fa-solid fa-star ${i < (review.rating || 0) ? '' : 'text-slate-300'}"></i>
+                                            `).join('')}
                                         </div>
                                     </div>
-                                    <div class="flex text-yellow-400">
-                                        ${Array(5).fill(0).map((_, i) => `
-                                            <i class="fa-solid fa-star ${i < (review.rating || 0) ? '' : 'text-slate-300'}"></i>
-                                        `).join('')}
+                                    
+                                    <h5 class="font-bold text-slate-900 mb-2">${review.title || 'Không có tiêu đề'}</h5>
+                                    <p class="text-slate-600 text-sm mb-4">${review.content}</p>
+                                    
+                                    <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                                        <div class="flex space-x-2">
+                                            <button onclick="approveReview('${review.id}')" 
+                                                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg">
+                                                <i class="fa-solid fa-check"></i>
+                                            </button>
+                                            <button onclick="replyToReview('${review.id}')" 
+                                                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                                                <i class="fa-solid fa-reply"></i>
+                                            </button>
+                                            <button onclick="deleteReview('${review.id}')" 
+                                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <span class="badge ${review.approved ? 'badge-success' : 'badge-warning'}">
+                                            ${review.approved ? 'Đã duyệt' : 'Chờ duyệt'}
+                                        </span>
                                     </div>
                                 </div>
-                                
-                                <h5 class="font-bold text-slate-900 mb-2">${review.title || 'Không có tiêu đề'}</h5>
-                                <p class="text-slate-600 text-sm mb-4">${review.content}</p>
-                                
-                                <div class="flex justify-between items-center pt-4 border-t border-slate-100">
-                                    <div class="flex space-x-2">
-                                        <button onclick="approveReview('${review.id}')" 
-                                                class="p-2 text-green-600 hover:bg-green-50 rounded-lg">
-                                            <i class="fa-solid fa-check"></i>
-                                        </button>
-                                        <button onclick="replyToReview('${review.id}')" 
-                                                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
-                                            <i class="fa-solid fa-reply"></i>
-                                        </button>
-                                        <button onclick="deleteReview('${review.id}')" 
-                                                class="p-2 text-red-600 hover:bg-red-50 rounded-lg">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </div>
-                                    <span class="badge ${review.approved ? 'badge-success' : 'badge-warning'}">
-                                        ${review.approved ? 'Đã duyệt' : 'Chờ duyệt'}
-                                    </span>
-                                </div>
-                            </div>
-                        `;
+                            `;
             }).join('')}
-                        ${localReviews.length === 0 ? `
+                        ${store.localReviews.length === 0 ? `
                             <div class="col-span-full text-center py-12">
                                 <i class="fa-regular fa-star text-5xl text-slate-300 mb-4"></i>
                                 <p class="text-slate-500">Chưa có đánh giá nào</p>
@@ -3688,19 +3654,18 @@
             `;
         }
 
-        // Admin Gallery
         function renderAdminGallery(container) {
             container.innerHTML = `
                 <div class="fade-in">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-slate-900">Thư viện ảnh (${localGallery.length})</h3>
+                        <h3 class="text-xl font-bold text-slate-900">Thư viện ảnh (${store.localGallery.length})</h3>
                         <button onclick="openGalleryUploadModal()" class="btn-primary">
                             <i class="fa-solid fa-upload mr-2"></i>Tải ảnh lên
                         </button>
                     </div>
 
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        ${localGallery.map(item => `
+                        ${store.localGallery.map(item => `
                             <div class="gallery-item group relative">
                                 <img src="${item.image}" class="w-full h-48 object-cover rounded-xl" alt="${item.title}">
                                 <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center" onclick="openGalleryImage('${item.image}')">
@@ -3722,13 +3687,12 @@
             `;
         }
 
-        // Admin Invoices
         function renderAdminInvoices(container) {
             container.innerHTML = `
                 <div class="fade-in">
                     <div class="table-container">
                         <div class="table-header flex justify-between items-center">
-                            <h3 class="font-bold text-slate-900">Quản lý hóa đơn (${localInvoices.length})</h3>
+                            <h3 class="font-bold text-slate-900">Quản lý hóa đơn (${store.localInvoices.length})</h3>
                             <div class="flex space-x-2">
                                 <input type="text" placeholder="Tìm kiếm hóa đơn..." class="form-input py-2 text-sm">
                                 <button onclick="exportInvoices()" class="btn-secondary text-sm py-2">
@@ -3749,33 +3713,33 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    ${localInvoices.map(invoice => {
+                                    ${store.localInvoices.map(invoice => {
                 const createdAt = invoice.createdAt?.toDate ? invoice.createdAt.toDate() : new Date(invoice.createdAt || 0);
                 return `
-                                        <tr class="table-row">
-                                            <td class="px-6 py-4 font-medium">#INV-${invoice.id.slice(-6)}</td>
-                                            <td class="px-6 py-4">${invoice.customerName || 'N/A'}</td>
-                                            <td class="px-6 py-4">${formatDate(createdAt)}</td>
-                                            <td class="px-6 py-4 font-mono font-bold text-blue-600">${formatCurrency(invoice.total || 0)}</td>
-                                            <td class="px-6 py-4">
-                                                <span class="badge ${invoice.status === 'paid' ? 'badge-success' : 'badge-warning'}">
-                                                    ${invoice.status === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán'}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex space-x-2">
-                                                    <button onclick="viewInvoice('${invoice.id}')" 
-                                                            class="p-2 text-slate-400 hover:text-blue-600 rounded-lg">
-                                                        <i class="fa-solid fa-eye"></i>
-                                                    </button>
-                                                    <button onclick="downloadInvoice('${invoice.id}')" 
-                                                            class="p-2 text-slate-400 hover:text-green-600 rounded-lg">
-                                                        <i class="fa-solid fa-download"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    `;
+                                            <tr class="table-row">
+                                                <td class="px-6 py-4 font-medium">#INV-${invoice.id.slice(-6)}</td>
+                                                <td class="px-6 py-4">${invoice.customerName || 'N/A'}</td>
+                                                <td class="px-6 py-4">${formatDate(createdAt)}</td>
+                                                <td class="px-6 py-4 font-mono font-bold text-blue-600">${formatCurrency(invoice.total || 0)}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="badge ${invoice.status === 'paid' ? 'badge-success' : 'badge-warning'}">
+                                                        ${invoice.status === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán'}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex space-x-2">
+                                                        <button onclick="viewInvoice('${invoice.id}')" 
+                                                                class="p-2 text-slate-400 hover:text-blue-600 rounded-lg">
+                                                            <i class="fa-solid fa-eye"></i>
+                                                        </button>
+                                                        <button onclick="downloadInvoice('${invoice.id}')" 
+                                                                class="p-2 text-slate-400 hover:text-green-600 rounded-lg">
+                                                            <i class="fa-solid fa-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
             }).join('')}
                                 </tbody>
                             </table>
@@ -3785,9 +3749,8 @@
             `;
         }
 
-        // Admin Logs
         function renderAdminLogs(container) {
-            const sortedLogs = [...localLogs].sort((a, b) => {
+            const sortedLogs = [...store.localLogs].sort((a, b) => {
                 const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp || 0);
                 const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp || 0);
                 return timeB - timeA;
@@ -3807,16 +3770,16 @@
                             ${sortedLogs.map(log => {
                 const timestamp = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp || 0);
                 return `
-                                <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-lg">
-                                    <div class="w-8 h-8 rounded-full bg-${log.type === 'error' ? 'red' : log.type === 'warning' ? 'yellow' : 'blue'}-100 flex items-center justify-center flex-shrink-0">
-                                        <i class="fa-solid fa-${log.type === 'error' ? 'exclamation' : log.type === 'warning' ? 'triangle-exclamation' : 'circle-info'} text-${log.type === 'error' ? 'red' : log.type === 'warning' ? 'yellow' : 'blue'}-600"></i>
+                                    <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-lg">
+                                        <div class="w-8 h-8 rounded-full bg-${log.type === 'error' ? 'red' : log.type === 'warning' ? 'yellow' : 'blue'}-100 flex items-center justify-center flex-shrink-0">
+                                            <i class="fa-solid fa-${log.type === 'error' ? 'exclamation' : log.type === 'warning' ? 'triangle-exclamation' : 'circle-info'} text-${log.type === 'error' ? 'red' : log.type === 'warning' ? 'yellow' : 'blue'}-600"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm text-slate-900">${log.message}</p>
+                                            <p class="text-xs text-slate-500 mt-1">${formatDateTime(timestamp)} • ${log.user || 'Hệ thống'}</p>
+                                        </div>
                                     </div>
-                                    <div class="flex-1">
-                                        <p class="text-sm text-slate-900">${log.message}</p>
-                                        <p class="text-xs text-slate-500 mt-1">${formatDateTime(timestamp)} • ${log.user || 'Hệ thống'}</p>
-                                    </div>
-                                </div>
-                            `;
+                                `;
             }).join('')}
                             ${sortedLogs.length === 0 ? `
                                 <p class="text-center text-slate-500 py-4">Chưa có nhật ký nào</p>
@@ -3827,19 +3790,18 @@
             `;
         }
 
-        // Admin Promotions
         function renderAdminPromotions(container) {
             container.innerHTML = `
                 <div class="fade-in">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-slate-900">Quản lý khuyến mãi (${localPromotions.length})</h3>
+                        <h3 class="text-xl font-bold text-slate-900">Quản lý khuyến mãi (${store.localPromotions.length})</h3>
                         <button onclick="openPromotionModal()" class="btn-primary">
                             <i class="fa-solid fa-plus mr-2"></i>Thêm khuyến mãi
                         </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${localPromotions.map(promo => `
+                        ${store.localPromotions.map(promo => `
                             <div class="bg-white p-6 rounded-2xl border border-slate-200 hover-lift relative overflow-hidden">
                                 ${promo.active ? `
                                     <div class="absolute top-4 right-4">
@@ -3891,7 +3853,7 @@
                                 </div>
                             </div>
                         `).join('')}
-                        ${localPromotions.length === 0 ? `
+                        ${store.localPromotions.length === 0 ? `
                             <div class="col-span-full text-center py-12">
                                 <i class="fa-solid fa-tags text-5xl text-slate-300 mb-4"></i>
                                 <p class="text-slate-500">Chưa có chương trình khuyến mãi nào</p>
@@ -3903,13 +3865,12 @@
             `;
         }
 
-        // Admin Reports
         function renderAdminReports(container) {
-            const totalRevenue = localBookings
+            const totalRevenue = store.localBookings
                 .filter(b => b.status === 'completed' || b.status === 'confirmed')
                 .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
-            const monthlyRevenue = localBookings
+            const monthlyRevenue = store.localBookings
                 .filter(b => {
                     const date = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
                     const now = new Date();
@@ -3917,7 +3878,7 @@
                 })
                 .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
-            const weeklyRevenue = localBookings
+            const weeklyRevenue = store.localBookings
                 .filter(b => {
                     const date = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
                     const now = new Date();
@@ -3926,7 +3887,7 @@
                 })
                 .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
-            const roomTypeStats = localRooms.reduce((acc, room) => {
+            const roomTypeStats = store.localRooms.reduce((acc, room) => {
                 acc[room.type] = (acc[room.type] || 0) + 1;
                 return acc;
             }, {});
@@ -3934,7 +3895,7 @@
             const monthlyData = Array.from({ length: 6 }, (_, i) => {
                 const month = new Date();
                 month.setMonth(month.getMonth() - i);
-                const revenue = localBookings
+                const revenue = store.localBookings
                     .filter(b => {
                         const date = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
                         return date.getMonth() === month.getMonth() &&
@@ -3968,8 +3929,8 @@
                         </div>
                         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                             <p class="text-sm text-slate-500 mb-2">Tổng đặt phòng</p>
-                            <p class="text-3xl font-bold text-slate-900">${localBookings.length}</p>
-                            <p class="text-xs text-slate-500 mt-2">${localBookings.filter(b => b.status === 'completed').length} hoàn tất</p>
+                            <p class="text-3xl font-bold text-slate-900">${store.localBookings.length}</p>
+                            <p class="text-xs text-slate-500 mt-2">${store.localBookings.filter(b => b.status === 'completed').length} hoàn tất</p>
                         </div>
                     </div>
 
@@ -3999,10 +3960,10 @@
                                     <div>
                                         <div class="flex justify-between text-sm mb-1">
                                             <span class="text-slate-600">Hạng ${type}</span>
-                                            <span class="font-medium">${count} phòng (${Math.round((count / localRooms.length) * 100)}%)</span>
+                                            <span class="font-medium">${count} phòng (${Math.round((count / store.localRooms.length) * 100)}%)</span>
                                         </div>
                                         <div class="w-full bg-slate-200 rounded-full h-2">
-                                            <div class="bg-blue-600 h-2 rounded-full" style="width: ${(count / localRooms.length) * 100}%"></div>
+                                            <div class="bg-blue-600 h-2 rounded-full" style="width: ${(count / store.localRooms.length) * 100}%"></div>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -4013,11 +3974,11 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <p class="text-sm text-slate-500">Tỷ lệ hủy</p>
-                                        <p class="text-2xl font-bold text-red-600">${localBookings.length > 0 ? Math.round((localBookings.filter(b => b.status === 'cancelled').length / localBookings.length) * 100) : 0}%</p>
+                                        <p class="text-2xl font-bold text-red-600">${store.localBookings.length > 0 ? Math.round((store.localBookings.filter(b => b.status === 'cancelled').length / store.localBookings.length) * 100) : 0}%</p>
                                     </div>
                                     <div>
                                         <p class="text-sm text-slate-500">Đặt phòng trung bình</p>
-                                        <p class="text-2xl font-bold text-blue-600">${localBookings.length > 0 ? Math.round(localBookings.reduce((sum, b) => sum + (b.nights || 1), 0) / localBookings.length) : 0} đêm</p>
+                                        <p class="text-2xl font-bold text-blue-600">${store.localBookings.length > 0 ? Math.round(store.localBookings.reduce((sum, b) => sum + (b.nights || 1), 0) / store.localBookings.length) : 0} đêm</p>
                                     </div>
                                 </div>
                             </div>
@@ -4028,8 +3989,8 @@
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                         <h4 class="font-bold text-slate-900 mb-4">Dịch vụ được sử dụng nhiều nhất</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            ${localServices.slice(0, 3).map(service => {
-                const usageCount = localBookings.filter(b =>
+                            ${store.localServices.slice(0, 3).map(service => {
+                const usageCount = store.localBookings.filter(b =>
                     b.services?.some(s => s.id === service.id)
                 ).length;
                 return `
@@ -4057,7 +4018,6 @@
             `;
         }
 
-        // Admin Backup
         function renderAdminBackup(container) {
             container.innerHTML = `
                 <div class="fade-in max-w-2xl">
@@ -4167,7 +4127,6 @@
             `;
         }
 
-        // Admin Settings
         function renderAdminSettings(container) {
             container.innerHTML = `
                 <div class="fade-in max-w-2xl">
@@ -4388,11 +4347,10 @@
 
         // ==================== USER RENDER FUNCTIONS ====================
 
-        // User Home
         function renderUserHome(container) {
-            const featuredRooms = localRooms.filter(r => r.status === 'available').slice(0, 3);
-            const featuredServices = localServices.slice(0, 4);
-            const recentReviews = [...localReviews]
+            const featuredRooms = store.localRooms.filter(r => r.status === 'available').slice(0, 3);
+            const featuredServices = store.localServices.slice(0, 4);
+            const recentReviews = [...store.localReviews]
                 .filter(r => r.approved)
                 .sort((a, b) => {
                     const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
@@ -4485,7 +4443,7 @@
                                                 <span><i class="fa-regular fa-square mr-1"></i>${room.area}m²</span>
                                                 <span><i class="fa-regular fa-user mr-1"></i>${room.capacity} người</span>
                                             </div>
-                                            <button onclick="openBookingModal('${room.id}')" 
+                                            <button onclick="handleBookNow('${room.id}')" 
                                                     class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition-all">
                                                 Đặt ngay
                                             </button>
@@ -4560,12 +4518,15 @@
             `;
         }
 
-        // User Rooms
         function renderUserRooms(container) {
-            const roomTypes = ['All', ...new Set(localRooms.map(r => r.type))];
-            const filteredRooms = window.currentRoomFilter === 'All'
-                ? localRooms.filter(r => r.status === 'available')
-                : localRooms.filter(r => r.type === window.currentRoomFilter && r.status === 'available');
+            const roomTypes = ['All', ...new Set(store.localRooms.map(r => r.type))];
+            const filteredRooms = store.currentRoomFilter === 'All'
+                ? store.localRooms.filter(r => r.status === 'available')
+                : store.localRooms.filter(r => r.type === store.currentRoomFilter && r.status === 'available');
+
+            const start = store.userRoomsPage * store.userRoomsLimit;
+            const paginated = filteredRooms.slice(start, start + store.userRoomsLimit);
+            const hasMore = filteredRooms.length > start + store.userRoomsLimit;
 
             container.innerHTML = `
                 <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
@@ -4578,7 +4539,7 @@
                     <div class="flex flex-wrap justify-center gap-3 mb-8">
                         ${roomTypes.map(type => `
                             <button onclick="filterUserRooms('${type}')" 
-                                    class="px-6 py-2 rounded-full text-sm font-medium transition-all ${window.currentRoomFilter === type ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-900'}">
+                                    class="px-6 py-2 rounded-full text-sm font-medium transition-all ${store.currentRoomFilter === type ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-900'}">
                                 ${type === 'All' ? 'Tất cả' : type}
                             </button>
                         `).join('')}
@@ -4586,7 +4547,7 @@
 
                     <!-- Room Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        ${filteredRooms.map(room => `
+                        ${paginated.map(room => `
                             <div class="bg-white rounded-3xl overflow-hidden shadow-xl hover-lift group">
                                 <div class="h-64 relative overflow-hidden">
                                     <img src="${room.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
@@ -4630,7 +4591,7 @@
                                         ` : ''}
                                     </div>
 
-                                    <button onclick="openBookingModal('${room.id}')" 
+                                    <button onclick="handleBookNow('${room.id}')" 
                                             class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition-all">
                                         Đặt ngay
                                     </button>
@@ -4644,16 +4605,25 @@
                             <p class="text-slate-500">Không tìm thấy phòng phù hợp</p>
                         </div>
                     ` : ''}
+
+                    ${hasMore ? `
+                        <div class="text-center mt-8">
+                            <button onclick="loadMoreUserRooms()" class="btn-secondary">Xem thêm phòng</button>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
 
-        // User Services
         function renderUserServices(container) {
-            const categories = ['All', ...new Set(localServices.map(s => s.category))];
-            const filteredServices = window.currentServiceCategory === 'All'
-                ? localServices.filter(s => s.available)
-                : localServices.filter(s => s.category === window.currentServiceCategory && s.available);
+            const categories = ['All', ...new Set(store.localServices.map(s => s.category))];
+            const filteredServices = store.currentServiceCategory === 'All'
+                ? store.localServices.filter(s => s.available)
+                : store.localServices.filter(s => s.category === store.currentServiceCategory && s.available);
+
+            const start = store.userServicesPage * store.userServicesLimit;
+            const paginated = filteredServices.slice(start, start + store.userServicesLimit);
+            const hasMore = filteredServices.length > start + store.userServicesLimit;
 
             container.innerHTML = `
                 <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
@@ -4666,7 +4636,7 @@
                     <div class="flex flex-wrap justify-center gap-3 mb-8">
                         ${categories.map(cat => `
                             <button onclick="filterUserServices('${cat}')" 
-                                    class="px-6 py-2 rounded-full text-sm font-medium transition-all ${window.currentServiceCategory === cat ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-900'}">
+                                    class="px-6 py-2 rounded-full text-sm font-medium transition-all ${store.currentServiceCategory === cat ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-900'}">
                                 ${cat === 'All' ? 'Tất cả' : cat === 'dining' ? 'Nhà hàng' : cat === 'spa' ? 'Spa' : cat === 'wellness' ? 'Sức khỏe' : cat === 'transport' ? 'Di chuyển' : 'Hoạt động'}
                             </button>
                         `).join('')}
@@ -4674,7 +4644,7 @@
 
                     <!-- Services Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        ${filteredServices.map(service => `
+                        ${paginated.map(service => `
                             <div class="bg-white rounded-2xl p-6 shadow-lg hover-lift">
                                 <div class="flex items-center mb-4">
                                     <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mr-4">
@@ -4699,14 +4669,25 @@
                             </div>
                         `).join('')}
                     </div>
+
+                    ${filteredServices.length === 0 ? `
+                        <div class="text-center py-12">
+                            <p class="text-slate-500">Không tìm thấy dịch vụ phù hợp</p>
+                        </div>
+                    ` : ''}
+
+                    ${hasMore ? `
+                        <div class="text-center mt-8">
+                            <button onclick="loadMoreUserServices()" class="btn-secondary">Xem thêm dịch vụ</button>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
 
-        // User Loyalty
         function renderUserLoyalty(container) {
-            const totalSpent = localBookings
-                .filter(b => b.userId === currentUser?.uid && b.status === 'completed')
+            const totalSpent = store.localBookings
+                .filter(b => b.userId === store.currentUser?.uid && b.status === 'completed')
                 .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
             const points = Math.floor(totalSpent / 100000);
@@ -4721,7 +4702,7 @@
                             <div class="flex justify-between items-start mb-8">
                                 <div>
                                     <p class="text-sm opacity-90 mb-1">Thẻ thành viên</p>
-                                    <h3 class="text-2xl font-bold">${currentUserData.name || 'Khách hàng'}</h3>
+                                    <h3 class="text-2xl font-bold">${store.currentUserData.name || 'Khách hàng'}</h3>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm opacity-90">Hạng</p>
@@ -4731,7 +4712,7 @@
                             
                             <div class="mb-8">
                                 <p class="text-sm opacity-90 mb-2">Số thẻ</p>
-                                <p class="text-xl font-mono">**** **** **** ${currentUser?.uid.slice(-4) || '0000'}</p>
+                                <p class="text-xl font-mono">**** **** **** ${store.currentUser?.uid.slice(-4) || '0000'}</p>
                             </div>
                             
                             <div class="flex justify-between items-end">
@@ -4741,7 +4722,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm opacity-90">Thành viên từ</p>
-                                    <p>${formatDate(currentUserData.memberSince)}</p>
+                                    <p>${formatDate(store.currentUserData.memberSince)}</p>
                                 </div>
                             </div>
                         </div>
@@ -4792,8 +4773,8 @@
                         <div class="bg-white rounded-2xl p-6 shadow-lg">
                             <h4 class="font-bold text-slate-900 mb-4">Lịch sử tích điểm</h4>
                             <div class="space-y-3">
-                                ${localBookings
-                    .filter(b => b.userId === currentUser?.uid && b.status === 'completed')
+                                ${store.localBookings
+                    .filter(b => b.userId === store.currentUser?.uid && b.status === 'completed')
                     .slice(0, 3)
                     .map(booking => {
                         const checkIn = booking.checkIn?.toDate ? booking.checkIn.toDate() : new Date(booking.checkIn || 0);
@@ -4814,9 +4795,8 @@
             `;
         }
 
-        // User Offers
         function renderUserOffers(container) {
-            const activePromotions = localPromotions.filter(p => p.active);
+            const activePromotions = store.localPromotions.filter(p => p.active);
 
             container.innerHTML = `
                 <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
@@ -4854,12 +4834,11 @@
             `;
         }
 
-        // User Profile
         function renderUserProfile(container) {
-            const userBookings = localBookings.filter(b => b.userId === currentUser?.uid);
+            const userBookings = store.localBookings.filter(b => b.userId === store.currentUser?.uid);
             const totalSpent = userBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
             const completedBookings = userBookings.filter(b => b.status === 'completed').length;
-            const memberSince = currentUserData?.memberSince?.toDate ? currentUserData.memberSince.toDate() : new Date(currentUserData?.memberSince || currentUserData?.createdAt || Date.now());
+            const memberSince = store.currentUserData?.memberSince?.toDate ? store.currentUserData.memberSince.toDate() : new Date(store.currentUserData?.memberSince || store.currentUserData?.createdAt || Date.now());
 
             container.innerHTML = `
                 <div class="max-w-4xl mx-auto px-4 md:px-8 py-8 md:py-12">
@@ -4869,7 +4848,7 @@
                             <div class="absolute -bottom-12 left-4 md:left-8">
                                 <div class="w-20 h-20 md:w-24 md:h-24 rounded-xl md:rounded-2xl bg-white p-1 shadow-xl">
                                     <div class="w-full h-full rounded-lg md:rounded-xl bg-gradient-to-br from-slate-900 to-blue-900 flex items-center justify-center text-white text-2xl md:text-4xl font-bold">
-                                        ${(currentUserData.name || currentUser?.email || 'U').charAt(0).toUpperCase()}
+                                        ${(store.currentUserData.name || store.currentUser?.email || 'U').charAt(0).toUpperCase()}
                                     </div>
                                 </div>
                             </div>
@@ -4880,7 +4859,7 @@
                             <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
                                 <div>
                                     <h2 class="text-xl md:text-2xl font-playfair font-bold text-slate-900 mb-1">
-                                        ${currentUserData.name || 'Chưa cập nhật tên'}
+                                        ${store.currentUserData.name || 'Chưa cập nhật tên'}
                                     </h2>
                                     <p class="text-xs md:text-sm text-slate-500">Thành viên từ ${formatDate(memberSince)}</p>
                                 </div>
@@ -4894,38 +4873,38 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="form-label">Email</label>
-                                        <input type="email" value="${currentUser?.email || ''}" disabled 
+                                        <input type="email" value="${store.currentUser?.email || ''}" disabled 
                                                class="form-input bg-slate-50 cursor-not-allowed text-sm">
                                     </div>
                                     <div>
                                         <label class="form-label">Số điện thoại</label>
-                                        <input type="tel" id="profile-phone" value="${currentUserData.phone || ''}" 
+                                        <input type="tel" id="profile-phone" value="${store.currentUserData.phone || ''}" 
                                                class="form-input text-sm" placeholder="Nhập số điện thoại">
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="form-label">Họ và tên</label>
-                                    <input type="text" id="profile-name" value="${currentUserData.name || ''}" 
+                                    <input type="text" id="profile-name" value="${store.currentUserData.name || ''}" 
                                            class="form-input text-sm" placeholder="Nhập họ và tên">
                                 </div>
 
                                 <div>
                                     <label class="form-label">Địa chỉ</label>
-                                    <input type="text" id="profile-address" value="${currentUserData.address || ''}" 
+                                    <input type="text" id="profile-address" value="${store.currentUserData.address || ''}" 
                                            class="form-input text-sm" placeholder="Nhập địa chỉ">
                                 </div>
 
                                 <div>
                                     <label class="form-label">Ngày sinh</label>
-                                    <input type="date" id="profile-birthday" value="${currentUserData.birthday || ''}" 
+                                    <input type="date" id="profile-birthday" value="${store.currentUserData.birthday || ''}" 
                                            class="form-input text-sm">
                                 </div>
 
                                 <div>
                                     <label class="form-label">Sở thích / Yêu cầu đặc biệt</label>
                                     <textarea id="profile-preferences" rows="3" class="form-input text-sm" 
-                                              placeholder="Ví dụ: Phòng không hút thuốc, gối cao su,...">${currentUserData.preferences || ''}</textarea>
+                                              placeholder="Ví dụ: Phòng không hút thuốc, gối cao su,...">${store.currentUserData.preferences || ''}</textarea>
                                 </div>
 
                                 <div class="pt-4 md:pt-6 border-t border-slate-200">
@@ -4973,10 +4952,9 @@
             `;
         }
 
-        // User Bookings
         function renderUserBookings(container) {
-            const myBookings = localBookings
-                .filter(b => b.userId === currentUser?.uid)
+            const myBookings = store.localBookings
+                .filter(b => b.userId === store.currentUser?.uid)
                 .sort((a, b) => {
                     const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
                     const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
@@ -5126,7 +5104,7 @@
             document.getElementById('roomModalTitle').textContent = 'Thêm phòng mới';
 
             if (id) {
-                const room = localRooms.find(r => r.id === id);
+                const room = store.localRooms.find(r => r.id === id);
                 if (room) {
                     document.getElementById('roomId').value = room.id;
                     document.getElementById('roomCode').value = room.code || '';
@@ -5196,7 +5174,7 @@
                     await addDoc(collection(db, 'logs'), {
                         type: 'info',
                         message: `Cập nhật phòng ${roomData.code}`,
-                        user: currentUser?.email,
+                        user: store.currentUser?.email,
                         timestamp: Timestamp.now()
                     });
                 } else {
@@ -5214,7 +5192,7 @@
                     await addDoc(collection(db, 'logs'), {
                         type: 'success',
                         message: `Thêm phòng mới ${roomData.code}`,
-                        user: currentUser?.email,
+                        user: store.currentUser?.email,
                         timestamp: Timestamp.now()
                     });
                 }
@@ -5231,14 +5209,14 @@
         window.deleteRoom = async (id) => {
             if (confirm('Bạn có chắc chắn muốn xóa phòng này?')) {
                 try {
-                    const room = localRooms.find(r => r.id === id);
+                    const room = store.localRooms.find(r => r.id === id);
                     await deleteDoc(doc(db, 'rooms', id));
                     showToast('Đã xóa phòng');
 
                     await addDoc(collection(db, 'logs'), {
                         type: 'warning',
                         message: `Xóa phòng ${room?.code}`,
-                        user: currentUser?.email,
+                        user: store.currentUser?.email,
                         timestamp: Timestamp.now()
                     });
                 } catch (error) {
@@ -5248,7 +5226,7 @@
         };
 
         window.filterRooms = (type) => {
-            window.currentRoomFilter = type;
+            store.currentRoomFilter = type;
             navigateAdmin('rooms', true);
         };
 
@@ -5265,7 +5243,7 @@
             document.getElementById('serviceModalTitle').textContent = 'Thêm dịch vụ mới';
 
             if (id) {
-                const service = localServices.find(s => s.id === id);
+                const service = store.localServices.find(s => s.id === id);
                 if (service) {
                     document.getElementById('serviceId').value = service.id;
                     document.getElementById('serviceName').value = service.name || '';
@@ -5334,7 +5312,7 @@
             document.getElementById('staffId').value = '';
 
             if (id) {
-                const staff = localStaff.find(s => s.id === id);
+                const staff = store.localStaff.find(s => s.id === id);
                 if (staff) {
                     document.getElementById('staffId').value = staff.id;
                     document.getElementById('staffName').value = staff.name || '';
@@ -5420,8 +5398,8 @@
             }
 
             const reviewData = {
-                userId: currentUser?.uid,
-                userName: currentUserData.name || currentUser?.email,
+                userId: store.currentUser?.uid,
+                userName: store.currentUserData.name || store.currentUser?.email,
                 roomId: document.getElementById('reviewRoomId').value,
                 bookingId: document.getElementById('reviewBookingId').value,
                 rating: parseInt(rating),
@@ -5495,7 +5473,7 @@
 
         // Invoice operations
         window.generateInvoice = async (bookingId) => {
-            const booking = localBookings.find(b => b.id === bookingId);
+            const booking = store.localBookings.find(b => b.id === bookingId);
             if (!booking) return;
 
             const invoiceData = {
@@ -5512,6 +5490,7 @@
                 services: booking.services || [],
                 serviceTotal: booking.serviceTotal || 0,
                 serviceFee: booking.serviceFee || 0,
+                discount: booking.discount || 0,
                 total: booking.totalPrice,
                 status: 'pending',
                 createdAt: Timestamp.now()
@@ -5528,7 +5507,7 @@
         };
 
         window.viewInvoice = (id) => {
-            const invoice = localInvoices.find(i => i.id === id);
+            const invoice = store.localInvoices.find(i => i.id === id);
             if (!invoice) return;
 
             const modal = document.getElementById('invoiceModal');
@@ -5630,6 +5609,12 @@
                                 <span class="text-slate-500">Dịch vụ:</span>
                                 <span>${formatCurrency(invoice.serviceTotal)}</span>
                             </div>
+                            ${invoice.discount ? `
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-500">Giảm giá:</span>
+                                    <span class="text-green-600">-${formatCurrency(invoice.discount)}</span>
+                                </div>
+                            ` : ''}
                             <div class="flex justify-between text-sm">
                                 <span class="text-slate-500">Phí dịch vụ (10%):</span>
                                 <span>${formatCurrency(invoice.serviceFee)}</span>
@@ -5679,7 +5664,7 @@
             });
 
             if (id) {
-                const promo = localPromotions.find(p => p.id === id);
+                const promo = store.localPromotions.find(p => p.id === id);
                 if (promo) {
                     document.getElementById('promotionId').value = promo.id;
                     document.getElementById('promoCode').value = promo.code || '';
@@ -5748,7 +5733,7 @@
         };
 
         window.duplicatePromotion = async (id) => {
-            const promo = localPromotions.find(p => p.id === id);
+            const promo = store.localPromotions.find(p => p.id === id);
             if (promo) {
                 const newPromo = { ...promo };
                 delete newPromo.id;
@@ -5784,7 +5769,7 @@
             document.getElementById('customerId').value = '';
 
             if (id) {
-                const customer = localUsers.find(u => u.id === id);
+                const customer = store.localUsers.find(u => u.id === id);
                 if (customer) {
                     document.getElementById('customerId').value = customer.id;
                     document.getElementById('customerName').value = customer.name || '';
@@ -5841,7 +5826,7 @@
         };
 
         window.viewCustomerBookings = (customerId) => {
-            const customerBookings = localBookings.filter(b => b.userId === customerId);
+            const customerBookings = store.localBookings.filter(b => b.userId === customerId);
             if (customerBookings.length > 0) {
                 showToast(`Khách hàng có ${customerBookings.length} đặt phòng`, 'info');
             } else {
@@ -5855,7 +5840,7 @@
 
         // Booking operations
         window.openBookingModal = (roomId) => {
-            const room = localRooms.find(r => r.id === roomId);
+            const room = store.localRooms.find(r => r.id === roomId);
             if (!room) return;
 
             const modal = document.getElementById('bookingModal');
@@ -5875,10 +5860,10 @@
             document.getElementById('checkOutDate').min = today;
 
             const servicesList = document.getElementById('booking-services-list');
-            if (localServices.length === 0) {
+            if (store.localServices.length === 0) {
                 servicesList.innerHTML = '<p class="text-slate-500 italic col-span-2">Chưa có dịch vụ nào</p>';
             } else {
-                servicesList.innerHTML = localServices.map(s => `
+                servicesList.innerHTML = store.localServices.map(s => `
                     <label class="flex items-center p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400 transition-colors">
                         <input type="checkbox" class="service-checkbox mr-3 rounded text-blue-600" 
                                value="${s.id}" data-name="${s.name}" data-price="${s.price}" onchange="calculateTotal()">
@@ -5926,8 +5911,18 @@
                     document.getElementById('book-room-total').textContent = formatCurrency(roomTotal);
                     document.getElementById('book-service-total').textContent = formatCurrency(serviceTotal);
                     document.getElementById('book-fee-total').textContent = formatCurrency(serviceFee);
-                    document.getElementById('book-total-price').textContent = formatCurrency(roomTotal + serviceTotal + serviceFee);
 
+                    let total = roomTotal + serviceTotal + serviceFee;
+
+                    // Kiểm tra nếu có mã giảm giá đã áp dụng
+                    const promoRow = document.getElementById('promo-discount-row');
+                    if (promoRow.style.display !== 'none') {
+                        const discountText = document.getElementById('book-promo-discount').textContent;
+                        const discount = parseInt(discountText.replace(/[^\d-]/g, '')) || 0;
+                        total -= discount;
+                    }
+
+                    document.getElementById('book-total-price').textContent = formatCurrency(total);
                     btn.disabled = false;
                     return;
                 }
@@ -5937,141 +5932,207 @@
         };
 
         window.applyPromoCode = () => {
-            const code = document.getElementById('promoCode').value;
-            const promo = localPromotions.find(p => p.code === code && p.active);
+            const code = document.getElementById('promoCode').value.trim();
+            const promo = store.localPromotions.find(p => p.code === code && p.active);
 
             if (promo) {
-                const total = document.getElementById('book-total-price').textContent;
-                showToast(`Áp dụng mã ${code} thành công!`, 'success');
+                const roomTotalText = document.getElementById('book-room-total').textContent;
+                const serviceTotalText = document.getElementById('book-service-total').textContent;
+                const feeText = document.getElementById('book-fee-total').textContent;
+
+                const roomTotal = parseInt(roomTotalText.replace(/[^\d]/g, ''));
+                const serviceTotal = parseInt(serviceTotalText.replace(/[^\d]/g, ''));
+                const fee = parseInt(feeText.replace(/[^\d]/g, ''));
+
+                const total = roomTotal + serviceTotal + fee;
+                let discount = 0;
+
+                if (promo.type === 'percent') {
+                    discount = Math.round(total * promo.value / 100);
+                } else {
+                    discount = promo.value;
+                }
+
+                // Kiểm tra điều kiện
+                if (promo.condition === 'min_amount') {
+                    if (roomTotal < promo.minAmount) {
+                        showToast(`Đơn hàng tối thiểu ${formatCurrency(promo.minAmount)}`, 'warning');
+                        return;
+                    }
+                }
+
+                if (promo.condition === 'first_booking') {
+                    const userBookings = store.localBookings.filter(b => b.userId === store.currentUser?.uid);
+                    if (userBookings.length > 0) {
+                        showToast('Mã này chỉ dành cho lần đặt đầu tiên', 'warning');
+                        return;
+                    }
+                }
+
                 document.getElementById('promo-discount-row').style.display = 'flex';
-                document.getElementById('book-promo-discount').textContent = `-${formatCurrency(100000)}`;
+                document.getElementById('book-promo-discount').textContent = `-${formatCurrency(discount)}`;
+
+                const newTotal = total - discount;
+                document.getElementById('book-total-price').textContent = formatCurrency(newTotal);
+
+                showToast(`Áp dụng mã ${code} thành công! Giảm ${formatCurrency(discount)}`, 'success');
+                document.getElementById('promo-message').className = 'text-xs mt-2 text-green-600';
+                document.getElementById('promo-message').textContent = `Giảm ${formatCurrency(discount)}`;
+                document.getElementById('promo-message').classList.remove('hidden');
+
+                store.appliedPromo = promo;
             } else {
                 showToast('Mã khuyến mãi không hợp lệ', 'error');
+                document.getElementById('promo-message').className = 'text-xs mt-2 text-red-600';
+                document.getElementById('promo-message').textContent = 'Mã không hợp lệ hoặc đã hết hạn';
+                document.getElementById('promo-message').classList.remove('hidden');
             }
         };
 
-        // Thay thế hàm submitBooking hiện tại bằng code này:
-
         window.submitBooking = async (e) => {
             e.preventDefault();
+
+            if (!store.currentUser) {
+                showToast('Vui lòng đăng nhập', 'warning');
+                return;
+            }
 
             const btn = document.getElementById('btn-submit-booking');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang xử lý...';
             btn.disabled = true;
 
-            const roomId = document.getElementById('book-room-id').value;
-            const roomCode = document.getElementById('book-room-code').value;
-            const checkIn = document.getElementById('checkInDate').value;
-            const checkOut = document.getElementById('checkOutDate').value;
-            const adultCount = parseInt(document.getElementById('adultCount')?.value || 2);
-            const childCount = parseInt(document.getElementById('childCount')?.value || 0);
-            const specialRequests = document.getElementById('specialRequests')?.value || '';
-
-            // Validate dates
-            if (!checkIn || !checkOut) {
-                showToast('Vui lòng chọn ngày nhận và trả phòng', 'warning');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                return;
-            }
-
-            const start = new Date(checkIn);
-            const end = new Date(checkOut);
-
-            if (end <= start) {
-                showToast('Ngày trả phòng phải sau ngày nhận phòng', 'warning');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                return;
-            }
-
-            const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-
-            const basePrice = parseInt(document.getElementById('book-room-base-price').value);
-            const roomTotal = basePrice * nights;
-
-            // Get selected services
-            const selectedServices = [];
-            document.querySelectorAll('.service-checkbox:checked').forEach(cb => {
-                selectedServices.push({
-                    id: cb.value,
-                    name: cb.dataset.name,
-                    price: parseInt(cb.dataset.price)
-                });
-            });
-
-            const serviceTotal = selectedServices.reduce((sum, s) => sum + s.price, 0);
-            const serviceFee = Math.round((roomTotal + serviceTotal) * 0.1);
-
-            // Create booking data
-            const bookingData = {
-                roomId: roomId,
-                roomCode: roomCode,
-                userId: currentUser.uid,
-                userEmail: currentUser.email,
-                userName: currentUserData.name || currentUser.email.split('@')[0] || '',
-                userPhone: currentUserData.phone || '',
-                checkIn: checkIn,
-                checkOut: checkOut,
-                nights: nights,
-                adultCount: adultCount,
-                childCount: childCount,
-                services: selectedServices,
-                roomPrice: basePrice,
-                roomTotal: roomTotal,
-                serviceTotal: serviceTotal,
-                serviceFee: serviceFee,
-                totalPrice: roomTotal + serviceTotal + serviceFee,
-                specialRequests: specialRequests,
-                status: 'pending',
-                createdAt: Timestamp.now()
-            };
-
-            console.log('Submitting booking:', bookingData); // Debug log
-
             try {
-                // Add to Firestore
-                const docRef = await addDoc(collection(db, 'bookings'), bookingData);
-                console.log('Booking created with ID:', docRef.id); // Debug log
+                // Validate dates
+                const checkIn = document.getElementById('checkInDate').value;
+                const checkOut = document.getElementById('checkOutDate').value;
 
-                // Update room booking count
-                const room = localRooms.find(r => r.id === roomId);
-                if (room) {
-                    await updateDoc(doc(db, 'rooms', roomId), {
-                        bookingsCount: (room.bookingsCount || 0) + 1
-                    });
+                if (!checkIn || !checkOut) {
+                    throw new Error('Vui lòng chọn ngày nhận và trả phòng');
                 }
 
-                showToast('Đặt phòng thành công! Vui lòng chờ xác nhận.');
+                const start = new Date(checkIn);
+                const end = new Date(checkOut);
+
+                if (end <= start) {
+                    throw new Error('Ngày trả phòng phải sau ngày nhận phòng');
+                }
+
+                // Get form values
+                const roomId = document.getElementById('book-room-id').value;
+                const roomCode = document.getElementById('book-room-code').value;
+                const basePrice = parseInt(document.getElementById('book-room-base-price').value);
+                const adultCount = parseInt(document.getElementById('adultCount')?.value || 2);
+                const childCount = parseInt(document.getElementById('childCount')?.value || 0);
+                const specialRequests = document.getElementById('specialRequests')?.value || '';
+
+                // Calculate nights
+                const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                const roomTotal = basePrice * nights;
+
+                // Get selected services
+                const selectedServices = [];
+                document.querySelectorAll('.service-checkbox:checked').forEach(cb => {
+                    selectedServices.push({
+                        id: cb.value,
+                        name: cb.dataset.name,
+                        price: parseInt(cb.dataset.price)
+                    });
+                });
+
+                const serviceTotal = selectedServices.reduce((sum, s) => sum + s.price, 0);
+                const serviceFee = Math.round((roomTotal + serviceTotal) * 0.1);
+
+                // Calculate discount
+                let discount = 0;
+                const promoRow = document.getElementById('promo-discount-row');
+                if (promoRow.style.display !== 'none') {
+                    const discountText = document.getElementById('book-promo-discount').textContent;
+                    discount = Math.abs(parseInt(discountText.replace(/[^\d-]/g, ''))) || 0;
+                }
+
+                const totalPrice = roomTotal + serviceTotal + serviceFee - discount;
+
+                // Prepare booking data - ĐƠN GIẢN HÓA, KHÔNG DÙNG Timestamp
+                const bookingData = {
+                    roomId: roomId,
+                    roomCode: roomCode,
+                    userId: store.currentUser.uid,
+                    userEmail: store.currentUser.email,
+                    userName: store.currentUserData.name || store.currentUser.email.split('@')[0] || 'Khách',
+                    userPhone: store.currentUserData.phone || '',
+                    checkIn: checkIn,
+                    checkOut: checkOut,
+                    nights: nights,
+                    adultCount: adultCount,
+                    childCount: childCount,
+                    services: selectedServices,
+                    roomPrice: basePrice,
+                    roomTotal: roomTotal,
+                    serviceTotal: serviceTotal,
+                    serviceFee: serviceFee,
+                    discount: discount,
+                    totalPrice: totalPrice,
+                    specialRequests: specialRequests,
+                    status: 'pending',
+                    createdAt: new Date().toISOString() // Dùng string thay vì Timestamp
+                };
+
+                console.log('Sending booking data:', bookingData);
+
+                // Thử nghiệm: tạo document với ID tự sinh
+                const bookingsRef = collection(db, 'bookings');
+                const docRef = await addDoc(bookingsRef, bookingData);
+
+                console.log('✅ Booking created successfully with ID:', docRef.id);
+
+                // Log thành công
+                try {
+                    await addDoc(collection(db, 'logs'), {
+                        type: 'success',
+                        message: `Đặt phòng mới: ${roomCode}`,
+                        user: store.currentUser.email,
+                        timestamp: new Date().toISOString()
+                    });
+                } catch (logError) {
+                    console.log('Log error (non-critical):', logError);
+                }
+
+                // Reset applied promo
+                store.appliedPromo = null;
+
+                showToast('Đặt phòng thành công! Vui lòng chờ xác nhận.', 'success');
                 closeModal('bookingModal');
 
-                // Navigate to my bookings after a short delay
+                // Chuyển đến trang đặt phòng của tôi
                 setTimeout(() => {
                     navigateUser('my-bookings');
                 }, 1500);
 
-                // Add log
-                await addDoc(collection(db, 'logs'), {
-                    type: 'success',
-                    message: `Đặt phòng mới: ${roomCode}`,
-                    user: currentUser.email,
-                    timestamp: Timestamp.now()
-                });
             } catch (error) {
-                console.error('Error creating booking:', error);
-                showToast('Lỗi khi đặt phòng: ' + error.message, 'error');
+                console.error('❌ Error creating booking:', error);
+
+                // Chi tiết lỗi
+                let errorMessage = 'Lỗi khi đặt phòng: ';
+
+                if (error.code === 'permission-denied') {
+                    errorMessage += 'Bạn không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại hoặc liên hệ admin.';
+                    console.error('Permission denied. Current user:', store.currentUser?.uid);
+                } else if (error.code === 'not-found') {
+                    errorMessage += 'Không tìm thấy collection bookings.';
+                } else if (error.code === 'unavailable') {
+                    errorMessage += 'Dịch vụ Firebase tạm thời không khả dụng.';
+                } else if (error.message) {
+                    errorMessage += error.message;
+                } else {
+                    errorMessage += 'Lỗi không xác định';
+                }
+
+                showToast(errorMessage, 'error');
+            } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
-        };
-
-        // Thêm hàm này để debug
-        window.checkBookings = () => {
-            console.log('Current user:', currentUser?.uid);
-            console.log('All bookings:', localBookings);
-            console.log('User bookings:', localBookings.filter(b => b.userId === currentUser?.uid));
-            showToast('Đã ghi log console', 'info');
         };
 
         window.updateBookingStatus = async (bookingId, newStatus, roomId) => {
@@ -6116,7 +6177,7 @@
         };
 
         window.viewBookingDetails = (id) => {
-            const booking = localBookings.find(b => b.id === id);
+            const booking = store.localBookings.find(b => b.id === id);
             if (booking) {
                 showToast(`Xem chi tiết đặt phòng ${booking.roomCode}`, 'info');
             }
@@ -6128,20 +6189,34 @@
 
         // Filter functions
         window.filterUserRooms = (type) => {
-            window.currentRoomFilter = type;
+            store.currentRoomFilter = type;
+            store.userRoomsPage = 0;
             navigateUser('rooms', true);
         };
 
         window.filterUserServices = (category) => {
-            window.currentServiceCategory = category;
+            store.currentServiceCategory = category;
+            store.userServicesPage = 0;
             navigateUser('services', true);
         };
 
         window.filterBookings = () => {
-            const status = document.getElementById('bookingStatusFilter')?.value;
-            if (status && status !== 'All') {
-                showToast(`Lọc đặt phòng trạng thái: ${status}`, 'info');
-            }
+            navigateAdmin('bookings', true);
+        };
+
+        window.loadMoreAdminBookings = () => {
+            store.adminBookingsPage++;
+            navigateAdmin('bookings', true);
+        };
+
+        window.loadMoreUserRooms = () => {
+            store.userRoomsPage++;
+            navigateUser('rooms', true);
+        };
+
+        window.loadMoreUserServices = () => {
+            store.userServicesPage++;
+            navigateUser('services', true);
         };
 
         // Profile operations
@@ -6158,8 +6233,8 @@
             };
 
             try {
-                await updateDoc(doc(db, 'users', currentUser.uid), profileData);
-                currentUserData = { ...currentUserData, ...profileData };
+                await updateDoc(doc(db, 'users', store.currentUser.uid), profileData);
+                store.currentUserData = { ...store.currentUserData, ...profileData };
                 showToast('Cập nhật hồ sơ thành công');
             } catch (error) {
                 console.error('Error updating profile:', error);
@@ -6226,18 +6301,29 @@
             showToast('Đã lưu cài đặt hệ thống');
         };
 
+        // Handle book now
+        window.handleBookNow = (roomId) => {
+            if (!store.currentUser) {
+                showToast('Vui lòng đăng nhập để đặt phòng', 'warning');
+                document.getElementById('auth-view').classList.remove('hidden');
+                document.getElementById('user-view').classList.add('hidden');
+                return;
+            }
+            openBookingModal(roomId);
+        };
+
         // ==================== AUTH STATE LISTENER ====================
         onAuthStateChanged(auth, async (user) => {
             document.getElementById('loading-screen').style.display = 'none';
 
             if (user) {
-                currentUser = user;
-                userRole = user.email === ADMIN_EMAIL ? 'admin' : 'user';
+                store.currentUser = user;
+                store.userRole = user.email === ADMIN_EMAIL ? 'admin' : 'user';
 
                 try {
                     const userDoc = await getDoc(doc(db, 'users', user.uid));
                     if (userDoc.exists()) {
-                        currentUserData = userDoc.data();
+                        store.currentUserData = userDoc.data();
                     } else {
                         const userData = {
                             email: user.email,
@@ -6252,10 +6338,10 @@
                             loyaltyPoints: 0
                         };
                         await setDoc(doc(db, 'users', user.uid), userData);
-                        currentUserData = userData;
+                        store.currentUserData = userData;
                     }
 
-                    document.getElementById('admin-name').textContent = currentUserData.name || 'Admin';
+                    document.getElementById('admin-name').textContent = store.currentUserData.name || 'Admin';
                     document.getElementById('admin-email').textContent = user.email;
 
                 } catch (e) {
@@ -6265,7 +6351,7 @@
 
                 document.getElementById('auth-view').classList.add('hidden');
 
-                if (userRole === 'admin') {
+                if (store.userRole === 'admin') {
                     document.getElementById('admin-view').classList.remove('hidden');
                     document.getElementById('user-view').classList.add('hidden');
                     initDataListeners();
@@ -6277,25 +6363,25 @@
                     navigateUser('home');
                 }
             } else {
-                currentUser = null;
-                currentUserData = {};
-                userRole = null;
+                store.currentUser = null;
+                store.currentUserData = {};
+                store.userRole = null;
 
                 document.getElementById('auth-view').classList.remove('hidden');
                 document.getElementById('admin-view').classList.add('hidden');
                 document.getElementById('user-view').classList.add('hidden');
 
-                if (unsubRooms) unsubRooms();
-                if (unsubBookings) unsubBookings();
-                if (unsubServices) unsubServices();
-                if (unsubUsers) unsubUsers();
-                if (unsubPromotions) unsubPromotions();
-                if (unsubStaff) unsubStaff();
-                if (unsubReviews) unsubReviews();
-                if (unsubGallery) unsubGallery();
-                if (unsubInvoices) unsubInvoices();
-                if (unsubLogs) unsubLogs();
-                if (unsubMessages) unsubMessages();
+                if (store.unsubRooms) store.unsubRooms();
+                if (store.unsubBookings) store.unsubBookings();
+                if (store.unsubServices) store.unsubServices();
+                if (store.unsubUsers) store.unsubUsers();
+                if (store.unsubPromotions) store.unsubPromotions();
+                if (store.unsubStaff) store.unsubStaff();
+                if (store.unsubReviews) store.unsubReviews();
+                if (store.unsubGallery) store.unsubGallery();
+                if (store.unsubInvoices) store.unsubInvoices();
+                if (store.unsubLogs) store.unsubLogs();
+                if (store.unsubMessages) store.unsubMessages();
             }
         });
 
@@ -6307,6 +6393,52 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateDateTime();
         });
+
+        // Check bookings function for debugging
+        window.checkBookings = () => {
+            console.log('Current user:', store.currentUser?.uid);
+            console.log('All bookings:', store.localBookings);
+            console.log('User bookings:', store.localBookings.filter(b => b.userId === store.currentUser?.uid));
+            showToast('Đã ghi log console', 'info');
+        };
+        // Thêm vào cuối file để test permissions
+        window.testFirestorePermissions = async () => {
+            if (!store.currentUser) {
+                alert('Cần đăng nhập trước');
+                return;
+            }
+
+            console.log('Testing with user:', store.currentUser.uid);
+
+            try {
+                // Test 1: Ghi vào bookings
+                const testBooking = {
+                    userId: store.currentUser.uid,
+                    roomCode: 'TEST',
+                    status: 'test',
+                    createdAt: new Date().toISOString()
+                };
+
+                const docRef = await addDoc(collection(db, 'bookings'), testBooking);
+                console.log('✅ Test 1 passed: Can write to bookings');
+
+                // Đọc lại
+                const docSnap = await getDoc(doc(db, 'bookings', docRef.id));
+                if (docSnap.exists()) {
+                    console.log('✅ Test 2 passed: Can read booking');
+                }
+
+                // Xóa test data
+                await deleteDoc(doc(db, 'bookings', docRef.id));
+                console.log('✅ Test 3 passed: Can delete test data');
+
+                alert('✅ Tất cả tests đều OK!');
+
+            } catch (error) {
+                console.error('❌ Test failed:', error);
+                alert('❌ Lỗi: ' + error.message);
+            }
+        };
     </script>
 </body>
 
