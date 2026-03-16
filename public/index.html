@@ -340,6 +340,8 @@
     </style>
 </head>
 
+
+
 <body>
     <!-- Loading Screen -->
     <div id="loading-screen" class="fixed inset-0 bg-white z-[9999] flex items-center justify-center flex-col">
@@ -1814,6 +1816,170 @@
             messagingSenderId: "379010173725",
             appId: "1:379010173725:web:20908f11fb0589ca432ff4",
             measurementId: "G-6YVST9PJYQ"
+        };
+
+        // ==================== SMOOTH PAGE TRANSITIONS ====================
+
+        // Thêm CSS transitions
+        const style = document.createElement('style');
+        style.textContent = `
+    .page-transition-enter {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    
+    .page-transition-enter-active {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    
+    .page-transition-exit {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .page-transition-exit-active {
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    .animate-slideRight {
+        animation: slideInRight 0.5s ease-out forwards;
+    }
+    
+    .animate-slideLeft {
+        animation: slideInLeft 0.5s ease-out forwards;
+    }
+    
+    .animate-scale {
+        animation: fadeInScale 0.4s ease-out forwards;
+    }
+    
+    /* Loading spinner đẹp */
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #2563eb;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    
+    .loading-spinner-slow {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #2563eb;
+        border-bottom: 3px solid #2563eb;
+        border-radius: 50%;
+        animation: spin 1.2s ease-in-out infinite;
+    }
+`;
+        document.head.appendChild(style);
+
+        // Cập nhật hàm navigate với transition đẹp
+        window.navigateUser = (route, isRefresh = false) => {
+            store.currentUserRoute = route;
+
+            if (!isRefresh) {
+                // Animation cho navigation buttons
+                document.querySelectorAll('#user-view nav button').forEach(btn => {
+                    btn.classList.remove('text-slate-900', 'border-slate-900');
+                    btn.classList.add('text-slate-500', 'border-transparent', 'transition-all', 'duration-300');
+                });
+                const activeNav = document.getElementById(`nav-user-${route}`);
+                if (activeNav) {
+                    activeNav.classList.remove('text-slate-500', 'border-transparent');
+                    activeNav.classList.add('text-slate-900', 'border-slate-900', 'scale-105');
+                }
+            }
+
+            const contentDiv = document.getElementById('user-content');
+
+            // Hiệu ứng loading đẹp
+            contentDiv.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-64 transition-opacity duration-300">
+            <div class="loading-spinner-slow mb-4"></div>
+            <p class="text-slate-500 animate-pulse">Đang tải...</p>
+        </div>
+    `;
+
+            // Simulate loading time for smooth transition
+            setTimeout(() => {
+                contentDiv.classList.add('opacity-0');
+
+                setTimeout(() => {
+                    switch (route) {
+                        case 'home':
+                            renderUserHome(contentDiv);
+                            break;
+                        case 'rooms':
+                            renderUserRooms(contentDiv);
+                            break;
+                        case 'services':
+                            renderUserServices(contentDiv);
+                            break;
+                        case 'my-bookings':
+                            renderUserBookings(contentDiv);
+                            break;
+                        case 'profile':
+                            renderUserProfile(contentDiv);
+                            break;
+                        case 'loyalty':
+                            renderUserLoyalty(contentDiv);
+                            break;
+                        case 'offers':
+                            renderUserOffers(contentDiv);
+                            break;
+                    }
+
+                    // Fade in content
+                    contentDiv.classList.remove('opacity-0');
+                    contentDiv.classList.add('animate-scale');
+
+                    // Scroll to top smoothly
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+
+                }, 150);
+            }, 300);
         };
 
         // ==================== PAYMENT FUNCTIONS ====================
@@ -4982,168 +5148,123 @@
         }
 
         function renderAdminRooms(container) {
-            if (store.localRooms.length === 0) {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-[60vh] text-center">
-                        <div class="w-24 h-24 bg-slate-100 rounded-3xl flex items-center justify-center mb-6">
-                            <i class="fa-solid fa-bed text-4xl text-slate-400"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-slate-900 mb-2">Chưa có phòng nào</h3>
-                        <p class="text-slate-500 mb-8">Bắt đầu thêm phòng để quản lý đặt phòng</p>
-                        <button onclick="openRoomModal()" class="btn-primary">
-                            <i class="fa-solid fa-plus mr-2"></i>Thêm phòng đầu tiên
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-
-            const roomTypes = ['All', ...new Set(store.localRooms.map(r => r.type))];
-            const filteredRooms = store.currentRoomFilter === 'All'
-                ? store.localRooms
-                : store.localRooms.filter(r => r.type === store.currentRoomFilter);
+            const searchQuery = sessionStorage.getItem('adminRoomSearch') || '';
+            const filteredRooms = searchQuery ? searchRooms(searchQuery) : store.localRooms;
 
             container.innerHTML = `
-                <div class="fade-in space-y-6">
-                    <!-- Filters -->
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
-                        <div class="flex items-center space-x-4">
-                            <span class="text-sm font-medium text-slate-500">Lọc theo:</span>
-                            <select onchange="filterRooms(this.value)" class="form-input py-2 w-auto">
-                                ${roomTypes.map(type => `
-                                    <option value="${type}" ${store.currentRoomFilter === type ? 'selected' : ''}>
-                                        ${type === 'All' ? 'Tất cả' : type}
-                                    </option>
-                                `).join('')}
-                            </select>
+        <div class="fade-in space-y-6">
+            <!-- Search và Filter -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex-1 min-w-[300px]">
+                        <div class="relative group">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                            <input type="text" 
+                                   id="roomSearch" 
+                                   value="${searchQuery}"
+                                   placeholder="Tìm kiếm phòng (mã phòng, tên, loại...)" 
+                                   class="form-input pl-11 pr-12"
+                                   oninput="handleRoomSearch(this.value)">
+                            ${searchQuery ? `
+                                <button onclick="clearRoomSearch()" 
+                                        class="absolute right-4 top-4 text-slate-400 hover:text-red-600 transition-colors">
+                                    <i class="fa-solid fa-times"></i>
+                                </button>
+                            ` : ''}
                         </div>
-                        <button onclick="openRoomModal()" class="btn-primary">
-                            <i class="fa-solid fa-plus mr-2"></i>Thêm phòng
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <select onchange="filterRooms(this.value)" class="form-input py-2 w-auto">
+                            <option value="All">🏨 Tất cả loại phòng</option>
+                            ${['Standard', 'Superior', 'Deluxe', 'Suite', 'Family', 'Executive'].map(type => `
+                                <option value="${type}" ${store.currentRoomFilter === type ? 'selected' : ''}>
+                                    ${type}
+                                </option>
+                            `).join('')}
+                        </select>
+                        
+                        <button onclick="openRoomModal()" class="btn-primary group">
+                            <i class="fa-solid fa-plus mr-2 group-hover:rotate-90 transition-transform"></i>
+                            Thêm phòng
                         </button>
                     </div>
-
-                    <!-- Stats Summary -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="bg-white p-4 rounded-xl border border-slate-200">
-                            <p class="text-sm text-slate-500">Tổng phòng</p>
-                            <p class="text-2xl font-bold text-slate-900">${store.localRooms.length}</p>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl border border-slate-200">
-                            <p class="text-sm text-slate-500">Còn trống</p>
-                            <p class="text-2xl font-bold text-green-600">${store.localRooms.filter(r => r.status === 'available').length}</p>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl border border-slate-200">
-                            <p class="text-sm text-slate-500">Đã đặt</p>
-                            <p class="text-2xl font-bold text-blue-600">${store.localRooms.filter(r => r.status === 'occupied').length}</p>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl border border-slate-200">
-                            <p class="text-sm text-slate-500">Bảo trì</p>
-                            <p class="text-2xl font-bold text-yellow-600">${store.localRooms.filter(r => r.status === 'maintenance').length}</p>
-                        </div>
-                    </div>
-
-                    <!-- Room Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${filteredRooms.map(room => {
-                const statusColors = {
-                    available: 'bg-green-100 text-green-700 border-green-200',
-                    occupied: 'bg-blue-100 text-blue-700 border-blue-200',
-                    maintenance: 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                };
-                const statusText = {
-                    available: 'Còn trống',
-                    occupied: 'Đã đặt',
-                    maintenance: 'Bảo trì'
-                };
-
-                const date = room.updatedAt?.toDate ? room.updatedAt.toDate() : new Date(room.updatedAt || room.createdAt || 0);
-
-                return `
-                                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden hover-lift">
-                                    <div class="h-48 bg-slate-200 relative">
-                                        <img src="${room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32'}" 
-                                             class="w-full h-full object-cover"
-                                             onerror="this.src='https://images.unsplash.com/photo-1611892440504-42a792e24d32'">
-                                        <div class="absolute top-4 left-4">
-                                            <span class="badge ${statusColors[room.status] || 'badge-info'}">
-                                                ${statusText[room.status] || room.status}
-                                            </span>
-                                        </div>
-                                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold">
-                                            ${room.type}
-                                        </div>
-                                    </div>
-                                    <div class="p-6">
-                                        <div class="flex justify-between items-start mb-2">
-                                            <div>
-                                                <h3 class="text-xl font-bold text-slate-900">Phòng ${room.code}</h3>
-                                                <p class="text-sm text-slate-500">Tầng ${room.floor || '1'} • ${room.bookingsCount || 0} lượt đặt</p>
-                                            </div>
-                                            <p class="text-xl font-bold text-blue-600 font-mono">${formatCurrency(room.price)}</p>
-                                        </div>
-                                        
-                                        <p class="text-slate-600 text-sm mb-4 line-clamp-2">${room.name || room.description || 'Chưa có mô tả'}</p>
-                                        
-                                        <div class="flex items-center space-x-4 text-sm text-slate-500 mb-4">
-                                            <span><i class="fa-regular fa-square mr-1"></i>${room.area || 30}m²</span>
-                                            <span><i class="fa-regular fa-user mr-1"></i>${room.capacity || 2} người</span>
-                                            <span><i class="fa-regular fa-bed mr-1"></i>${room.bedType || '1 giường'}</span>
-                                        </div>
-                                        
-                                        <div class="flex flex-wrap gap-2 mb-4">
-                                            ${room.amenities?.map(a => {
-                    const icons = {
-                        wifi: 'fa-wifi',
-                        tv: 'fa-tv',
-                        ac: 'fa-wind',
-                        minibar: 'fa-glass-water',
-                        bathtub: 'fa-bath',
-                        seaView: 'fa-water',
-                        breakfast: 'fa-utensils',
-                        pool: 'fa-swimmer'
-                    };
-                    return `
-                                                    <span class="px-2 py-1 bg-slate-100 rounded-lg text-xs text-slate-600" title="${a}">
-                                                        <i class="fa-solid ${icons[a] || 'fa-circle'} mr-1"></i>
-                                                        ${a === 'wifi' ? 'WiFi' :
-                            a === 'tv' ? 'TV' :
-                                a === 'ac' ? 'ĐH' :
-                                    a === 'minibar' ? 'Minibar' :
-                                        a === 'bathtub' ? 'Bồn tắm' :
-                                            a === 'seaView' ? 'View biển' :
-                                                a === 'breakfast' ? 'Ăn sáng' :
-                                                    a === 'pool' ? 'Hồ bơi' : a}
-                                                    </span>
-                                                `;
-                }).join('') || 'Chưa có tiện nghi'}
-                                        </div>
-                                        
-                                        <div class="flex justify-between items-center pt-4 border-t border-slate-100">
-                                            <div class="text-sm text-slate-500">
-                                                <i class="fa-regular fa-clock"></i> ${formatDate(date) || 'Mới'}
-                                            </div>
-                                            <div class="space-x-2">
-                                                <button onclick="openRoomModal('${room.id}')" 
-                                                        class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                                    <i class="fa-solid fa-pen"></i>
-                                                </button>
-                                                <button onclick="deleteRoom('${room.id}')" 
-                                                        class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                                <button onclick="viewRoomDetails('${room.id}')" 
-                                                        class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                                                    <i class="fa-solid fa-chart-line"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-            }).join('')}
-                    </div>
                 </div>
-            `;
+                
+                <!-- Kết quả tìm kiếm -->
+                ${searchQuery ? `
+                    <div class="mt-4 p-3 bg-blue-50 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center text-blue-700">
+                            <i class="fa-solid fa-circle-info mr-2"></i>
+                            Tìm thấy <span class="font-bold mx-1">${filteredRooms.length}</span> phòng cho từ khóa "${searchQuery}"
+                        </div>
+                        <button onclick="clearRoomSearch()" class="text-blue-700 hover:text-blue-900">
+                            <i class="fa-solid fa-times"></i> Xóa tìm kiếm
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 hover:shadow-lg transition-shadow">
+                    <p class="text-sm text-slate-500">Tổng phòng</p>
+                    <p class="text-2xl font-bold text-slate-900">${store.localRooms.length}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 hover:shadow-lg transition-shadow">
+                    <p class="text-sm text-slate-500">Còn trống</p>
+                    <p class="text-2xl font-bold text-green-600">${store.localRooms.filter(r => r.status === 'available').length}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 hover:shadow-lg transition-shadow">
+                    <p class="text-sm text-slate-500">Đã đặt</p>
+                    <p class="text-2xl font-bold text-blue-600">${store.localRooms.filter(r => r.status === 'occupied').length}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 hover:shadow-lg transition-shadow">
+                    <p class="text-sm text-slate-500">Bảo trì</p>
+                    <p class="text-2xl font-bold text-yellow-600">${store.localRooms.filter(r => r.status === 'maintenance').length}</p>
+                </div>
+            </div>
+
+            <!-- Room Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${filteredRooms.map(room => renderAdminRoomCard(room)).join('')}
+            </div>
+            
+            ${filteredRooms.length === 0 ? `
+                <div class="text-center py-12">
+                    <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-bed text-4xl text-slate-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Không tìm thấy phòng</h3>
+                    <p class="text-slate-500">Thử lại với từ khóa khác</p>
+                </div>
+            ` : ''}
+        </div>
+    `;
+        }
+
+        // Handle search
+        window.handleRoomSearch = debounce((query) => {
+            sessionStorage.setItem('adminRoomSearch', query);
+            navigateAdmin('rooms', true);
+        }, 500);
+
+        window.clearRoomSearch = () => {
+            sessionStorage.removeItem('adminRoomSearch');
+            navigateAdmin('rooms', true);
+        };
+
+        // Debounce function để tránh gọi API quá nhiều
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         }
 
         function renderAdminServices(container) {
@@ -6324,7 +6445,7 @@
             `;
         }
 
-        function renderUserRooms(container) {
+        function renderUserRooms(container, append = false) {
             const roomTypes = ['All', ...new Set(store.localRooms.map(r => r.type))];
             const filteredRooms = store.currentRoomFilter === 'All'
                 ? store.localRooms.filter(r => r.status === 'available')
@@ -6334,91 +6455,159 @@
             const paginated = filteredRooms.slice(start, start + store.userRoomsLimit);
             const hasMore = filteredRooms.length > start + store.userRoomsLimit;
 
+            if (append) {
+                // Thêm vào cuối container
+                const gridContainer = container.querySelector('.rooms-grid');
+                if (gridContainer) {
+                    gridContainer.insertAdjacentHTML('beforeend', renderRoomsHTML(paginated));
+                }
+
+                // Cập nhật nút xem thêm
+                const loadMoreBtn = container.querySelector('.load-more-btn');
+                if (loadMoreBtn) {
+                    if (hasMore) {
+                        loadMoreBtn.style.display = 'block';
+                    } else {
+                        loadMoreBtn.style.display = 'none';
+                        // Hiển thị thông báo hết
+                        container.insertAdjacentHTML('beforeend', '<p class="text-center text-slate-500 mt-8">Đã hiển thị tất cả phòng</p>');
+                    }
+                }
+                return;
+            }
+
+            // Render lần đầu
             container.innerHTML = `
-                <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-playfair font-bold text-slate-900 mb-4">Danh sách phòng</h2>
-                        <p class="text-lg text-slate-600">Lựa chọn phòng phù hợp với nhu cầu của bạn</p>
-                    </div>
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-12 fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-playfair font-bold text-slate-900 mb-4 animate-slideDown">Danh sách phòng</h2>
+                <p class="text-lg text-slate-600 animate-slideUp">Lựa chọn phòng phù hợp với nhu cầu của bạn</p>
+            </div>
 
-                    <!-- Filters -->
-                    <div class="flex flex-wrap justify-center gap-3 mb-8">
-                        ${roomTypes.map(type => `
-                            <button onclick="filterUserRooms('${type}')" 
-                                    class="px-6 py-2 rounded-full text-sm font-medium transition-all ${store.currentRoomFilter === type ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-900'}">
-                                ${type === 'All' ? 'Tất cả' : type}
-                            </button>
+            <!-- Filters với animation -->
+            <div class="flex flex-wrap justify-center gap-3 mb-8 animate-fadeIn">
+                ${roomTypes.map(type => `
+                    <button onclick="filterUserRooms('${type}')" 
+                            class="filter-btn relative px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+                                   ${store.currentRoomFilter === type
+                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/30'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-900 hover:text-slate-900'}">
+                        <span class="relative z-10">${type === 'All' ? '🏨 Tất cả' : type}</span>
+                        ${store.currentRoomFilter === type ? '<span class="absolute inset-0 rounded-full bg-slate-900 animate-ping opacity-30"></span>' : ''}
+                    </button>
+                `).join('')}
+            </div>
+
+            <!-- Room Grid -->
+            <div class="rooms-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                ${renderRoomsHTML(paginated)}
+            </div>
+
+            ${filteredRooms.length === 0 ? `
+                <div class="text-center py-20 animate-fadeIn">
+                    <div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                        <i class="fa-solid fa-bed text-4xl text-slate-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-2">Không tìm thấy phòng</h3>
+                    <p class="text-slate-500">Vui lòng thử lại với bộ lọc khác</p>
+                </div>
+            ` : ''}
+
+            ${hasMore ? `
+                <div class="text-center mt-8 load-more-btn">
+                    <button onclick="loadMoreUserRooms()" 
+                            class="btn-secondary group relative overflow-hidden">
+                        <span class="relative z-10 flex items-center">
+                            <i class="fa-regular fa-eye mr-2 group-hover:animate-pulse"></i>
+                            Xem thêm phòng
+                            <span class="ml-2 text-xs bg-slate-200 px-2 py-1 rounded-full group-hover:bg-white">
+                                ${filteredRooms.length - (start + store.userRoomsLimit)} còn lại
+                            </span>
+                        </span>
+                        <span class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    </button>
+                </div>
+            ` : filteredRooms.length > 0 ? `
+                <p class="text-center text-slate-500 mt-8 animate-fadeIn">
+                    <i class="fa-regular fa-circle-check text-green-500 mr-2"></i>
+                    Đã hiển thị tất cả ${filteredRooms.length} phòng
+                </p>
+            ` : ''}
+        </div>
+    `;
+        }
+
+        // Helper function để render rooms
+        function renderRoomsHTML(rooms) {
+            return rooms.map(room => `
+        <div class="room-card group relative bg-white rounded-3xl shadow-xl overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-2">
+            <div class="h-64 overflow-hidden relative">
+                <img src="${room.image}" 
+                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                     onerror="this.src='https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800'">
+                
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-70 transition-opacity duration-500"></div>
+                
+                <!-- Badge loại phòng -->
+                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold shadow-lg transform -translate-x-20 group-hover:translate-x-0 transition-transform duration-500">
+                    ${room.type}
+                </div>
+                
+                <!-- Badge giá -->
+                <div class="absolute top-4 right-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-2 rounded-full font-bold shadow-lg transform translate-x-20 group-hover:translate-x-0 transition-transform duration-500">
+                    ${formatCurrency(room.price)}<span class="text-xs opacity-80">/đêm</span>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                            Phòng ${room.code}
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1">${room.name}</p>
+                    </div>
+                    <div class="flex text-yellow-400">
+                        ${Array(5).fill(0).map((_, i) => `
+                            <i class="fa-solid fa-star ${i < 4 ? '' : 'text-slate-300'}"></i>
                         `).join('')}
                     </div>
-
-                    <!-- Room Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        ${paginated.map(room => `
-                            <div class="bg-white rounded-3xl overflow-hidden shadow-xl hover-lift group">
-                                <div class="h-64 relative overflow-hidden">
-                                    <img src="${room.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                                    <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold">
-                                        ${room.type}
-                                    </div>
-                                    <div class="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full font-bold">
-                                        ${formatCurrency(room.price)}/đêm
-                                    </div>
-                                </div>
-                                <div class="p-6">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h3 class="text-2xl font-bold text-slate-900">Phòng ${room.code}</h3>
-                                        <div class="flex text-yellow-400">
-                                            <i class="fa-solid fa-star"></i>
-                                            <i class="fa-solid fa-star"></i>
-                                            <i class="fa-solid fa-star"></i>
-                                            <i class="fa-solid fa-star"></i>
-                                            <i class="fa-solid fa-star"></i>
-                                        </div>
-                                    </div>
-                                    <p class="text-slate-600 mb-4">${room.name}</p>
-                                    
-                                    <div class="flex items-center space-x-4 text-slate-500 mb-4">
-                                        <span><i class="fa-regular fa-square mr-1"></i>${room.area}m²</span>
-                                        <span><i class="fa-regular fa-user mr-1"></i>${room.capacity} người</span>
-                                        <span><i class="fa-regular fa-bed mr-1"></i>${room.bedType}</span>
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-2 mb-4">
-                                        ${room.amenities?.slice(0, 4).map(a => `
-                                            <span class="px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-600">
-                                                <i class="fa-solid fa-${a === 'wifi' ? 'wifi' : a === 'tv' ? 'tv' : a === 'ac' ? 'wind' : a === 'minibar' ? 'glass-water' : a === 'bathtub' ? 'bath' : a === 'seaView' ? 'water' : a === 'breakfast' ? 'utensils' : 'swimmer'} mr-1"></i>
-                                                ${a === 'wifi' ? 'WiFi' : a === 'tv' ? 'TV' : a === 'ac' ? 'ĐH' : a === 'minibar' ? 'Minibar' : a === 'bathtub' ? 'Bồn tắm' : a === 'seaView' ? 'View biển' : a === 'breakfast' ? 'Ăn sáng' : 'Hồ bơi'}
-                                            </span>
-                                        `).join('')}
-                                        ${room.amenities?.length > 4 ? `
-                                            <span class="px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-600">
-                                                +${room.amenities.length - 4}
-                                            </span>
-                                        ` : ''}
-                                    </div>
-
-                                    <button onclick="handleBookNow('${room.id}')" 
-                                            class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition-all">
-                                        Đặt ngay
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    ${filteredRooms.length === 0 ? `
-                        <div class="text-center py-12">
-                            <p class="text-slate-500">Không tìm thấy phòng phù hợp</p>
-                        </div>
-                    ` : ''}
-
-                    ${hasMore ? `
-                        <div class="text-center mt-8">
-                            <button onclick="loadMoreUserRooms()" class="btn-secondary">Xem thêm phòng</button>
-                        </div>
+                </div>
+                
+                <!-- Tiện ích -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                    ${room.amenities?.slice(0, 3).map(a => `
+                        <span class="px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-600">
+                            <i class="fa-solid fa-${a === 'wifi' ? 'wifi' : a === 'tv' ? 'tv' : a === 'ac' ? 'wind' : a === 'minibar' ? 'glass-water' : 'bath'} mr-1"></i>
+                            ${a === 'wifi' ? 'WiFi' : a === 'tv' ? 'TV' : a === 'ac' ? 'ĐH' : a === 'minibar' ? 'Minibar' : 'Bồn tắm'}
+                        </span>
+                    `).join('')}
+                    ${room.amenities?.length > 3 ? `
+                        <span class="px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-600">
+                            +${room.amenities.length - 3}
+                        </span>
                     ` : ''}
                 </div>
-            `;
+                
+                <!-- Thông số -->
+                <div class="flex items-center space-x-4 text-sm text-slate-500 mb-4">
+                    <span class="flex items-center"><i class="fa-regular fa-square mr-1"></i>${room.area || 30}m²</span>
+                    <span class="flex items-center"><i class="fa-regular fa-user mr-1"></i>${room.capacity || 2} người</span>
+                    <span class="flex items-center"><i class="fa-regular fa-bed mr-1"></i>${room.bedType || '1 giường'}</span>
+                </div>
+                
+                <!-- Nút đặt phòng -->
+                <button onclick="handleBookNow('${room.id}')" 
+                        class="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-3 rounded-xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg relative overflow-hidden group/btn">
+                    <span class="relative z-10 flex items-center justify-center">
+                        <i class="fa-regular fa-calendar-check mr-2 group-hover/btn:rotate-12 transition-transform"></i>
+                        Đặt ngay
+                    </span>
+                    <span class="absolute inset-0 bg-white/20 transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500"></span>
+                </button>
+            </div>
+        </div>
+    `).join('');
         }
 
         function renderUserServices(container) {
@@ -6427,155 +6616,202 @@
                 ? store.localServices.filter(s => s.available)
                 : store.localServices.filter(s => s.category === store.currentServiceCategory && s.available);
 
+            const start = store.userServicesPage * store.userServicesLimit;
+            const paginated = filteredServices.slice(start, start + store.userServicesLimit);
+            const hasMore = filteredServices.length > start + store.userServicesLimit;
+
             container.innerHTML = `
         <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
-            <!-- Hero Section -->
-            <div class="relative h-96 rounded-3xl overflow-hidden mb-16 group">
+            <!-- Hero Section với Parallax -->
+            <div class="relative h-[500px] rounded-3xl overflow-hidden mb-16 group perspective-1000">
+                <div class="absolute inset-0 bg-black/40 z-10"></div>
                 <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2000&auto=format&fit=crop" 
-                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
-                <div class="absolute bottom-0 left-0 p-12 text-white">
-                    <span class="text-blue-400 font-bold text-sm uppercase tracking-widest mb-4 block animate-pulse">
-                        TRẢI NGHIỆM ĐẲNG CẤP
+                     class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-7000">
+                
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent z-20"></div>
+                
+                <div class="absolute bottom-0 left-0 p-12 text-white z-30">
+                    <span class="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-sm font-bold mb-6 animate-pulse">
+                        ✨ TRẢI NGHIỆM ĐẲNG CẤP
                     </span>
-                    <h2 class="text-5xl font-playfair font-bold mb-4">Dịch vụ 5 sao</h2>
-                    <p class="text-xl text-slate-200 max-w-2xl">
-                        Tận hưởng những dịch vụ đẳng cấp thế giới tại Luna Hotel
+                    
+                    <h1 class="text-6xl font-playfair font-bold mb-4 animate-slideRight">
+                        Dịch vụ 5 sao
+                    </h1>
+                    
+                    <p class="text-xl text-slate-200 max-w-2xl mb-8 animate-slideLeft">
+                        Tận hưởng những dịch vụ đẳng cấp thế giới với đội ngũ chuyên nghiệp
                     </p>
+                    
+                    <div class="flex gap-4">
+                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20">
+                            <div class="text-3xl font-bold">50+</div>
+                            <div class="text-sm opacity-80">Dịch vụ cao cấp</div>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20">
+                            <div class="text-3xl font-bold">24/7</div>
+                            <div class="text-sm opacity-80">Phục vụ</div>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20">
+                            <div class="text-3xl font-bold">4.9</div>
+                            <div class="text-sm opacity-80">Đánh giá</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Categories với hiệu ứng -->
+            <!-- Categories với hiệu ứng 3D -->
             <div class="flex flex-wrap justify-center gap-3 mb-12">
                 ${categories.map(cat => `
                     <button onclick="filterUserServices('${cat}')" 
-                            class="group relative px-8 py-3 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+                            class="category-btn group relative px-8 py-3 rounded-full text-sm font-medium transition-all duration-500 transform hover:scale-110 hover:rotate-1
                                    ${store.currentServiceCategory === cat
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-400 hover:text-blue-600'}">
-                        <span class="relative z-10">
-                            ${cat === 'All' ? '✨ Tất cả' :
-                    cat === 'dining' ? '🍽️ Nhà hàng' :
-                        cat === 'spa' ? '💆 Spa' :
-                            cat === 'wellness' ? '🏋️ Sức khỏe' :
-                                cat === 'transport' ? '🚗 Di chuyển' : '🎉 Hoạt động'}
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-purple-400 hover:text-purple-600'}">
+                        <span class="relative z-10 flex items-center">
+                            ${cat === 'All' ? '🌟 Tất cả' :
+                    cat === 'dining' ? '🍽️ Ẩm thực' :
+                        cat === 'spa' ? '💆 Spa & Wellness' :
+                            cat === 'wellness' ? '🏋️ Fitness' :
+                                cat === 'transport' ? '🚗 Di chuyển' : '🎉 Giải trí'}
                         </span>
                         ${store.currentServiceCategory === cat ? `
-                            <span class="absolute inset-0 rounded-full bg-blue-600 animate-ping opacity-30"></span>
+                            <span class="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 animate-ping opacity-30"></span>
                         ` : ''}
                     </button>
                 `).join('')}
             </div>
 
-            <!-- Service Grid với hiệu ứng 3D -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 perspective-1000">
-                ${filteredServices.map((service, index) => `
-                    <div class="group relative bg-white rounded-3xl shadow-xl overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-2"
-                         style="animation: fadeInUp 0.6s ease-out ${index * 0.1}s both;">
-                        
-                        <!-- Image Container với hiệu ứng zoom -->
-                        <div class="h-64 overflow-hidden relative">
-                            <img src="${service.image || 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'}" 
-                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                 onerror="this.src='https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'">
-                            
-                            <!-- Overlay gradient -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-70 transition-opacity duration-500"></div>
-                            
-                            <!-- Badge -->
-                            <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold shadow-lg transform translate-x-20 group-hover:translate-x-0 transition-transform duration-500">
-                                <span class="text-blue-600">${service.unit === 'person' ? '👤' : service.unit === 'room' ? '🏠' : '⏰'}</span>
-                                <span class="ml-1">${service.unit === 'person' ? '/người' : service.unit === 'room' ? '/phòng' : '/giờ'}</span>
-                            </div>
-                        </div>
-
-                        <!-- Content -->
-                        <div class="p-8">
-                            <div class="flex items-center mb-4">
-                                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white mr-4 transform group-hover:rotate-12 transition-transform duration-500">
-                                    <i class="fa-solid fa-${service.icon || 'utensils'} text-2xl"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-2xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                                        ${service.name}
-                                    </h3>
-                                    <p class="text-sm text-slate-500">${service.category === 'dining' ? 'Nhà hàng' :
-                                        service.category === 'spa' ? 'Spa & Wellness' :
-                                            service.category === 'wellness' ? 'Sức khỏe' :
-                                                service.category === 'transport' ? 'Di chuyển' : 'Giải trí'}</p>
-                                </div>
-                            </div>
-                            
-                            <p class="text-slate-600 mb-6 leading-relaxed">${service.description}</p>
-                            
-                            <!-- Features -->
-                            <div class="flex items-center justify-between mb-6">
-                                <div class="space-y-2">
-                                    <p class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">
-                                        ${formatCurrency(service.price)}
-                                    </p>
-                                    <div class="flex items-center text-sm text-slate-500">
-                                        <i class="fa-regular fa-clock mr-2"></i>
-                                        <span>${service.unit === 'person' ? 'Tính theo người' :
-                                        service.unit === 'room' ? 'Tính theo phòng' : 'Tính theo giờ'}</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Rating -->
-                                <div class="flex items-center bg-yellow-50 px-3 py-2 rounded-xl">
-                                    <i class="fa-solid fa-star text-yellow-400 mr-1"></i>
-                                    <span class="font-bold text-slate-900">4.9</span>
-                                    <span class="text-xs text-slate-500 ml-1">(128)</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Action Buttons -->
-                            <div class="flex gap-3">
-                                <button onclick="addServiceToCart('${service.id}')" 
-                                        class="flex-1 bg-gradient-to-r from-slate-900 to-slate-800 text-white py-4 rounded-xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/30 group/btn">
-                                    <i class="fa-regular fa-plus mr-2 group-hover/btn:rotate-90 transition-transform"></i>
-                                    Thêm vào đặt phòng
-                                </button>
-                                <button onclick="viewServiceDetails('${service.id}')" 
-                                        class="w-14 h-14 border-2 border-slate-200 rounded-xl hover:border-blue-400 hover:text-blue-600 transition-all duration-300 transform hover:scale-110">
-                                    <i class="fa-regular fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
+            <!-- Service Grid -->
+            <div class="services-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                ${paginated.map((service, index) => renderServiceCard(service, index)).join('')}
             </div>
 
             ${filteredServices.length === 0 ? `
                 <div class="text-center py-20">
-                    <div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-                        <i class="fa-solid fa-magnifying-glass text-4xl text-slate-400"></i>
+                    <div class="relative w-40 h-40 mx-auto mb-6">
+                        <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full animate-ping opacity-20"></div>
+                        <div class="relative w-40 h-40 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-magnifying-glass text-5xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"></i>
+                        </div>
                     </div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-2">Không tìm thấy dịch vụ</h3>
                     <p class="text-slate-500">Vui lòng thử lại với danh mục khác</p>
                 </div>
             ` : ''}
+
+            ${hasMore ? `
+                <div class="text-center mt-12 load-more-btn">
+                    <button onclick="loadMoreUserServices()" 
+                            class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-bold overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
+                        <span class="relative z-10 flex items-center">
+                            <i class="fa-regular fa-eye mr-2 group-hover:animate-pulse"></i>
+                            Khám phá thêm dịch vụ
+                            <span class="ml-3 px-3 py-1 bg-white/20 rounded-full text-sm">
+                                +${filteredServices.length - (start + store.userServicesLimit)}
+                            </span>
+                        </span>
+                        <span class="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+                    </button>
+                </div>
+            ` : filteredServices.length > 0 ? `
+                <div class="text-center mt-8 text-slate-500 animate-fadeIn">
+                    <i class="fa-regular fa-circle-check text-green-500 mr-2"></i>
+                    Đã hiển thị tất cả ${filteredServices.length} dịch vụ cao cấp
+                </div>
+            ` : ''}
         </div>
     `;
+        }
 
-            // Thêm animation keyframes
-            const style = document.createElement('style');
-            style.textContent = `
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .perspective-1000 {
-            perspective: 1000px;
-        }
+        function renderServiceCard(service, index) {
+            const images = {
+                dining: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=800',
+                spa: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800',
+                wellness: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800',
+                transport: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=800',
+                activities: 'https://images.unsplash.com/photo-1527631746610-bca00a040702?q=80&w=800'
+            };
+
+            return `
+        <div class="service-card group relative bg-white rounded-3xl shadow-xl overflow-hidden transform transition-all duration-700 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2"
+             style="animation: slideInUp 0.6s ease-out ${index * 0.1}s both;">
+            
+            <!-- Image với overlay -->
+            <div class="h-72 overflow-hidden relative">
+                <img src="${service.image || images[service.category] || 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'}" 
+                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                     onerror="this.src='${images[service.category] || 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'}'">
+                
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500"></div>
+                
+                <!-- Badge -->
+                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold shadow-lg transform translate-x-20 group-hover:translate-x-0 transition-transform duration-500">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+                        ${service.category === 'dining' ? '🍽️ Nhà hàng' :
+                    service.category === 'spa' ? '💆 Spa' :
+                        service.category === 'wellness' ? '🏋️ Fitness' :
+                            service.category === 'transport' ? '🚗 Xe' : '🎉 Giải trí'}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="p-8">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-white mr-4 transform group-hover:rotate-12 transition-transform duration-500">
+                            <i class="fa-solid fa-${service.icon || 'utensils'} text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-blue-600 transition-all">
+                                ${service.name}
+                            </h3>
+                            <p class="text-sm text-slate-500">${service.category === 'dining' ? 'Ẩm thực cao cấp' :
+                    service.category === 'spa' ? 'Thư giãn & làm đẹp' :
+                        service.category === 'wellness' ? 'Rèn luyện sức khỏe' :
+                            service.category === 'transport' ? 'Di chuyển sang trọng' : 'Giải trí đỉnh cao'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="text-slate-600 mb-6 leading-relaxed">${service.description}</p>
+                
+                <!-- Features Grid -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="flex items-center p-3 bg-slate-50 rounded-xl">
+                        <i class="fa-regular fa-clock text-blue-600 mr-2"></i>
+                        <span class="text-sm">${service.unit === 'person' ? 'Theo người' :
+                    service.unit === 'room' ? 'Theo phòng' :
+                        service.unit === 'hour' ? 'Theo giờ' : 'Linh hoạt'}</span>
+                    </div>
+                    <div class="flex items-center p-3 bg-slate-50 rounded-xl">
+                        <i class="fa-regular fa-star text-yellow-500 mr-2"></i>
+                        <span class="text-sm">4.9 (128 đánh giá)</span>
+                    </div>
+                </div>
+                
+                <!-- Price và Action -->
+                <div class="flex items-center justify-between pt-4 border-t border-slate-200">
+                    <div>
+                        <p class="text-sm text-slate-500 mb-1">Giá chỉ từ</p>
+                        <p class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+                            ${formatCurrency(service.price)}
+                        </p>
+                    </div>
+                    
+                    <button onclick="addServiceToCart('${service.id}')" 
+                            class="group/btn relative px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                        <span class="relative z-10 flex items-center">
+                            <i class="fa-regular fa-plus mr-2 group-hover/btn:rotate-90 transition-transform duration-300"></i>
+                            Đặt ngay
+                        </span>
+                        <span class="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
     `;
-            document.head.appendChild(style);
         }
 
         function renderUserLoyalty(container) {
@@ -8641,16 +8877,14 @@ ${booking.paymentStatus === 'paid' ? `
         // Filter functions
         window.filterUserRooms = (type) => {
             store.currentRoomFilter = type;
-            store.userRoomsPage = 0;
+            store.userRoomsPage = 0; // Reset về trang đầu khi filter
             navigateUser('rooms', true);
         };
-
         window.filterUserServices = (category) => {
             store.currentServiceCategory = category;
-            store.userServicesPage = 0;
+            store.userServicesPage = 0; // Reset về trang đầu khi filter
             navigateUser('services', true);
         };
-
         window.filterBookings = () => {
             navigateAdmin('bookings', true);
         };
@@ -8662,12 +8896,65 @@ ${booking.paymentStatus === 'paid' ? `
 
         window.loadMoreUserRooms = () => {
             store.userRoomsPage++;
-            navigateUser('rooms', true);
+            // Reset về đầu trang và load thêm
+            const contentDiv = document.getElementById('user-content');
+            renderUserRooms(contentDiv, true); // true = append mode
         };
 
         window.loadMoreUserServices = () => {
             store.userServicesPage++;
-            navigateUser('services', true);
+            const contentDiv = document.getElementById('user-content');
+            renderUserServices(contentDiv, true);
+        };
+
+        // ==================== SEARCH FUNCTIONS ====================
+
+        // Tìm kiếm phòng
+        window.searchRooms = (query) => {
+            if (!query) return store.localRooms;
+
+            return store.localRooms.filter(room =>
+                room.code?.toLowerCase().includes(query.toLowerCase()) ||
+                room.name?.toLowerCase().includes(query.toLowerCase()) ||
+                room.type?.toLowerCase().includes(query.toLowerCase()) ||
+                room.description?.toLowerCase().includes(query.toLowerCase())
+            );
+        };
+
+        // Tìm kiếm nhân viên
+        window.searchStaff = (query) => {
+            if (!query) return store.localStaff;
+
+            return store.localStaff.filter(staff =>
+                staff.name?.toLowerCase().includes(query.toLowerCase()) ||
+                staff.email?.toLowerCase().includes(query.toLowerCase()) ||
+                staff.phone?.includes(query) ||
+                staff.position?.toLowerCase().includes(query.toLowerCase()) ||
+                staff.department?.toLowerCase().includes(query.toLowerCase())
+            );
+        };
+
+        // Tìm kiếm khách hàng
+        window.searchCustomers = (query) => {
+            if (!query) return store.localUsers.filter(u => u.role !== 'admin');
+
+            return store.localUsers.filter(user =>
+                user.name?.toLowerCase().includes(query.toLowerCase()) ||
+                user.email?.toLowerCase().includes(query.toLowerCase()) ||
+                user.phone?.includes(query) ||
+                user.id?.toLowerCase().includes(query.toLowerCase())
+            );
+        };
+
+        // Tìm kiếm dịch vụ
+        window.searchServices = (query) => {
+            if (!query) return store.localServices;
+
+            return store.localServices.filter(service =>
+                service.name?.toLowerCase().includes(query.toLowerCase()) ||
+                service.description?.toLowerCase().includes(query.toLowerCase()) ||
+                service.category?.toLowerCase().includes(query.toLowerCase())
+            );
         };
 
         // Profile operations
@@ -8794,6 +9081,7 @@ ${booking.paymentStatus === 'paid' ? `
         };
 
         // ==================== AUTH STATE LISTENER ====================
+        // Sửa lại onAuthStateChanged
         onAuthStateChanged(auth, async (user) => {
             document.getElementById('loading-screen').style.display = 'none';
 
@@ -8801,6 +9089,7 @@ ${booking.paymentStatus === 'paid' ? `
                 store.currentUser = user;
                 store.userRole = user.email === ADMIN_EMAIL ? 'admin' : 'user';
 
+                // Load user data
                 try {
                     const userDoc = await getDoc(doc(db, 'users', user.uid));
                     if (userDoc.exists()) {
@@ -8821,15 +9110,11 @@ ${booking.paymentStatus === 'paid' ? `
                         await setDoc(doc(db, 'users', user.uid), userData);
                         store.currentUserData = userData;
                     }
-
-                    document.getElementById('admin-name').textContent = store.currentUserData.name || 'Admin';
-                    document.getElementById('admin-email').textContent = user.email;
-
                 } catch (e) {
                     console.error('Error fetching user data:', e);
-                    showToast('Lỗi kết nối database: ' + e.message, 'error');
                 }
 
+                // Ẩn auth view, hiển thị view tương ứng
                 document.getElementById('auth-view').classList.add('hidden');
 
                 if (store.userRole === 'admin') {
@@ -8844,27 +9129,86 @@ ${booking.paymentStatus === 'paid' ? `
                     navigateUser('home');
                 }
             } else {
+                // KHÔNG ĐĂNG NHẬP - VẪN XEM ĐƯỢC TRANG
                 store.currentUser = null;
                 store.currentUserData = {};
-                store.userRole = null;
+                store.userRole = 'guest';
 
-                document.getElementById('auth-view').classList.remove('hidden');
+                // Hiển thị user view nhưng ở chế độ guest
+                document.getElementById('auth-view').classList.add('hidden');
                 document.getElementById('admin-view').classList.add('hidden');
-                document.getElementById('user-view').classList.add('hidden');
+                document.getElementById('user-view').classList.remove('hidden');
 
-                if (store.unsubRooms) store.unsubRooms();
-                if (store.unsubBookings) store.unsubBookings();
-                if (store.unsubServices) store.unsubServices();
-                if (store.unsubUsers) store.unsubUsers();
-                if (store.unsubPromotions) store.unsubPromotions();
-                if (store.unsubStaff) store.unsubStaff();
-                if (store.unsubReviews) store.unsubReviews();
-                if (store.unsubGallery) store.unsubGallery();
-                if (store.unsubInvoices) store.unsubInvoices();
-                if (store.unsubLogs) store.unsubLogs();
-                if (store.unsubMessages) store.unsubMessages();
+                // Cập nhật UI cho guest
+                document.getElementById('user-name-display').textContent = 'Khách';
+                document.getElementById('user-avatar').textContent = 'K';
+
+                // Ẩn các nút cần đăng nhập
+                const navButtons = document.querySelectorAll('#nav-user-my-bookings, #nav-user-profile, #nav-user-loyalty');
+                navButtons.forEach(btn => btn.style.display = 'none');
+
+                // Thêm nút đăng nhập vào header
+                const headerActions = document.querySelector('#user-view header .hidden.md\\:flex.items-center.space-x-4');
+                if (headerActions) {
+                    headerActions.innerHTML = `
+                <button onclick="showAuthView()" 
+                        class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-xl font-semibold hover:shadow-lg transition-all transform hover:scale-105">
+                    <i class="fa-regular fa-user mr-2"></i>
+                    Đăng nhập / Đăng ký
+                </button>
+            `;
+                }
+
+                // Load dữ liệu public
+                initPublicData();
+                navigateUser('home');
             }
         });
+
+        // Hàm hiển thị auth view
+        window.showAuthView = () => {
+            document.getElementById('auth-view').classList.remove('hidden');
+            document.getElementById('user-view').classList.add('hidden');
+        };
+
+        // Load dữ liệu public (không cần auth)
+        async function initPublicData() {
+            try {
+                // Rooms
+                const roomsSnap = await getDocs(collection(db, 'rooms'));
+                store.localRooms = roomsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Services
+                const servicesSnap = await getDocs(collection(db, 'services'));
+                store.localServices = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Promotions
+                const promotionsSnap = await getDocs(collection(db, 'promotions'));
+                store.localPromotions = promotionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Gallery
+                const gallerySnap = await getDocs(collection(db, 'gallery'));
+                store.localGallery = gallerySnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Reviews
+                const reviewsSnap = await getDocs(collection(db, 'reviews'));
+                store.localReviews = reviewsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                refreshCurrentView();
+            } catch (error) {
+                console.error('Error loading public data:', error);
+            }
+        }
+
+        // Sửa handleBookNow để chuyển đến đăng nhập
+        window.handleBookNow = (roomId) => {
+            if (!store.currentUser) {
+                showToast('Vui lòng đăng nhập để đặt phòng', 'warning');
+                showAuthView();
+                return;
+            }
+            openBookingModal(roomId);
+        };
 
         // ==================== UTILITY FUNCTIONS ====================
         window.closeModal = (id) => {
