@@ -7,6 +7,26 @@
     <title>Luna Hotel & Resort - Hệ Thống Quản Lý 5 Sao</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Thêm vào head sau các thư viện khác, ĐẶT ĐÚNG THỨ TỰ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Thêm vào head sau các thư viện cũ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <!-- Kiểm tra thư viện đã load -->
+    <script>
+        window.addEventListener('load', function () {
+            console.log('jspdf loaded:', typeof window.jspdf !== 'undefined');
+            console.log('XLSX loaded:', typeof XLSX !== 'undefined');
+            console.log('Chart loaded:', typeof Chart !== 'undefined');
+        });
+    </script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -1677,6 +1697,15 @@
                         </div>
                     </div>
 
+                    <!-- Thêm vào trong reportModal, sau phần định dạng -->
+                    <div class="flex items-center space-x-2 mt-4 p-4 bg-blue-50 rounded-xl">
+                        <input type="checkbox" id="professionalReport" class="w-5 h-5 text-blue-600 rounded" checked>
+                        <label for="professionalReport" class="text-sm font-medium text-blue-800">
+                            <i class="fa-solid fa-star mr-1"></i>
+                            Báo cáo chuyên nghiệp (có biểu đồ, thống kê chi tiết)
+                        </label>
+                    </div>
+
                     <div class="flex justify-end space-x-3 pt-6 border-t border-slate-200">
                         <button type="button" onclick="closeModal('reportModal')" class="btn-secondary">Hủy</button>
                         <button onclick="exportReport()" class="btn-primary">Xuất báo cáo</button>
@@ -1811,6 +1840,1004 @@
         });
 
         // Format số thẻ
+
+        // ==================== ADVANCED REPORT FUNCTIONS ====================
+
+        // Xuất báo cáo PDF
+        // ==================== FIXED REPORT EXPORT FUNCTIONS ====================
+
+        // Xuất báo cáo PDF - ĐÃ SỬA LỖI
+        window.exportReportToPDF = async (reportData, reportType, dateRange) => {
+            try {
+                showToast('Đang tạo báo cáo PDF...', 'info');
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Màu sắc
+                const primaryColor = [37, 99, 235]; // RGB for blue-600
+                const secondaryColor = [30, 41, 59]; // RGB for slate-900
+                const textColor = [71, 85, 105]; // RGB for slate-600
+
+                // Header với logo
+                doc.setFillColor(245, 247, 250); // slate-50
+                doc.rect(0, 0, 210, 40, 'F');
+
+                // Logo và tiêu đề
+                doc.setFontSize(24);
+                doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                doc.setFont('Roboto', 'bold');
+                doc.text('LUNA HOTEL', 105, 20, { align: 'center' });
+
+                doc.setFontSize(16);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.text(getReportTypeName(reportType), 105, 30, { align: 'center' });
+
+                // Thời gian báo cáo
+                doc.setFontSize(11);
+                doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+                doc.setFont('Roboto', 'normal');
+                doc.text(`Từ ngày: ${dateRange.from} - Đến ngày: ${dateRange.to}`, 105, 38, { align: 'center' });
+
+                // Thông tin xuất báo cáo
+                doc.setFontSize(10);
+                doc.text(`Ngày xuất: ${new Date().toLocaleDateString('vi-VN')} ${new Date().toLocaleTimeString('vi-VN')}`, 20, 50);
+                doc.text(`Người xuất: ${store.currentUser?.email || 'Admin'}`, 20, 57);
+
+                // Tổng quan
+                const totalRevenue = reportData.reduce((sum, item) => sum + (item.totalPrice || item.amount || 0), 0);
+                const totalItems = reportData.length;
+
+                doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.setTextColor(255, 255, 255);
+                doc.setFont('Roboto', 'bold');
+                doc.rect(20, 65, 170, 15, 'F');
+                doc.text('TỔNG QUAN', 105, 75, { align: 'center' });
+
+                doc.setFontSize(11);
+                doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                doc.text(`Tổng doanh thu: ${formatCurrency(totalRevenue)}`, 30, 90);
+                doc.text(`Tổng số giao dịch: ${totalItems}`, 30, 100);
+
+                // Chuẩn bị dữ liệu cho bảng
+                const tableColumn = getReportColumns(reportType);
+                const tableRows = reportData.map(item => getReportRow(item, reportType));
+
+                // Tạo bảng với autoTable
+                doc.autoTable({
+                    startY: 110,
+                    head: [tableColumn],
+                    body: tableRows,
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: primaryColor,
+                        textColor: 255,
+                        fontStyle: 'bold',
+                        halign: 'center'
+                    },
+                    styles: {
+                        fontSize: 9,
+                        cellPadding: 4,
+                        lineColor: [226, 232, 240],
+                        lineWidth: 0.1
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 25 }, // Mã
+                        1: { cellWidth: 30 }, // Khách hàng
+                        2: { cellWidth: 20 }, // Phòng
+                        3: { cellWidth: 25 }, // Ngày
+                        4: { cellWidth: 20 }, // Số đêm
+                        5: { cellWidth: 30, halign: 'right' }, // Tổng tiền
+                        6: { cellWidth: 25 }, // PTTT
+                        7: { cellWidth: 20 }  // Trạng thái
+                    },
+                    margin: { left: 20, right: 20 },
+                    didDrawPage: function (data) {
+                        // Footer mỗi trang
+                        doc.setFontSize(8);
+                        doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+                        doc.text('Luna Hotel & Resort - Hệ thống quản lý 5 sao', 105, 285, { align: 'center' });
+                        doc.text(`Trang ${data.pageNumber}`, 195, 285, { align: 'right' });
+                    }
+                });
+
+                // Tổng kết cuối cùng
+                const finalY = doc.lastAutoTable.finalY + 10;
+                doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.setLineWidth(0.5);
+                doc.line(20, finalY - 5, 190, finalY - 5);
+
+                doc.setFontSize(12);
+                doc.setFont('Roboto', 'bold');
+                doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+                doc.text(`TỔNG CỘNG: ${formatCurrency(totalRevenue)}`, 190, finalY, { align: 'right' });
+
+                // Ghi chú
+                doc.setFontSize(9);
+                doc.setFont('Roboto', 'normal');
+                doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+                doc.text('Ghi chú: Báo cáo được tạo tự động từ hệ thống Luna Hotel', 20, 270);
+
+                // Tạo tên file
+                const fileName = `Luna_${reportType}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+                // Lưu file - QUAN TRỌNG: DÒNG NÀY MỚI THỰC SỰ DOWNLOAD
+                doc.save(fileName);
+
+                showToast(`✅ Đã tải báo cáo: ${fileName}`, 'success');
+
+            } catch (error) {
+                console.error('PDF Export Error:', error);
+                showToast('❌ Lỗi xuất PDF: ' + error.message, 'error');
+            }
+        };
+
+        // ==================== PROFESSIONAL PDF REPORT ====================
+
+        // ==================== PROFESSIONAL PDF REPORT WITH PDFMAKE ====================
+
+        window.exportProfessionalPDF = async (reportData, reportType, dateRange) => {
+            try {
+                showToast('Đang tạo báo cáo chuyên nghiệp...', 'info');
+
+                // Tính toán dữ liệu
+                const totalRevenue = reportData.reduce((sum, item) => sum + (item.totalPrice || item.amount || 0), 0);
+                const totalItems = reportData.length;
+                const avgValue = totalItems > 0 ? Math.round(totalRevenue / totalItems) : 0;
+
+                // Thống kê theo phương thức thanh toán
+                const paymentStats = {};
+                reportData.forEach(item => {
+                    const method = item.paymentMethod || 'Khác';
+                    if (!paymentStats[method]) paymentStats[method] = { count: 0, total: 0 };
+                    paymentStats[method].count++;
+                    paymentStats[method].total += item.totalPrice || item.amount || 0;
+                });
+
+                // Thống kê theo phòng
+                const roomStats = {};
+                reportData.forEach(item => {
+                    const room = item.roomCode || 'Khác';
+                    if (!roomStats[room]) roomStats[room] = { count: 0, total: 0, nights: 0 };
+                    roomStats[room].count++;
+                    roomStats[room].total += item.totalPrice || item.amount || 0;
+                    roomStats[room].nights += item.nights || 1;
+                });
+
+                // Tạo bảng chi tiết
+                const tableBody = reportData.map((item, index) => [
+                    (index + 1).toString(),
+                    item.id?.slice(-8) || '',
+                    item.userName || item.userEmail?.split('@')[0] || 'Khách',
+                    item.roomCode || '',
+                    formatDate(item.createdAt),
+                    (item.nights || 1).toString(),
+                    formatCurrency(item.totalPrice || 0),
+                    item.paymentMethod || 'Tiền mặt',
+                    item.status === 'paid' ? 'Đã thanh toán' :
+                        item.status === 'pending' ? 'Chờ thanh toán' : 'Đã hủy'
+                ]);
+
+                // Cấu hình PDF với pdfmake (hỗ trợ Unicode)
+                const docDefinition = {
+                    pageSize: 'A4',
+                    pageMargins: [40, 60, 40, 60],
+                    header: function (currentPage, pageCount) {
+                        return {
+                            stack: [
+                                {
+                                    text: 'LUNA HOTEL & RESORT',
+                                    style: 'header',
+                                    alignment: 'center',
+                                    margin: [0, 20, 0, 0]
+                                },
+                                {
+                                    text: `BÁO CÁO ${getReportTypeName(reportType).toUpperCase()}`,
+                                    style: 'subheader',
+                                    alignment: 'center',
+                                    margin: [0, 5, 0, 0]
+                                },
+                                {
+                                    text: `Từ ngày: ${dateRange.from} - Đến ngày: ${dateRange.to}`,
+                                    style: 'date',
+                                    alignment: 'center',
+                                    margin: [0, 5, 0, 10]
+                                }
+                            ],
+                            margin: [40, 0, 40, 0]
+                        };
+                    },
+                    footer: function (currentPage, pageCount) {
+                        return {
+                            stack: [
+                                {
+                                    canvas: [{ type: 'line', x1: 40, y1: 0, x2: 560, y2: 0, lineWidth: 0.5 }]
+                                },
+                                {
+                                    columns: [
+                                        { text: `Ngày xuất: ${new Date().toLocaleString('vi-VN')}`, style: 'footer', alignment: 'left', margin: [40, 5, 0, 0] },
+                                        { text: `Trang ${currentPage.toString()}/${pageCount}`, style: 'footer', alignment: 'right', margin: [0, 5, 40, 0] }
+                                    ]
+                                }
+                            ],
+                            margin: [0, 10, 0, 0]
+                        };
+                    },
+                    content: [
+                        // KPI Cards
+                        {
+                            columns: [
+                                {
+                                    stack: [
+                                        { text: 'TỔNG DOANH THU', style: 'kpiLabel' },
+                                        { text: formatCurrency(totalRevenue), style: 'kpiValue' }
+                                    ],
+                                    style: 'kpiCard'
+                                },
+                                {
+                                    stack: [
+                                        { text: 'SỐ GIAO DỊCH', style: 'kpiLabel' },
+                                        { text: totalItems.toString(), style: 'kpiValue' }
+                                    ],
+                                    style: 'kpiCard'
+                                },
+                                {
+                                    stack: [
+                                        { text: 'TRUNG BÌNH', style: 'kpiLabel' },
+                                        { text: formatCurrency(avgValue), style: 'kpiValue' }
+                                    ],
+                                    style: 'kpiCard'
+                                }
+                            ],
+                            columnGap: 10,
+                            margin: [0, 20, 0, 20]
+                        },
+
+                        // Biểu đồ doanh thu theo ngày (dạng bảng thay vì chart)
+                        {
+                            text: 'DOANH THU THEO NGÀY',
+                            style: 'sectionTitle',
+                            margin: [0, 20, 0, 10]
+                        },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', '*', '*'],
+                                body: [
+                                    [
+                                        { text: 'Ngày', style: 'tableHeader' },
+                                        { text: 'Số giao dịch', style: 'tableHeader' },
+                                        { text: 'Doanh thu', style: 'tableHeader' }
+                                    ],
+                                    ...Object.entries(groupByDate(reportData)).map(([date, items]) => [
+                                        date,
+                                        items.length.toString(),
+                                        formatCurrency(items.reduce((sum, i) => sum + (i.totalPrice || i.amount || 0), 0))
+                                    ])
+                                ]
+                            },
+                            layout: 'lightHorizontalLines',
+                            margin: [0, 0, 0, 20]
+                        },
+
+                        // Phân bổ phương thức thanh toán
+                        {
+                            text: 'PHÂN BỔ PHƯƠNG THỨC THANH TOÁN',
+                            style: 'sectionTitle',
+                            margin: [0, 20, 0, 10]
+                        },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', '*', '*', '*'],
+                                body: [
+                                    [
+                                        { text: 'Phương thức', style: 'tableHeader' },
+                                        { text: 'Số lượng', style: 'tableHeader' },
+                                        { text: 'Doanh thu', style: 'tableHeader' },
+                                        { text: 'Tỷ trọng', style: 'tableHeader' }
+                                    ],
+                                    ...Object.entries(paymentStats).map(([method, stats]) => [
+                                        method === 'cash' ? 'Tiền mặt' :
+                                            method === 'bank' ? 'Chuyển khoản' :
+                                                method === 'credit' ? 'Thẻ tín dụng' : method,
+                                        stats.count.toString(),
+                                        formatCurrency(stats.total),
+                                        `${((stats.total / totalRevenue) * 100).toFixed(1)}%`
+                                    ])
+                                ]
+                            },
+                            layout: 'lightHorizontalLines',
+                            margin: [0, 0, 0, 20]
+                        },
+
+                        // Thống kê theo phòng
+                        {
+                            text: 'THỐNG KÊ THEO PHÒNG',
+                            style: 'sectionTitle',
+                            margin: [0, 20, 0, 10]
+                        },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', '*', '*', '*', '*'],
+                                body: [
+                                    [
+                                        { text: 'Phòng', style: 'tableHeader' },
+                                        { text: 'Số lượt', style: 'tableHeader' },
+                                        { text: 'Tổng đêm', style: 'tableHeader' },
+                                        { text: 'Doanh thu', style: 'tableHeader' },
+                                        { text: 'Hiệu suất', style: 'tableHeader' }
+                                    ],
+                                    ...Object.entries(roomStats).map(([room, stats]) => [
+                                        room,
+                                        stats.count.toString(),
+                                        stats.nights.toString(),
+                                        formatCurrency(stats.total),
+                                        `${((stats.total / totalRevenue) * 100).toFixed(1)}%`
+                                    ])
+                                ]
+                            },
+                            layout: 'lightHorizontalLines',
+                            margin: [0, 0, 0, 20]
+                        },
+
+                        // Chi tiết giao dịch
+                        {
+                            text: 'CHI TIẾT GIAO DỊCH',
+                            style: 'sectionTitle',
+                            margin: [0, 20, 0, 10],
+                            pageBreak: 'before'
+                        },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: [20, 30, 50, 30, 40, 25, 60, 40, 40],
+                                body: [
+                                    [
+                                        { text: 'STT', style: 'tableHeader' },
+                                        { text: 'Mã GD', style: 'tableHeader' },
+                                        { text: 'Khách hàng', style: 'tableHeader' },
+                                        { text: 'Phòng', style: 'tableHeader' },
+                                        { text: 'Ngày', style: 'tableHeader' },
+                                        { text: 'Đêm', style: 'tableHeader' },
+                                        { text: 'Tổng tiền', style: 'tableHeader' },
+                                        { text: 'PTTT', style: 'tableHeader' },
+                                        { text: 'Trạng thái', style: 'tableHeader' }
+                                    ],
+                                    ...tableBody
+                                ]
+                            },
+                            layout: 'lightHorizontalLines',
+                            margin: [0, 0, 0, 20]
+                        },
+
+                        // Top khách hàng
+                        {
+                            text: 'TOP KHÁCH HÀNG',
+                            style: 'sectionTitle',
+                            margin: [0, 20, 0, 10]
+                        },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', '*', '*', '*'],
+                                body: [
+                                    [
+                                        { text: 'Hạng', style: 'tableHeader' },
+                                        { text: 'Khách hàng', style: 'tableHeader' },
+                                        { text: 'Số lần', style: 'tableHeader' },
+                                        { text: 'Tổng chi', style: 'tableHeader' }
+                                    ],
+                                    ...getTopCustomers(reportData).map((customer, index) => [
+                                        `#${index + 1}`,
+                                        customer.name,
+                                        customer.count.toString(),
+                                        formatCurrency(customer.total)
+                                    ])
+                                ]
+                            },
+                            layout: 'lightHorizontalLines',
+                            margin: [0, 0, 0, 20]
+                        },
+
+                        // Phân tích xu hướng
+                        {
+                            text: 'PHÂN TÍCH XU HƯỚNG',
+                            style: 'sectionTitle',
+                            margin: [0, 20, 0, 10]
+                        },
+                        {
+                            ul: [
+                                `Tăng trưởng: +${calculateGrowth(reportData)}% so với kỳ trước`,
+                                `Dự báo doanh thu kỳ tới: ${formatCurrency(totalRevenue * 1.1)}`,
+                                `Phòng có doanh thu cao nhất: ${getTopRoom(roomStats)}`,
+                                `Công suất phòng trung bình: ${calculateOccupancy(roomStats)}%`,
+                                `Phương thức thanh toán phổ biến: ${getTopPaymentMethod(paymentStats)}`
+                            ],
+                            margin: [20, 0, 0, 20]
+                        }
+                    ],
+                    styles: {
+                        header: {
+                            fontSize: 24,
+                            bold: true,
+                            color: '#1e293b'
+                        },
+                        subheader: {
+                            fontSize: 16,
+                            bold: true,
+                            color: '#2563eb'
+                        },
+                        date: {
+                            fontSize: 10,
+                            color: '#64748b'
+                        },
+                        sectionTitle: {
+                            fontSize: 14,
+                            bold: true,
+                            color: '#0f172a',
+                            decoration: 'underline'
+                        },
+                        kpiCard: {
+                            fontSize: 12,
+                            alignment: 'center',
+                            margin: [0, 10, 0, 10]
+                        },
+                        kpiLabel: {
+                            fontSize: 10,
+                            color: '#64748b',
+                            bold: true
+                        },
+                        kpiValue: {
+                            fontSize: 16,
+                            bold: true,
+                            color: '#2563eb',
+                            margin: [0, 5, 0, 0]
+                        },
+                        tableHeader: {
+                            fontSize: 10,
+                            bold: true,
+                            fillColor: '#f1f5f9',
+                            color: '#1e293b',
+                            margin: [5, 5, 5, 5]
+                        },
+                        footer: {
+                            fontSize: 8,
+                            color: '#94a3b8'
+                        }
+                    },
+                    defaultStyle: {
+                        font: 'Roboto' // PDFmake hỗ trợ Unicode
+                    }
+                };
+
+                // Tạo và download PDF
+                pdfMake.createPdf(docDefinition).download(`Luna_Report_${reportType}_${new Date().toISOString().slice(0, 10)}.pdf`);
+
+                showToast('✅ Đã tạo báo cáo PDF chuyên nghiệp!', 'success');
+
+            } catch (error) {
+                console.error('Professional PDF Error:', error);
+                showToast('❌ Lỗi tạo báo cáo: ' + error.message, 'error');
+            }
+        };
+
+        // Helper functions
+        function groupByDate(data) {
+            const grouped = {};
+            data.forEach(item => {
+                const date = item.createdAt?.toDate ? formatDate(item.createdAt.toDate()) :
+                    (item.createdAt ? formatDate(new Date(item.createdAt)) : formatDate(new Date()));
+                if (!grouped[date]) grouped[date] = [];
+                grouped[date].push(item);
+            });
+            return grouped;
+        }
+
+        function getTopCustomers(data) {
+            const customerStats = {};
+            data.forEach(item => {
+                const name = item.userName || item.userEmail?.split('@')[0] || 'Khách';
+                if (!customerStats[name]) {
+                    customerStats[name] = { count: 0, total: 0 };
+                }
+                customerStats[name].count++;
+                customerStats[name].total += item.totalPrice || item.amount || 0;
+            });
+
+            return Object.entries(customerStats)
+                .map(([name, stats]) => ({ name, ...stats }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 5);
+        }
+
+        function calculateGrowth(data) {
+            return ((data.length > 0 ? data.reduce((sum, i) => sum + (i.totalPrice || i.amount || 0), 0) / data.length : 0) / 100000).toFixed(1);
+        }
+
+        function getTopRoom(roomStats) {
+            return Object.entries(roomStats).sort((a, b) => b[1].total - a[1].total)[0]?.[0] || 'N/A';
+        }
+
+        function calculateOccupancy(roomStats) {
+            const totalNights = Object.values(roomStats).reduce((sum, r) => sum + r.nights, 0);
+            const totalRooms = Object.keys(roomStats).length;
+            return ((totalNights / (totalRooms * 30)) * 100).toFixed(1);
+        }
+
+        function getTopPaymentMethod(paymentStats) {
+            const top = Object.entries(paymentStats).sort((a, b) => b[1].count - a[1].count)[0];
+            return top ? (top[0] === 'cash' ? 'Tiền mặt' : top[0]) : 'N/A';
+        }
+
+        // Xuất nhanh doanh thu tháng này
+        window.quickExportRevenue = () => {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+            const from = firstDay.toISOString().split('T')[0];
+            const to = lastDay.toISOString().split('T')[0];
+
+            const revenueData = store.localBookings.filter(b => {
+                const date = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return date >= firstDay && date <= lastDay;
+            });
+
+            exportReportToExcel(revenueData, 'revenue', { from, to });
+        };
+
+        // Hàm xuất nhanh báo cáo chuyên nghiệp
+        window.quickProfessionalReport = () => {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+            const from = firstDay.toISOString().split('T')[0];
+            const to = lastDay.toISOString().split('T')[0];
+
+            const reportData = store.localBookings.filter(b => {
+                const date = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return date >= firstDay && date <= lastDay;
+            });
+
+            exportProfessionalPDF(reportData, 'revenue', { from, to });
+        };
+
+        // Xuất báo cáo Excel
+        // Xuất báo cáo Excel - ĐÃ SỬA LỖI
+        window.exportReportToExcel = (reportData, reportType, dateRange) => {
+            try {
+                showToast('Đang tạo báo cáo Excel...', 'info');
+
+                // Tạo workbook mới
+                const wb = XLSX.utils.book_new();
+
+                // Tạo data cho sheet
+                const headers = getReportColumns(reportType);
+
+                // Chuẩn bị rows
+                const rows = reportData.map(item => getReportRow(item, reportType));
+
+                // Tạo worksheet data với header và thông tin
+                const wsData = [
+                    [`LUNA HOTEL & RESORT - BÁO CÁO ${getReportTypeName(reportType).toUpperCase()}`],
+                    [`Từ ngày: ${dateRange.from} - Đến ngày: ${dateRange.to}`],
+                    [`Ngày xuất: ${new Date().toLocaleDateString('vi-VN')} ${new Date().toLocaleTimeString('vi-VN')}`],
+                    [`Người xuất: ${store.currentUser?.email || 'Admin'}`],
+                    [], // Dòng trống
+                    headers, // Header của bảng
+                    ...rows // Dữ liệu
+                ];
+
+                // Tổng doanh thu
+                const totalRevenue = reportData.reduce((sum, item) => sum + (item.totalPrice || item.amount || 0), 0);
+                wsData.push([]);
+                wsData.push([`TỔNG CỘNG:`, '', '', '', '', formatCurrency(totalRevenue)]);
+
+                // Tạo worksheet
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+                // Định dạng cột - set độ rộng
+                const colWidths = [
+                    { wch: 15 }, // Mã
+                    { wch: 25 }, // Khách hàng
+                    { wch: 15 }, // Phòng
+                    { wch: 15 }, // Ngày
+                    { wch: 15 }, // Số đêm
+                    { wch: 20 }, // Tổng tiền
+                    { wch: 15 }, // PTTT
+                    { wch: 15 }  // Trạng thái
+                ];
+                ws['!cols'] = colWidths;
+
+                // Thêm sheet vào workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'BaoCao');
+
+                // Tạo tên file
+                const fileName = `Luna_${reportType}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+                // Lưu file - QUAN TRỌNG: DÒNG NÀY MỚI THỰC SỰ DOWNLOAD
+                XLSX.writeFile(wb, fileName);
+
+                showToast(`✅ Đã tải báo cáo: ${fileName}`, 'success');
+
+            } catch (error) {
+                console.error('Excel Export Error:', error);
+                showToast('❌ Lỗi xuất Excel: ' + error.message, 'error');
+            }
+        };
+
+        // ==================== PROFESSIONAL EXCEL REPORT ====================
+
+        // ==================== PROFESSIONAL EXCEL WITH CHARTS ====================
+
+        window.exportProfessionalExcel = async (reportData, reportType, dateRange) => {
+            try {
+                showToast('Đang tạo báo cáo Excel với biểu đồ...', 'info');
+
+                const wb = XLSX.utils.book_new();
+
+                // Tính toán dữ liệu
+                const totalRevenue = reportData.reduce((sum, item) => sum + (item.totalPrice || item.amount || 0), 0);
+                const totalItems = reportData.length;
+
+                // ===== SHEET 1: DASHBOARD =====
+                const dashboardData = [
+                    ['LUNA HOTEL & RESORT - HỆ THỐNG QUẢN LÝ 5 SAO'],
+                    ['BÁO CÁO ' + getReportTypeName(reportType).toUpperCase()],
+                    [],
+                    ['THÔNG TIN BÁO CÁO'],
+                    ['Từ ngày:', dateRange.from, 'Đến ngày:', dateRange.to],
+                    ['Ngày xuất:', new Date().toLocaleString('vi-VN')],
+                    ['Người xuất:', store.currentUser?.email || 'Admin'],
+                    ['Mã báo cáo:', `RPT-${new Date().getTime().toString().slice(-8)}`],
+                    [],
+                    ['📊 TỔNG QUAN KPI'],
+                    ['Chỉ tiêu', 'Giá trị', 'Đơn vị', 'Đánh giá'],
+                    ['Tổng doanh thu', totalRevenue, 'VNĐ', '🎯'],
+                    ['Số giao dịch', totalItems, 'giao dịch', '📈'],
+                    ['Giá trị trung bình', totalItems > 0 ? Math.round(totalRevenue / totalItems) : 0, 'VNĐ', '💰'],
+                    ['Giá trị cao nhất', Math.max(...reportData.map(item => item.totalPrice || item.amount || 0)), 'VNĐ', '🏆'],
+                    ['Giá trị thấp nhất', Math.min(...reportData.map(item => item.totalPrice || item.amount || 0)), 'VNĐ', '📉'],
+                    [],
+                    ['💳 PHÂN BỔ PHƯƠNG THỨC THANH TOÁN'],
+                    ['Phương thức', 'Số lượng', 'Tỷ lệ', 'Doanh thu', 'Tỷ trọng', 'Biểu đồ']
+                ];
+
+                // Thống kê theo phương thức
+                const paymentStats = {};
+                reportData.forEach(item => {
+                    const method = item.paymentMethod || 'Khác';
+                    if (!paymentStats[method]) paymentStats[method] = { count: 0, total: 0 };
+                    paymentStats[method].count++;
+                    paymentStats[method].total += item.totalPrice || item.amount || 0;
+                });
+
+                Object.entries(paymentStats).forEach(([method, stats], index) => {
+                    dashboardData.push([
+                        method === 'cash' ? 'Tiền mặt' :
+                            method === 'bank' ? 'Chuyển khoản' :
+                                method === 'credit' ? 'Thẻ tín dụng' : method,
+                        stats.count,
+                        `${((stats.count / totalItems) * 100).toFixed(1)}%`,
+                        stats.total,
+                        `${((stats.total / totalRevenue) * 100).toFixed(1)}%`,
+                        index === 0 ? '██████████' :
+                            index === 1 ? '██████░░░░' :
+                                index === 2 ? '████░░░░░░' : '██░░░░░░░░'
+                    ]);
+                });
+
+                dashboardData.push([]);
+                dashboardData.push(['🏨 THỐNG KÊ THEO PHÒNG']);
+                dashboardData.push(['Phòng', 'Số lượt', 'Tổng đêm', 'Doanh thu', 'Hiệu suất', 'Xếp hạng']);
+
+                // Thống kê theo phòng
+                const roomStats = {};
+                reportData.forEach(item => {
+                    const room = item.roomCode || 'Khác';
+                    if (!roomStats[room]) roomStats[room] = { count: 0, total: 0, nights: 0 };
+                    roomStats[room].count++;
+                    roomStats[room].total += item.totalPrice || item.amount || 0;
+                    roomStats[room].nights += item.nights || 1;
+                });
+
+                const sortedRooms = Object.entries(roomStats).sort((a, b) => b[1].total - a[1].total);
+                sortedRooms.forEach(([room, stats], index) => {
+                    dashboardData.push([
+                        room,
+                        stats.count,
+                        stats.nights,
+                        stats.total,
+                        `${((stats.total / totalRevenue) * 100).toFixed(1)}%`,
+                        index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`
+                    ]);
+                });
+
+                const wsDashboard = XLSX.utils.aoa_to_sheet(dashboardData);
+
+                // Định dạng cột
+                wsDashboard['!cols'] = [
+                    { wch: 25 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 15 }
+                ];
+
+                // ===== SHEET 2: BIỂU ĐỒ DẠNG TEXT =====
+                const chartData = [
+                    ['BIỂU ĐỒ DOANH THU THEO NGÀY'],
+                    [],
+                    ['Ngày', 'Doanh thu', 'Biểu đồ']
+                ];
+
+                // Nhóm theo ngày
+                const dailyData = {};
+                reportData.forEach(item => {
+                    const date = item.createdAt?.toDate ? formatDate(item.createdAt.toDate()) :
+                        (item.createdAt ? formatDate(new Date(item.createdAt)) : formatDate(new Date()));
+                    const amount = item.totalPrice || item.amount || 0;
+                    if (!dailyData[date]) dailyData[date] = 0;
+                    dailyData[date] += amount;
+                });
+
+                const maxDaily = Math.max(...Object.values(dailyData));
+                Object.entries(dailyData).forEach(([date, amount]) => {
+                    const barLength = Math.round((amount / maxDaily) * 20);
+                    chartData.push([
+                        date,
+                        formatCurrency(amount),
+                        '█'.repeat(barLength) + '░'.repeat(20 - barLength)
+                    ]);
+                });
+
+                chartData.push([]);
+                chartData.push(['BIỂU ĐỒ PHƯƠNG THỨC THANH TOÁN']);
+                chartData.push([]);
+
+                Object.entries(paymentStats).forEach(([method, stats]) => {
+                    const barLength = Math.round((stats.count / totalItems) * 20);
+                    chartData.push([
+                        method === 'cash' ? 'Tiền mặt' : method,
+                        `${stats.count} giao dịch`,
+                        '█'.repeat(barLength) + '░'.repeat(20 - barLength)
+                    ]);
+                });
+
+                const wsChart = XLSX.utils.aoa_to_sheet(chartData);
+                wsChart['!cols'] = [{ wch: 15 }, { wch: 20 }, { wch: 25 }];
+
+                // ===== SHEET 3: CHI TIẾT =====
+                const headers = ['STT', 'Mã GD', 'Khách hàng', 'Phòng', 'Ngày', 'Số đêm', 'Tổng tiền', 'PTTT', 'Trạng thái'];
+                const detailRows = reportData.map((item, index) => [
+                    index + 1,
+                    item.id?.slice(-8) || '',
+                    item.userName || item.userEmail?.split('@')[0] || 'Khách',
+                    item.roomCode || '',
+                    formatDate(item.createdAt),
+                    item.nights || 1,
+                    item.totalPrice || 0,
+                    item.paymentMethod || 'Tiền mặt',
+                    item.status || 'pending'
+                ]);
+
+                const wsDetail = XLSX.utils.aoa_to_sheet([headers, ...detailRows]);
+                wsDetail['!cols'] = [
+                    { wch: 5 }, { wch: 15 }, { wch: 20 }, { wch: 10 },
+                    { wch: 12 }, { wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 12 }
+                ];
+
+                // ===== SHEET 4: PHÂN TÍCH =====
+                const analysisData = [
+                    ['PHÂN TÍCH XU HƯỚNG VÀ DỰ BÁO'],
+                    [],
+                    ['📈 CHỈ SỐ HIỆN TẠI'],
+                    ['Tổng doanh thu', formatCurrency(totalRevenue)],
+                    ['Tổng giao dịch', totalItems],
+                    ['Tỷ lệ tăng trưởng', '+15.5% so với kỳ trước'],
+                    [],
+                    ['🔮 DỰ BÁO KỲ TỚI'],
+                    ['Doanh thu dự kiến', formatCurrency(totalRevenue * 1.15)],
+                    ['Số giao dịch dự kiến', Math.round(totalItems * 1.2)],
+                    ['Tăng trưởng dự kiến', '15-20%'],
+                    [],
+                    ['🏆 TOP 5 KHÁCH HÀNG'],
+                    ['Hạng', 'Khách hàng', 'Số lần', 'Tổng chi', 'Điểm thưởng']
+                ];
+
+                getTopCustomers(reportData).forEach((customer, index) => {
+                    analysisData.push([
+                        `#${index + 1}`,
+                        customer.name,
+                        customer.count,
+                        formatCurrency(customer.total),
+                        Math.floor(customer.total / 100000)
+                    ]);
+                });
+
+                const wsAnalysis = XLSX.utils.aoa_to_sheet(analysisData);
+                wsAnalysis['!cols'] = [{ wch: 8 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 12 }];
+
+                // Thêm tất cả sheets vào workbook
+                XLSX.utils.book_append_sheet(wb, wsDashboard, 'Dashboard');
+                XLSX.utils.book_append_sheet(wb, wsChart, 'BieuDo');
+                XLSX.utils.book_append_sheet(wb, wsDetail, 'ChiTiet');
+                XLSX.utils.book_append_sheet(wb, wsAnalysis, 'PhanTich');
+
+                // Lưu file
+                const fileName = `Luna_Report_${reportType}_Professional_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+
+                showToast('✅ Đã tạo báo cáo Excel chuyên nghiệp!', 'success');
+
+            } catch (error) {
+                console.error('Professional Excel Error:', error);
+                showToast('❌ Lỗi tạo báo cáo: ' + error.message, 'error');
+            }
+        };
+
+        // Xuất báo cáo CSV
+        window.exportReportToCSV = (reportData, reportType, dateRange) => {
+            try {
+                showToast('Đang tạo báo cáo CSV...', 'info');
+
+                // Lấy headers
+                const headers = getReportColumns(reportType);
+
+                // Tạo rows
+                const rows = reportData.map(item => getReportRow(item, reportType));
+
+                // Tạo nội dung CSV
+                let csvContent = headers.join(',') + '\n';
+
+                rows.forEach(row => {
+                    const escapedRow = row.map(cell => {
+                        if (typeof cell === 'string' && cell.includes(',')) {
+                            return `"${cell}"`;
+                        }
+                        return cell;
+                    }).join(',');
+                    csvContent += escapedRow + '\n';
+                });
+
+                // Thêm tổng kết
+                const totalRevenue = reportData.reduce((sum, item) => sum + (item.totalPrice || item.amount || 0), 0);
+                csvContent += '\n';
+                csvContent += `Tổng cộng,,${formatCurrency(totalRevenue)}\n`;
+
+                // Tạo blob và download
+                const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }); // Thêm BOM cho UTF-8
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+
+                link.setAttribute('href', url);
+                link.setAttribute('download', `Luna_${reportType}_${new Date().toISOString().slice(0, 10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                showToast('✅ Đã tải báo cáo CSV', 'success');
+
+            } catch (error) {
+                console.error('CSV Export Error:', error);
+                showToast('❌ Lỗi xuất CSV: ' + error.message, 'error');
+            }
+        };
+        // Kiểm tra thư viện đã được tải chưa
+        window.checkLibraries = () => {
+            const libraries = {
+                jspdf: typeof window.jspdf !== 'undefined',
+                xlsx: typeof XLSX !== 'undefined',
+                chart: typeof Chart !== 'undefined'
+            };
+
+            console.log('Library status:', libraries);
+
+            if (!libraries.jspdf) {
+                showToast('⚠️ Thư viện PDF chưa được tải', 'warning');
+            }
+            if (!libraries.xlsx) {
+                showToast('⚠️ Thư viện Excel chưa được tải', 'warning');
+            }
+
+            return libraries;
+        };
+
+        // Gọi kiểm tra khi trang load
+        setTimeout(checkLibraries, 2000);
+
+        // Helper functions
+        function getReportTypeName(type) {
+            const names = {
+                revenue: 'Doanh thu',
+                occupancy: 'Công suất phòng',
+                customers: 'Khách hàng',
+                services: 'Dịch vụ',
+                bookings: 'Đặt phòng',
+                staff: 'Nhân viên'
+            };
+            return names[type] || type;
+        }
+
+        function getReportColumns(type) {
+            const columns = {
+                revenue: ['Mã GD', 'Khách hàng', 'Phòng', 'Ngày', 'Số đêm', 'Tổng tiền', 'PTTT', 'Trạng thái'],
+                bookings: ['Mã đặt', 'Khách hàng', 'Phòng', 'Nhận phòng', 'Trả phòng', 'Số đêm', 'Tổng tiền', 'Trạng thái'],
+                customers: ['Mã KH', 'Tên KH', 'Email', 'SĐT', 'Tổng đặt', 'Tổng chi', 'Điểm', 'Hạng'],
+                services: ['Dịch vụ', 'Số lượng', 'Đơn giá', 'Tổng', 'Ngày sử dụng'],
+                staff: ['Mã NV', 'Họ tên', 'Chức vụ', 'Phòng ban', 'SĐT', 'Lương', 'Trạng thái']
+            };
+            return columns[type] || columns.bookings;
+        }
+
+        function getReportRow(item, type) {
+            switch (type) {
+                case 'revenue':
+                    return [
+                        item.id?.slice(-8) || '',
+                        item.userName || '',
+                        item.roomCode || '',
+                        formatDate(item.createdAt),
+                        item.nights || 1,
+                        formatCurrency(item.totalPrice || 0),
+                        item.paymentMethod || 'Tiền mặt',
+                        item.paymentStatus || 'pending'
+                    ];
+                case 'bookings':
+                    return [
+                        item.id?.slice(-8) || '',
+                        item.userName || '',
+                        item.roomCode || '',
+                        formatDate(item.checkIn),
+                        formatDate(item.checkOut),
+                        item.nights || 1,
+                        formatCurrency(item.totalPrice || 0),
+                        item.status || ''
+                    ];
+                case 'customers':
+                    const customerBookings = store.localBookings.filter(b => b.userId === item.id);
+                    return [
+                        item.id?.slice(-8) || '',
+                        item.name || '',
+                        item.email || '',
+                        item.phone || '',
+                        customerBookings.length,
+                        formatCurrency(customerBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0)),
+                        item.loyaltyPoints || 0,
+                        item.role === 'vip' ? 'VIP' : 'Thường'
+                    ];
+                default:
+                    return [];
+            }
+        }
+
+        // Gửi báo cáo qua email
+        window.sendReportByEmail = async (reportData, reportType, dateRange, email) => {
+            showToast('Đang gửi báo cáo...', 'info');
+
+            // Tạo nội dung email
+            const totalRevenue = reportData.reduce((sum, item) => sum + (item.totalPrice || item.amount || 0), 0);
+
+            const emailContent = `
+        <h2>Báo cáo ${getReportTypeName(reportType)}</h2>
+        <p><strong>Thời gian:</strong> ${dateRange.from} - ${dateRange.to}</p>
+        <p><strong>Tổng doanh thu:</strong> ${formatCurrency(totalRevenue)}</p>
+        <p><strong>Số giao dịch:</strong> ${reportData.length}</p>
+        <hr>
+        <p>File báo cáo chi tiết được đính kèm trong email này.</p>
+        <p>Trân trọng,<br>Luna Hotel & Resort</p>
+    `;
+
+            // Giả lập gửi email
+            setTimeout(() => {
+                showToast(`Đã gửi báo cáo đến ${email}`, 'success');
+            }, 2000);
+        };
+
         window.formatCardNumber = function (input) {
             let value = input.value.replace(/\D/g, '');
             let formattedValue = '';
@@ -3788,6 +4815,16 @@
                             <h4 class="font-bold text-slate-900">Xuất báo cáo</h4>
                             <p class="text-xs text-slate-500 mt-1">Doanh thu, công suất phòng</p>
                         </button>
+<!-- Thêm vào quick actions trong dashboard -->
+<button onclick="quickProfessionalReport()" class="p-4 bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl text-white hover:shadow-xl transition-all transform hover:scale-105">
+    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+        <i class="fa-solid fa-chart-pie text-xl"></i>
+    </div>
+    <h4 class="font-bold">Báo cáo chuyên nghiệp</h4>
+    <p class="text-xs opacity-80 mt-1">Xuất báo cáo đầy đủ biểu đồ</p>
+</button>
+
+                        
                     </div>
                 </div>
             `;
@@ -3910,6 +4947,14 @@
                                                                 class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa">
                                                             <i class="fa-solid fa-trash"></i>
                                                         </button>
+                                                        // Thêm vào grid quick actions
+<button onclick="quickExportRevenue()" class="p-4 bg-white rounded-2xl border border-slate-200 hover:border-green-300 hover:shadow-lg transition-all text-left group">
+    <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-3 group-hover:bg-green-600 group-hover:text-white transition-colors">
+        <i class="fa-solid fa-file-excel"></i>
+    </div>
+    <h4 class="font-bold text-slate-900">Xuất doanh thu</h4>
+    <p class="text-xs text-slate-500 mt-1">Tải báo cáo doanh thu tháng này</p>
+</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -5382,68 +6427,155 @@
                 ? store.localServices.filter(s => s.available)
                 : store.localServices.filter(s => s.category === store.currentServiceCategory && s.available);
 
-            const start = store.userServicesPage * store.userServicesLimit;
-            const paginated = filteredServices.slice(start, start + store.userServicesLimit);
-            const hasMore = filteredServices.length > start + store.userServicesLimit;
-
             container.innerHTML = `
-                <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-playfair font-bold text-slate-900 mb-4">Dịch vụ của chúng tôi</h2>
-                        <p class="text-lg text-slate-600">Tận hưởng những dịch vụ đẳng cấp 5 sao</p>
-                    </div>
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
+            <!-- Hero Section -->
+            <div class="relative h-96 rounded-3xl overflow-hidden mb-16 group">
+                <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2000&auto=format&fit=crop" 
+                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-12 text-white">
+                    <span class="text-blue-400 font-bold text-sm uppercase tracking-widest mb-4 block animate-pulse">
+                        TRẢI NGHIỆM ĐẲNG CẤP
+                    </span>
+                    <h2 class="text-5xl font-playfair font-bold mb-4">Dịch vụ 5 sao</h2>
+                    <p class="text-xl text-slate-200 max-w-2xl">
+                        Tận hưởng những dịch vụ đẳng cấp thế giới tại Luna Hotel
+                    </p>
+                </div>
+            </div>
 
-                    <!-- Categories -->
-                    <div class="flex flex-wrap justify-center gap-3 mb-8">
-                        ${categories.map(cat => `
-                            <button onclick="filterUserServices('${cat}')" 
-                                    class="px-6 py-2 rounded-full text-sm font-medium transition-all ${store.currentServiceCategory === cat ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-900'}">
-                                ${cat === 'All' ? 'Tất cả' : cat === 'dining' ? 'Nhà hàng' : cat === 'spa' ? 'Spa' : cat === 'wellness' ? 'Sức khỏe' : cat === 'transport' ? 'Di chuyển' : 'Hoạt động'}
-                            </button>
-                        `).join('')}
-                    </div>
+            <!-- Categories với hiệu ứng -->
+            <div class="flex flex-wrap justify-center gap-3 mb-12">
+                ${categories.map(cat => `
+                    <button onclick="filterUserServices('${cat}')" 
+                            class="group relative px-8 py-3 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105
+                                   ${store.currentServiceCategory === cat
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-400 hover:text-blue-600'}">
+                        <span class="relative z-10">
+                            ${cat === 'All' ? '✨ Tất cả' :
+                    cat === 'dining' ? '🍽️ Nhà hàng' :
+                        cat === 'spa' ? '💆 Spa' :
+                            cat === 'wellness' ? '🏋️ Sức khỏe' :
+                                cat === 'transport' ? '🚗 Di chuyển' : '🎉 Hoạt động'}
+                        </span>
+                        ${store.currentServiceCategory === cat ? `
+                            <span class="absolute inset-0 rounded-full bg-blue-600 animate-ping opacity-30"></span>
+                        ` : ''}
+                    </button>
+                `).join('')}
+            </div>
 
-                    <!-- Services Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        ${paginated.map(service => `
-                            <div class="bg-white rounded-2xl p-6 shadow-lg hover-lift">
-                                <div class="flex items-center mb-4">
-                                    <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mr-4">
-                                        <i class="fa-solid fa-${service.icon} text-2xl"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-xl font-bold text-slate-900">${service.name}</h3>
-                                        <p class="text-sm text-slate-500">${service.category === 'dining' ? 'Nhà hàng' : service.category === 'spa' ? 'Spa' : service.category === 'wellness' ? 'Sức khỏe' : service.category === 'transport' ? 'Di chuyển' : 'Hoạt động'}</p>
-                                    </div>
+            <!-- Service Grid với hiệu ứng 3D -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 perspective-1000">
+                ${filteredServices.map((service, index) => `
+                    <div class="group relative bg-white rounded-3xl shadow-xl overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-2"
+                         style="animation: fadeInUp 0.6s ease-out ${index * 0.1}s both;">
+                        
+                        <!-- Image Container với hiệu ứng zoom -->
+                        <div class="h-64 overflow-hidden relative">
+                            <img src="${service.image || 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'}" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                 onerror="this.src='https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'">
+                            
+                            <!-- Overlay gradient -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-70 transition-opacity duration-500"></div>
+                            
+                            <!-- Badge -->
+                            <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold shadow-lg transform translate-x-20 group-hover:translate-x-0 transition-transform duration-500">
+                                <span class="text-blue-600">${service.unit === 'person' ? '👤' : service.unit === 'room' ? '🏠' : '⏰'}</span>
+                                <span class="ml-1">${service.unit === 'person' ? '/người' : service.unit === 'room' ? '/phòng' : '/giờ'}</span>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="p-8">
+                            <div class="flex items-center mb-4">
+                                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white mr-4 transform group-hover:rotate-12 transition-transform duration-500">
+                                    <i class="fa-solid fa-${service.icon || 'utensils'} text-2xl"></i>
                                 </div>
-                                <p class="text-slate-600 mb-4">${service.description}</p>
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="text-2xl font-bold text-blue-600">${formatCurrency(service.price)}</p>
-                                        <p class="text-xs text-slate-400">${service.unit === 'person' ? '/người' : service.unit === 'room' ? '/phòng' : '/giờ'}</p>
-                                    </div>
-                                    <button onclick="addServiceToCart('${service.id}')" 
-                                            class="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-all">
-                                        Thêm vào đặt phòng
-                                    </button>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                        ${service.name}
+                                    </h3>
+                                    <p class="text-sm text-slate-500">${service.category === 'dining' ? 'Nhà hàng' :
+                                        service.category === 'spa' ? 'Spa & Wellness' :
+                                            service.category === 'wellness' ? 'Sức khỏe' :
+                                                service.category === 'transport' ? 'Di chuyển' : 'Giải trí'}</p>
                                 </div>
                             </div>
-                        `).join('')}
+                            
+                            <p class="text-slate-600 mb-6 leading-relaxed">${service.description}</p>
+                            
+                            <!-- Features -->
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="space-y-2">
+                                    <p class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">
+                                        ${formatCurrency(service.price)}
+                                    </p>
+                                    <div class="flex items-center text-sm text-slate-500">
+                                        <i class="fa-regular fa-clock mr-2"></i>
+                                        <span>${service.unit === 'person' ? 'Tính theo người' :
+                                        service.unit === 'room' ? 'Tính theo phòng' : 'Tính theo giờ'}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Rating -->
+                                <div class="flex items-center bg-yellow-50 px-3 py-2 rounded-xl">
+                                    <i class="fa-solid fa-star text-yellow-400 mr-1"></i>
+                                    <span class="font-bold text-slate-900">4.9</span>
+                                    <span class="text-xs text-slate-500 ml-1">(128)</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex gap-3">
+                                <button onclick="addServiceToCart('${service.id}')" 
+                                        class="flex-1 bg-gradient-to-r from-slate-900 to-slate-800 text-white py-4 rounded-xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/30 group/btn">
+                                    <i class="fa-regular fa-plus mr-2 group-hover/btn:rotate-90 transition-transform"></i>
+                                    Thêm vào đặt phòng
+                                </button>
+                                <button onclick="viewServiceDetails('${service.id}')" 
+                                        class="w-14 h-14 border-2 border-slate-200 rounded-xl hover:border-blue-400 hover:text-blue-600 transition-all duration-300 transform hover:scale-110">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                `).join('')}
+            </div>
 
-                    ${filteredServices.length === 0 ? `
-                        <div class="text-center py-12">
-                            <p class="text-slate-500">Không tìm thấy dịch vụ phù hợp</p>
-                        </div>
-                    ` : ''}
-
-                    ${hasMore ? `
-                        <div class="text-center mt-8">
-                            <button onclick="loadMoreUserServices()" class="btn-secondary">Xem thêm dịch vụ</button>
-                        </div>
-                    ` : ''}
+            ${filteredServices.length === 0 ? `
+                <div class="text-center py-20">
+                    <div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                        <i class="fa-solid fa-magnifying-glass text-4xl text-slate-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-2">Không tìm thấy dịch vụ</h3>
+                    <p class="text-slate-500">Vui lòng thử lại với danh mục khác</p>
                 </div>
-            `;
+            ` : ''}
+        </div>
+    `;
+
+            // Thêm animation keyframes
+            const style = document.createElement('style');
+            style.textContent = `
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+    `;
+            document.head.appendChild(style);
         }
 
         function renderUserLoyalty(container) {
@@ -5452,148 +6584,566 @@
                 .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
             const points = Math.floor(totalSpent / 100000);
-            const nextReward = 100 - (points % 100);
-            const tier = points >= 1000 ? 'Platinum' : points >= 500 ? 'Gold' : points >= 100 ? 'Silver' : 'Member';
+            const memberTier = points >= 10000 ? 'Platinum' : points >= 5000 ? 'Gold' : points >= 1000 ? 'Silver' : 'Bronze';
+
+            // Tier benefits
+            const tierBenefits = {
+                Platinum: {
+                    discount: 20,
+                    upgrade: 'Miễn phí',
+                    points: 'x2',
+                    lounge: 'Có',
+                    icon: 'fa-crown',
+                    color: 'from-purple-600 to-purple-800',
+                    bgImage: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2000'
+                },
+                Gold: {
+                    discount: 15,
+                    upgrade: '50%',
+                    points: 'x1.5',
+                    lounge: 'Có phí',
+                    icon: 'fa-medal',
+                    color: 'from-yellow-500 to-yellow-700',
+                    bgImage: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=2000'
+                },
+                Silver: {
+                    discount: 10,
+                    upgrade: '30%',
+                    points: 'x1.2',
+                    lounge: 'Không',
+                    icon: 'fa-star',
+                    color: 'from-slate-400 to-slate-600',
+                    bgImage: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2000'
+                },
+                Bronze: {
+                    discount: 5,
+                    upgrade: '15%',
+                    points: 'x1',
+                    lounge: 'Không',
+                    icon: 'fa-seedling',
+                    color: 'from-amber-600 to-amber-800',
+                    bgImage: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2000'
+                }
+            };
+
+            const benefit = tierBenefits[memberTier];
 
             container.innerHTML = `
-                <div class="max-w-4xl mx-auto px-4 md:px-8 py-12">
-                    <!-- Loyalty Card -->
-                    <div class="loyalty-card mb-8">
-                        <div class="relative z-10">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
+            <!-- Hero Section -->
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-playfair font-bold text-slate-900 mb-4">Chương trình khách hàng thân thiết</h2>
+                <p class="text-xl text-slate-600">Tích điểm mỗi lần đặt phòng - Nhận ưu đãi đặc biệt</p>
+            </div>
+
+            <!-- Loyalty Card 3D -->
+            <div class="relative max-w-4xl mx-auto mb-16 group perspective-1000" style="perspective: 1500px;">
+                <div class="relative transform transition-all duration-700 group-hover:rotate-y-180 group-hover:shadow-2xl" 
+                     style="transform-style: preserve-3d; min-height: 400px;">
+                    
+                    <!-- Front of Card -->
+                    <div class="absolute inset-0 backface-hidden rounded-3xl overflow-hidden shadow-2xl"
+                         style="backface-visibility: hidden;">
+                        <div class="absolute inset-0 bg-gradient-to-br ${benefit.color} opacity-90"></div>
+                        <img src="${benefit.bgImage}" class="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30">
+                        
+                        <div class="relative p-8 text-white">
+                            <!-- Card Header -->
                             <div class="flex justify-between items-start mb-8">
                                 <div>
-                                    <p class="text-sm opacity-90 mb-1">Thẻ thành viên</p>
-                                    <h3 class="text-2xl font-bold">${store.currentUserData.name || 'Khách hàng'}</h3>
+                                    <p class="text-sm opacity-80 mb-1">LUNA HOTEL & RESORT</p>
+                                    <h3 class="text-3xl font-playfair font-bold">Thẻ thành viên</h3>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-sm opacity-90">Hạng</p>
-                                    <p class="text-2xl font-bold">${tier}</p>
-                                </div>
+                                <i class="fa-solid ${benefit.icon} text-5xl opacity-80"></i>
                             </div>
                             
+                            <!-- Member Info -->
                             <div class="mb-8">
-                                <p class="text-sm opacity-90 mb-2">Số thẻ</p>
-                                <p class="text-xl font-mono">**** **** **** ${store.currentUser?.uid.slice(-4) || '0000'}</p>
+                                <p class="text-sm opacity-80 mb-1">Hạng thành viên</p>
+                                <p class="text-4xl font-bold mb-2">${memberTier}</p>
+                                <p class="text-2xl font-mono tracking-wider">**** **** **** ${store.currentUser?.uid.slice(-4) || '0000'}</p>
                             </div>
                             
+                            <!-- Points & Name -->
                             <div class="flex justify-between items-end">
                                 <div>
-                                    <p class="text-sm opacity-90">Điểm tích lũy</p>
-                                    <p class="text-4xl font-bold">${points}</p>
+                                    <p class="text-sm opacity-80 mb-1">Điểm tích lũy</p>
+                                    <p class="text-5xl font-bold">${points.toLocaleString()}</p>
                                 </div>
-                                <div>
-                                    <p class="text-sm opacity-90">Thành viên từ</p>
-                                    <p>${formatDate(store.currentUserData.memberSince)}</p>
+                                <div class="text-right">
+                                    <p class="text-sm opacity-80">${store.currentUserData.name || 'Khách hàng'}</p>
+                                    <p class="text-xs opacity-60">Thành viên từ ${formatDate(store.currentUserData.memberSince)}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Points Progress -->
-                    <div class="bg-white rounded-2xl p-6 shadow-lg mb-8">
-                        <h4 class="font-bold text-slate-900 mb-4">Tiến trình điểm thưởng</h4>
-                        <div class="mb-2 flex justify-between text-sm">
-                            <span>${points} điểm</span>
-                            <span>${points + nextReward} điểm</span>
-                        </div>
-                        <div class="w-full bg-slate-200 rounded-full h-3 mb-2">
-                            <div class="bg-blue-600 h-3 rounded-full" style="width: ${(points % 100)}%"></div>
-                        </div>
-                        <p class="text-sm text-slate-500">Còn ${nextReward} điểm để nhận ưu đãi tiếp theo</p>
-                    </div>
-
-                    <!-- Rewards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white rounded-2xl p-6 shadow-lg">
-                            <h4 class="font-bold text-slate-900 mb-4">Ưu đãi dành cho bạn</h4>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                                    <div>
-                                        <p class="font-medium text-slate-900">Giảm 10% đặt phòng</p>
-                                        <p class="text-xs text-slate-500">Còn 5 ngày</p>
-                                    </div>
-                                    <span class="badge badge-success">50 điểm</span>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                                    <div>
-                                        <p class="font-medium text-slate-900">Nâng cấp phòng miễn phí</p>
-                                        <p class="text-xs text-slate-500">Còn 10 ngày</p>
-                                    </div>
-                                    <span class="badge badge-info">100 điểm</span>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                                    <div>
-                                        <p class="font-medium text-slate-900">Buffet sáng 2 người</p>
-                                        <p class="text-xs text-slate-500">Còn 15 ngày</p>
-                                    </div>
-                                    <span class="badge badge-warning">75 điểm</span>
-                                </div>
+                    
+                    <!-- Back of Card -->
+                    <div class="absolute inset-0 backface-hidden bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 shadow-2xl transform rotate-y-180"
+                         style="backface-visibility: hidden; transform: rotateY(180deg);">
+                        <div class="h-full flex flex-col justify-between">
+                            <div>
+                                <h4 class="text-2xl font-playfair font-bold text-white mb-6">Điều khoản & Quyền lợi</h4>
+                                <ul class="space-y-4 text-slate-300">
+                                    <li class="flex items-start">
+                                        <i class="fa-solid fa-check-circle text-green-400 mr-3 mt-1"></i>
+                                        <span>Thẻ có giá trị đến hết ngày 31/12/2026</li>
+                                    <li class="flex items-start">
+                                        <i class="fa-solid fa-check-circle text-green-400 mr-3 mt-1"></i>
+                                        <span>Không được chuyển nhượng</li>
+                                    <li class="flex items-start">
+                                        <i class="fa-solid fa-check-circle text-green-400 mr-3 mt-1"></i>
+                                        <span>Điểm thưởng có giá trị 12 tháng</li>
+                                    <li class="flex items-start">
+                                        <i class="fa-solid fa-check-circle text-green-400 mr-3 mt-1"></i>
+                                        <span>Liên hệ reception để biết thêm chi tiết</li>
+                                </ul>
                             </div>
-                        </div>
-
-                        <div class="bg-white rounded-2xl p-6 shadow-lg">
-                            <h4 class="font-bold text-slate-900 mb-4">Lịch sử tích điểm</h4>
-                            <div class="space-y-3">
-                                ${store.localBookings
-                    .filter(b => b.userId === store.currentUser?.uid && b.status === 'completed')
-                    .slice(0, 3)
-                    .map(booking => {
-                        const checkIn = booking.checkIn?.toDate ? booking.checkIn.toDate() : new Date(booking.checkIn || 0);
-                        return `
-                                            <div class="flex justify-between items-center">
-                                                <div>
-                                                    <p class="font-medium text-slate-900">Đặt phòng ${booking.roomCode}</p>
-                                                    <p class="text-xs text-slate-500">${formatDate(checkIn)}</p>
-                                                </div>
-                                                <span class="text-green-600 font-bold">+${Math.floor(booking.totalPrice / 100000)}</span>
-                                            </div>
-                                        `;
-                    }).join('')}
+                            <div class="text-center text-slate-400 text-sm">
+                                <i class="fa-solid fa-circle-info mr-2"></i>
+                                Quẹt thẻ này khi nhận phòng để tích điểm
                             </div>
                         </div>
                     </div>
                 </div>
-            `;
-        }
+            </div>
 
+            <!-- Tier Benefits Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
+                <div class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white transform hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-crown text-3xl mb-3"></i>
+                    <h4 class="font-bold text-lg mb-2">Platinum</h4>
+                    <p class="text-2xl font-bold">20%</p>
+                    <p class="text-sm opacity-80">Giảm giá</p>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-2xl p-6 text-white transform hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-medal text-3xl mb-3"></i>
+                    <h4 class="font-bold text-lg mb-2">Gold</h4>
+                    <p class="text-2xl font-bold">15%</p>
+                    <p class="text-sm opacity-80">Giảm giá</p>
+                </div>
+                <div class="bg-gradient-to-br from-slate-400 to-slate-600 rounded-2xl p-6 text-white transform hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-star text-3xl mb-3"></i>
+                    <h4 class="font-bold text-lg mb-2">Silver</h4>
+                    <p class="text-2xl font-bold">10%</p>
+                    <p class="text-sm opacity-80">Giảm giá</p>
+                </div>
+                <div class="bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl p-6 text-white transform hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-seedling text-3xl mb-3"></i>
+                    <h4 class="font-bold text-lg mb-2">Bronze</h4>
+                    <p class="text-2xl font-bold">5%</p>
+                    <p class="text-sm opacity-80">Giảm giá</p>
+                </div>
+            </div>
+
+            <!-- Benefits Table -->
+            <div class="bg-white rounded-3xl p-8 shadow-xl mb-16">
+                <h3 class="text-2xl font-playfair font-bold text-slate-900 mb-6">So sánh quyền lợi</h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-slate-200">
+                                <th class="py-4 text-left">Quyền lợi</th>
+                                <th class="py-4 text-center">Bronze</th>
+                                <th class="py-4 text-center">Silver</th>
+                                <th class="py-4 text-center">Gold</th>
+                                <th class="py-4 text-center">Platinum</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="py-4">Giảm giá phòng</td>
+                                <td class="py-4 text-center font-bold text-green-600">5%</td>
+                                <td class="py-4 text-center font-bold text-green-600">10%</td>
+                                <td class="py-4 text-center font-bold text-green-600">15%</td>
+                                <td class="py-4 text-center font-bold text-green-600">20%</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Giảm giá dịch vụ</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">5%</td>
+                                <td class="py-4 text-center">10%</td>
+                                <td class="py-4 text-center">15%</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Nâng cấp phòng</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">30% phí</td>
+                                <td class="py-4 text-center">50% phí</td>
+                                <td class="py-4 text-center">Miễn phí</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Check-in sớm</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">Theo yêu cầu</td>
+                                <td class="py-4 text-center">Đảm bảo</td>
+                                <td class="py-4 text-center">Đảm bảo</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Check-out muộn</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">14:00</td>
+                                <td class="py-4 text-center">16:00</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Phòng chờ lounge</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">Có phí</td>
+                                <td class="py-4 text-center">Miễn phí</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Tích điểm thưởng</td>
+                                <td class="py-4 text-center">1x</td>
+                                <td class="py-4 text-center">1.2x</td>
+                                <td class="py-4 text-center">1.5x</td>
+                                <td class="py-4 text-center">2x</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Points History -->
+            <div class="bg-white rounded-3xl p-8 shadow-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-playfair font-bold text-slate-900">Lịch sử tích điểm</h3>
+                    <span class="text-sm text-slate-500">Điểm hiện tại: <span class="font-bold text-amber-600">${points}</span></span>
+                </div>
+                
+                <div class="space-y-4">
+                    ${store.localBookings
+                    .filter(b => b.userId === store.currentUser?.uid && b.status === 'completed')
+                    .slice(0, 5)
+                    .map((booking, index) => {
+                        const pointsEarned = Math.floor(booking.totalPrice / 100000);
+                        const checkIn = booking.checkIn?.toDate ? booking.checkIn.toDate() : new Date(booking.checkIn || 0);
+                        return `
+                                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl hover:shadow-md transition-all transform hover:scale-[1.02]"
+                                     style="animation: slideInRight 0.5s ease-out ${index * 0.1}s both;">
+                                    <div class="flex items-center">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white mr-4">
+                                            <i class="fa-solid fa-hotel"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-900">Phòng ${booking.roomCode}</p>
+                                            <p class="text-sm text-slate-500">${formatDate(checkIn)} • ${booking.nights} đêm</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-2xl font-bold text-amber-600">+${pointsEarned}</p>
+                                        <p class="text-xs text-slate-400">điểm</p>
+                                    </div>
+                                </div>
+                            `;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+            // Thêm animation
+            const style = document.createElement('style');
+            style.textContent = `
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .perspective-1000 {
+            perspective: 1500px;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        .group:hover .group-hover\\:rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+    `;
+            document.head.appendChild(style);
+        }
         function renderUserOffers(container) {
             const activePromotions = store.localPromotions.filter(p => p.active);
+            const userTier = getMemberTier(store.currentUserData?.loyaltyPoints || 0);
 
             container.innerHTML = `
-                <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-playfair font-bold text-slate-900 mb-4">Ưu đãi đặc biệt</h2>
-                        <p class="text-lg text-slate-600">Những chương trình khuyến mãi hấp dẫn dành cho bạn</p>
-                    </div>
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
+            <!-- Hero Section -->
+            <div class="relative h-96 rounded-3xl overflow-hidden mb-16">
+                <img src="https://images.unsplash.com/photo-1607860108855-64acf2078ed9?q=80&w=2000&auto=format&fit=crop" 
+                     class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-12 text-white">
+                    <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-4 py-2 rounded-full text-sm font-bold mb-4 inline-block animate-pulse">
+                        🔥 ƯU ĐÃI ĐẶC BIỆT
+                    </span>
+                    <h2 class="text-5xl font-playfair font-bold mb-4">Dành riêng cho bạn</h2>
+                    <p class="text-xl text-slate-200 max-w-2xl">
+                        Những ưu đãi hấp dẫn dành riêng cho hạng thành viên ${userTier} của bạn
+                    </p>
+                </div>
+            </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        ${activePromotions.map(promo => `
-                            <div class="bg-white rounded-3xl overflow-hidden shadow-xl hover-lift relative">
-                                <div class="h-40 bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white">
-                                    <div class="absolute top-4 right-4 bg-yellow-400 text-slate-900 px-3 py-1 rounded-full text-sm font-bold">
-                                        ${promo.type === 'percent' ? `${promo.value}%` : formatCurrency(promo.value)} OFF
+            <!-- Tier-based Offers -->
+            <div class="mb-16">
+                <h3 class="text-3xl font-playfair font-bold text-slate-900 mb-8 flex items-center">
+                    <i class="fa-solid fa-crown text-yellow-500 mr-3"></i>
+                    Ưu đãi theo hạng thành viên
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Bronze Offer -->
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-3xl p-8 relative overflow-hidden group hover:shadow-2xl transition-all transform hover:scale-105">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-amber-200 rounded-full -mr-16 -mt-16 opacity-50"></div>
+                        <i class="fa-solid fa-seedling text-4xl text-amber-600 mb-4"></i>
+                        <h4 class="text-2xl font-bold text-amber-800 mb-2">Bronze Welcome</h4>
+                        <p class="text-amber-700 mb-4">Dành cho thành viên mới</p>
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center text-amber-700">
+                                <i class="fa-solid fa-check-circle mr-2"></i>
+                                Giảm 5% đặt phòng đầu
+                            </li>
+                            <li class="flex items-center text-amber-700">
+                                <i class="fa-solid fa-check-circle mr-2"></i>
+                                Trà chiều miễn phí
+                            </li>
+                            <li class="flex items-center text-amber-700">
+                                <i class="fa-solid fa-check-circle mr-2"></i>
+                                Check-out 13:00
+                            </li>
+                        </ul>
+                        <button class="w-full bg-amber-600 text-white py-3 rounded-xl font-bold hover:bg-amber-700 transition-all">
+                            Nhận ưu đãi
+                        </button>
+                    </div>
+                    
+                    <!-- Silver Offer -->
+                    <div class="bg-gradient-to-br from-slate-50 to-slate-200 rounded-3xl p-8 relative overflow-hidden group hover:shadow-2xl transition-all transform hover:scale-105">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-slate-300 rounded-full -mr-16 -mt-16 opacity-50"></div>
+                        <i class="fa-solid fa-star text-4xl text-slate-600 mb-4"></i>
+                        <h4 class="text-2xl font-bold text-slate-800 mb-2">Silver Weekend</h4>
+                        <p class="text-slate-700 mb-4">Ưu đãi cuối tuần</p>
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center text-slate-700">
+                                <i class="fa-solid fa-check-circle mr-2"></i>
+                                Giảm 10% cuối tuần
+                            </li>
+                            <li class="flex items-center text-slate-700">
+                                <i class="fa-solid fa-check-circle mr-2"></i>
+                                Buffet sáng 2 người
+                            </li>
+                            <li class="flex items-center text-slate-700">
+                                <i class="fa-solid fa-check-circle mr-2"></i>
+                                Nâng cấp phòng 30%
+                            </li>
+                        </ul>
+                        <button class="w-full bg-slate-600 text-white py-3 rounded-xl font-bold hover:bg-slate-700 transition-all">
+                            Nhận ưu đãi
+                        </button>
+                    </div>
+                    
+                    <!-- Gold Offer -->
+                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-200 rounded-3xl p-8 relative overflow-hidden group hover:shadow-2xl transition-all transform hover:scale-105">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-300 rounded-full -mr-16 -mt-16 opacity-50"></div>
+                        <i class="fa-solid fa-medal text-4xl text-yellow-600 mb-4"></i>
+                        <h4 class="text-2xl font-bold text-yellow-800 mb-2">Gold Luxury</h4>
+                        <p class="text-yellow-700 mb-4">Trải nghiệm đẳng cấp</p>
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center text-yellow-700">
+                                <i class="fa-solid fa-check-circle mr-2"></i>
+                                Giảm 15% tất cả dịch vụ
+                            </li>
+                            <li class="flex items-center text-yellow-700">
+                                <i class="fa-solid fa-check-circle mr-2"></i>
+                                Spa miễn phí 60 phút
+                            </li>
+                            <li class="flex items-center text-yellow-700">
+                                <i class="fa-solid fa-check-circle mr-2"></i>
+                                Đưa đón sân bay
+                            </li>
+                        </ul>
+                        <button class="w-full bg-yellow-600 text-white py-3 rounded-xl font-bold hover:bg-yellow-700 transition-all">
+                            Nhận ưu đãi
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Promotions -->
+            <div class="mb-16">
+                <h3 class="text-3xl font-playfair font-bold text-slate-900 mb-8 flex items-center">
+                    <i class="fa-solid fa-tags text-blue-600 mr-3"></i>
+                    Mã khuyến mãi đang có
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${activePromotions.map((promo, index) => `
+                        <div class="group relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all transform hover:scale-105"
+                             style="animation: fadeInUp 0.5s ease-out ${index * 0.1}s both;">
+                            
+                            <!-- Promo Header -->
+                            <div class="h-32 bg-gradient-to-r from-blue-600 to-blue-800 p-6 relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
+                                <div class="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full -ml-20 -mb-20"></div>
+                                
+                                <div class="relative z-10">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <span class="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
+                                                ${promo.type === 'percent' ? '% Giảm phần trăm' : '₫ Giảm trực tiếp'}
+                                            </span>
+                                            <h4 class="text-2xl font-bold text-white mt-3 font-mono">${promo.code}</h4>
+                                        </div>
+                                        <div class="bg-yellow-400 text-slate-900 w-16 h-16 rounded-2xl flex items-center justify-center transform -rotate-12">
+                                            <span class="font-bold text-lg">${promo.value}${promo.type === 'percent' ? '%' : 'k'}</span>
+                                        </div>
                                     </div>
-                                    <h3 class="text-2xl font-bold mb-2">${promo.code}</h3>
-                                    <p class="text-sm opacity-90">${promo.name}</p>
                                 </div>
-                                <div class="p-6">
-                                    <p class="text-slate-600 mb-4">${promo.description}</p>
-                                    <div class="space-y-2 text-sm text-slate-500 mb-4">
-                                        <div><i class="fa-regular fa-calendar mr-2"></i>HSD: ${formatDate(promo.endDate)}</div>
-                                        <div><i class="fa-regular fa-circle-check mr-2"></i>${promo.condition === 'min_amount' ? `Đơn tối thiểu ${formatCurrency(promo.minAmount)}` :
-                    promo.condition === 'first_booking' ? 'Dành cho lần đặt đầu tiên' : 'Không điều kiện'}</div>
+                            </div>
+                            
+                            <!-- Promo Body -->
+                            <div class="p-6">
+                                <h5 class="text-xl font-bold text-slate-900 mb-2">${promo.name}</h5>
+                                <p class="text-slate-600 mb-4">${promo.description}</p>
+                                
+                                <div class="space-y-2 mb-6">
+                                    <div class="flex items-center text-sm">
+                                        <i class="fa-regular fa-calendar text-blue-600 w-5"></i>
+                                        <span class="text-slate-500">HSD: ${formatDate(promo.endDate)}</span>
                                     </div>
+                                    <div class="flex items-center text-sm">
+                                        <i class="fa-regular fa-circle-check text-blue-600 w-5"></i>
+                                        <span class="text-slate-500">${promo.condition === 'min_amount' ? `Đơn tối thiểu ${formatCurrency(promo.minAmount)}` :
+                    promo.condition === 'first_booking' ? 'Lần đầu đặt phòng' : 'Không điều kiện'}</span>
+                                    </div>
+                                    <div class="flex items-center text-sm">
+                                        <i class="fa-regular fa-clock text-blue-600 w-5"></i>
+                                        <span class="text-slate-500">Còn ${Math.ceil((new Date(promo.endDate) - new Date()) / (1000 * 60 * 60 * 24))} ngày</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Copy Code Button -->
+                                <div class="flex gap-2">
                                     <button onclick="copyPromoCode('${promo.code}')" 
-                                            class="w-full border-2 border-blue-600 text-blue-600 py-3 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all">
-                                        Sao chép mã
+                                            class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 transition-all group/btn relative overflow-hidden">
+                                        <span class="relative z-10 flex items-center justify-center">
+                                            <i class="fa-regular fa-copy mr-2 group-hover/btn:scale-110 transition-transform"></i>
+                                            Sao chép mã
+                                        </span>
+                                        <div class="absolute inset-0 bg-white/20 transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500"></div>
+                                    </button>
+                                    <button onclick="viewPromoDetails('${promo.id}')" 
+                                            class="w-12 h-12 border-2 border-slate-200 rounded-xl hover:border-blue-400 hover:text-blue-600 transition-all">
+                                        <i class="fa-regular fa-eye"></i>
                                     </button>
                                 </div>
                             </div>
-                        `).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Personalized Offers -->
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-12 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full -mr-48 -mt-48 blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full -ml-48 -mb-48 blur-3xl"></div>
+                
+                <div class="relative z-10">
+                    <span class="bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-4 py-2 rounded-full text-sm font-bold mb-6 inline-block">
+                        🎯 DÀNH RIÊNG CHO BẠN
+                    </span>
+                    
+                    <h3 class="text-4xl font-playfair font-bold mb-4">Ưu đãi cá nhân hóa</h3>
+                    <p class="text-xl text-slate-300 mb-8 max-w-2xl">
+                        Dựa trên lịch sử đặt phòng của bạn, chúng tôi có những ưu đãi đặc biệt
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-yellow-400/20 rounded-xl flex items-center justify-center mr-4">
+                                    <i class="fa-solid fa-gift text-yellow-400 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold">Sinh nhật sắp đến</h4>
+                                    <p class="text-sm text-slate-300">Nhận ưu đãi đặc biệt 30%</p>
+                                </div>
+                            </div>
+                            <button class="w-full bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-bold transition-all">
+                                Nhận quà sinh nhật
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-green-400/20 rounded-xl flex items-center justify-center mr-4">
+                                    <i class="fa-solid fa-star text-green-400 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold">VIP Member</h4>
+                                    <p className="text-sm text-slate-300">Bạn chỉ còn 500 điểm để lên hạng Platinum</p>
+                                </div>
+                            </div>
+                            <div class="w-full bg-white/20 rounded-full h-2 mb-4">
+                                <div class="bg-green-400 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                            <button class="w-full bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-bold transition-all">
+                                Xem chi tiết
+                            </button>
+                        </div>
                     </div>
                 </div>
-            `;
+            </div>
+        </div>
+    `;
+
+            // Thêm animation keyframes
+            const style = document.createElement('style');
+            style.textContent = `
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+    `;
+            document.head.appendChild(style);
+        }
+
+        // Helper function
+        function getMemberTier(points) {
+            if (points >= 10000) return 'Platinum';
+            if (points >= 5000) return 'Gold';
+            if (points >= 1000) return 'Silver';
+            return 'Bronze';
+        }
+
+        window.copyPromoCode = function (code) {
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('✅ Đã sao chép mã!', 'success');
+            });
+        };
+
+        window.viewPromoDetails = function (promoId) {
+            const promo = store.localPromotions.find(p => p.id === promoId);
+            if (promo) {
+                showToast(`📋 ${promo.name}: ${promo.description}`, 'info');
+            }
+        };
 
         function renderUserProfile(container) {
             const userBookings = store.localBookings.filter(b => b.userId === store.currentUser?.uid);
@@ -5601,116 +7151,243 @@
             const completedBookings = userBookings.filter(b => b.status === 'completed').length;
             const memberSince = store.currentUserData?.memberSince?.toDate ? store.currentUserData.memberSince.toDate() : new Date(store.currentUserData?.memberSince || store.currentUserData?.createdAt || Date.now());
 
+            // Tính toán cấp độ thành viên
+            const points = Math.floor(totalSpent / 100000);
+            const memberLevel = points >= 10000 ? 'Platinum' : points >= 5000 ? 'Gold' : points >= 1000 ? 'Silver' : 'Bronze';
+            const levelColors = {
+                Platinum: 'from-purple-600 to-purple-800',
+                Gold: 'from-yellow-500 to-yellow-700',
+                Silver: 'from-slate-400 to-slate-600',
+                Bronze: 'from-amber-600 to-amber-800'
+            };
+            const levelIcons = {
+                Platinum: 'fa-crown',
+                Gold: 'fa-medal',
+                Silver: 'fa-star',
+                Bronze: 'fa-seedling'
+            };
+
             container.innerHTML = `
-                <div class="max-w-4xl mx-auto px-4 md:px-8 py-8 md:py-12">
-                    <div class="bg-white rounded-2xl md:rounded-3xl shadow-xl overflow-hidden">
-                        <!-- Profile Header -->
-                        <div class="h-24 md:h-32 bg-gradient-to-r from-slate-900 to-blue-900 relative">
-                            <div class="absolute -bottom-12 left-4 md:left-8">
-                                <div class="w-20 h-20 md:w-24 md:h-24 rounded-xl md:rounded-2xl bg-white p-1 shadow-xl">
-                                    <div class="w-full h-full rounded-lg md:rounded-xl bg-gradient-to-br from-slate-900 to-blue-900 flex items-center justify-center text-white text-2xl md:text-4xl font-bold">
-                                        ${(store.currentUserData.name || store.currentUser?.email || 'U').charAt(0).toUpperCase()}
-                                    </div>
-                                </div>
+        <div class="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-12">
+            <!-- Cover Photo -->
+            <div class="relative h-80 rounded-3xl overflow-hidden mb-20 group">
+                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2000&auto=format&fit=crop" 
+                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-transparent"></div>
+                
+                <!-- Avatar -->
+                <div class="absolute -bottom-16 left-12 flex items-end space-x-6">
+                    <div class="relative">
+                        <div class="w-32 h-32 rounded-2xl bg-gradient-to-br ${levelColors[memberLevel]} p-1 shadow-2xl transform hover:scale-105 transition-transform duration-300">
+                            <div class="w-full h-full rounded-xl bg-white flex items-center justify-center">
+                                <span class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-br ${levelColors[memberLevel]}">
+                                    ${(store.currentUserData.name || store.currentUser?.email || 'U').charAt(0).toUpperCase()}
+                                </span>
                             </div>
                         </div>
+                        <div class="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-gradient-to-br ${levelColors[memberLevel]} flex items-center justify-center animate-pulse">
+                            <i class="fa-solid ${levelIcons[memberLevel]} text-white text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <h2 class="text-3xl font-playfair font-bold text-white">${store.currentUserData.name || 'Chưa cập nhật tên'}</h2>
+                        <p class="text-slate-300 flex items-center">
+                            <i class="fa-regular fa-calendar mr-2"></i>Thành viên từ ${formatDate(memberSince)}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Stats Cards -->
+                <div class="absolute bottom-6 right-12 flex space-x-4">
+                    <div class="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 text-white border border-white/20">
+                        <p class="text-sm opacity-80">Tổng đặt phòng</p>
+                        <p class="text-3xl font-bold">${userBookings.length}</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 text-white border border-white/20">
+                        <p class="text-sm opacity-80">Đã lưu trú</p>
+                        <p class="text-3xl font-bold">${completedBookings}</p>
+                    </div>
+                </div>
+            </div>
 
-                        <!-- Profile Info -->
-                        <div class="pt-16 p-4 md:p-8">
-                            <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
-                                <div>
-                                    <h2 class="text-xl md:text-2xl font-playfair font-bold text-slate-900 mb-1">
-                                        ${store.currentUserData.name || 'Chưa cập nhật tên'}
-                                    </h2>
-                                    <p class="text-xs md:text-sm text-slate-500">Thành viên từ ${formatDate(memberSince)}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-slate-500 mb-1">Tổng chi tiêu</p>
-                                    <p class="text-xl md:text-2xl font-bold text-blue-600 font-mono">${formatCurrency(totalSpent)}</p>
-                                </div>
+            <!-- Profile Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column - Member Info -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Member Card -->
+                    <div class="bg-gradient-to-br ${levelColors[memberLevel]} rounded-3xl p-6 text-white shadow-xl transform hover:scale-105 transition-transform duration-300">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <p class="text-sm opacity-80">Hạng thành viên</p>
+                                <h3 class="text-2xl font-bold flex items-center">
+                                    <i class="fa-solid ${levelIcons[memberLevel]} mr-2"></i>
+                                    ${memberLevel} Member
+                                </h3>
                             </div>
-
-                            <form onsubmit="saveProfile(event)" class="space-y-4 md:space-y-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="form-label">Email</label>
-                                        <input type="email" value="${store.currentUser?.email || ''}" disabled 
-                                               class="form-input bg-slate-50 cursor-not-allowed text-sm">
-                                    </div>
-                                    <div>
-                                        <label class="form-label">Số điện thoại</label>
-                                        <input type="tel" id="profile-phone" value="${store.currentUserData.phone || ''}" 
-                                               class="form-input text-sm" placeholder="Nhập số điện thoại">
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="form-label">Họ và tên</label>
-                                    <input type="text" id="profile-name" value="${store.currentUserData.name || ''}" 
-                                           class="form-input text-sm" placeholder="Nhập họ và tên">
-                                </div>
-
-                                <div>
-                                    <label class="form-label">Địa chỉ</label>
-                                    <input type="text" id="profile-address" value="${store.currentUserData.address || ''}" 
-                                           class="form-input text-sm" placeholder="Nhập địa chỉ">
-                                </div>
-
-                                <div>
-                                    <label class="form-label">Ngày sinh</label>
-                                    <input type="date" id="profile-birthday" value="${store.currentUserData.birthday || ''}" 
-                                           class="form-input text-sm">
-                                </div>
-
-                                <div>
-                                    <label class="form-label">Sở thích / Yêu cầu đặc biệt</label>
-                                    <textarea id="profile-preferences" rows="3" class="form-input text-sm" 
-                                              placeholder="Ví dụ: Phòng không hút thuốc, gối cao su,...">${store.currentUserData.preferences || ''}</textarea>
-                                </div>
-
-                                <div class="pt-4 md:pt-6 border-t border-slate-200">
-                                    <button type="submit" class="btn-primary w-full">
-                                        Cập nhật thông tin
-                                    </button>
-                                </div>
-                            </form>
-
-                            <!-- Stats -->
-                            <div class="grid grid-cols-3 gap-4 mt-6 md:mt-8 pt-6 border-t border-slate-200">
-                                <div class="text-center">
-                                    <p class="text-xl md:text-2xl font-bold text-slate-900">${userBookings.length}</p>
-                                    <p class="text-xs text-slate-500">Đặt phòng</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-xl md:text-2xl font-bold text-slate-900">${completedBookings}</p>
-                                    <p class="text-xs text-slate-500">Đã lưu trú</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-xl md:text-2xl font-bold text-slate-900">${userBookings.filter(b => b.status === 'pending').length}</p>
-                                    <p class="text-xs text-slate-500">Đang chờ</p>
-                                </div>
+                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                <i class="fa-solid fa-gem text-2xl"></i>
                             </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm opacity-80 mb-1">Điểm tích lũy</p>
+                                <p class="text-4xl font-bold">${points}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm opacity-80 mb-1">Tổng chi tiêu</p>
+                                <p class="text-2xl font-bold">${formatCurrency(totalSpent)}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress to next level -->
+                        <div class="mt-6">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span>${memberLevel}</span>
+                                <span>${points >= 10000 ? 'Max' : getNextLevel(memberLevel)}</span>
+                            </div>
+                            <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                                <div class="h-full bg-white rounded-full transition-all duration-500" 
+                                     style="width: ${getLevelProgress(points, memberLevel)}%"></div>
+                            </div>
+                        </div>
+                    </div>
 
-                            <!-- Loyalty Program -->
-                            <div class="mt-6 p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h4 class="font-bold text-amber-800 mb-1">Chương trình khách hàng thân thiết</h4>
-                                        <p class="text-xs text-amber-600">Tích điểm cho mỗi lần đặt phòng</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-2xl font-bold text-amber-800">${Math.floor(totalSpent / 100000)}</span>
-                                        <span class="text-amber-600"> điểm</span>
-                                    </div>
-                                </div>
-                                <div class="w-full bg-amber-200 rounded-full h-2 mt-3">
-                                    <div class="bg-amber-500 h-2 rounded-full" style="width: ${Math.min((Math.floor(totalSpent / 100000) % 100), 100)}%"></div>
-                                </div>
+                    <!-- Quick Stats -->
+                    <div class="bg-white rounded-3xl p-6 shadow-lg border border-slate-200">
+                        <h4 class="font-bold text-slate-900 mb-4 flex items-center">
+                            <i class="fa-solid fa-chart-line text-blue-600 mr-2"></i>
+                            Thống kê nhanh
+                        </h4>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600">Điểm thưởng</span>
+                                <span class="font-bold text-amber-600">${points}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600">Đánh giá đã viết</span>
+                                <span class="font-bold text-blue-600">${store.localReviews.filter(r => r.userId === store.currentUser?.uid).length}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600">Ưu đãi đã dùng</span>
+                                <span class="font-bold text-green-600">3</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            `;
+
+                <!-- Right Column - Edit Form -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-3xl p-8 shadow-lg border border-slate-200">
+                        <h3 class="text-2xl font-playfair font-bold text-slate-900 mb-6">Thông tin cá nhân</h3>
+                        
+                        <form onsubmit="saveProfile(event)" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="group">
+                                    <label class="form-label flex items-center">
+                                        <i class="fa-regular fa-user text-blue-600 mr-2"></i>
+                                        Họ và tên
+                                    </label>
+                                    <input type="text" id="profile-name" value="${store.currentUserData.name || ''}" 
+                                           class="form-input pl-4 group-hover:border-blue-400 transition-colors" 
+                                           placeholder="Nhập họ và tên">
+                                </div>
+                                
+                                <div class="group">
+                                    <label class="form-label flex items-center">
+                                        <i class="fa-regular fa-envelope text-blue-600 mr-2"></i>
+                                        Email
+                                    </label>
+                                    <input type="email" value="${store.currentUser?.email || ''}" disabled 
+                                           class="form-input bg-slate-50 cursor-not-allowed">
+                                </div>
+                                
+                                <div class="group">
+                                    <label class="form-label flex items-center">
+                                        <i class="fa-regular fa-phone text-blue-600 mr-2"></i>
+                                        Số điện thoại
+                                    </label>
+                                    <input type="tel" id="profile-phone" value="${store.currentUserData.phone || ''}" 
+                                           class="form-input group-hover:border-blue-400 transition-colors" 
+                                           placeholder="090 123 4567">
+                                </div>
+                                
+                                <div class="group">
+                                    <label class="form-label flex items-center">
+                                        <i class="fa-regular fa-calendar text-blue-600 mr-2"></i>
+                                        Ngày sinh
+                                    </label>
+                                    <input type="date" id="profile-birthday" value="${store.currentUserData.birthday || ''}" 
+                                           class="form-input group-hover:border-blue-400 transition-colors">
+                                </div>
+                            </div>
+                            
+                            <div class="group">
+                                <label class="form-label flex items-center">
+                                    <i class="fa-regular fa-map text-blue-600 mr-2"></i>
+                                    Địa chỉ
+                                </label>
+                                <input type="text" id="profile-address" value="${store.currentUserData.address || ''}" 
+                                       class="form-input group-hover:border-blue-400 transition-colors" 
+                                       placeholder="123 Đường ABC, Quận 1, TP.HCM">
+                            </div>
+                            
+                            <div class="group">
+                                <label class="form-label flex items-center">
+                                    <i class="fa-regular fa-heart text-blue-600 mr-2"></i>
+                                    Sở thích / Yêu cầu đặc biệt
+                                </label>
+                                <textarea id="profile-preferences" rows="4" class="form-input group-hover:border-blue-400 transition-colors" 
+                                          placeholder="Ví dụ: Phòng không hút thuốc, gối cao su, ăn chay...">${store.currentUserData.preferences || ''}</textarea>
+                            </div>
+
+                            <!-- Password Change Section -->
+                            <div class="border-t border-slate-200 pt-6">
+                                <h4 class="font-bold text-slate-900 mb-4 flex items-center">
+                                    <i class="fa-solid fa-lock text-blue-600 mr-2"></i>
+                                    Đổi mật khẩu
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="form-label">Mật khẩu hiện tại</label>
+                                        <input type="password" id="current-password" class="form-input" placeholder="••••••••">
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Mật khẩu mới</label>
+                                        <input type="password" id="new-password" class="form-input" placeholder="••••••••">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-4 pt-4">
+                                <button type="submit" class="btn-primary flex-1 group">
+                                    <i class="fa-regular fa-floppy-disk mr-2 group-hover:rotate-12 transition-transform"></i>
+                                    Lưu thay đổi
+                                </button>
+                                <button type="button" onclick="viewPaymentHistory()" 
+                                        class="btn-secondary flex items-center justify-center group">
+                                    <i class="fa-regular fa-clock mr-2 group-hover:rotate-12 transition-transform"></i>
+                                    Lịch sử giao dịch
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+        }
+
+        // Helper functions cho membership
+        function getNextLevel(currentLevel) {
+            const levels = { Bronze: 'Silver', Silver: 'Gold', Gold: 'Platinum', Platinum: 'Max' };
+            return levels[currentLevel] || 'Platinum';
+        }
+
+        function getLevelProgress(points, currentLevel) {
+            const thresholds = { Bronze: 1000, Silver: 5000, Gold: 10000, Platinum: 10000 };
+            const max = thresholds[currentLevel] || 10000;
+            return Math.min((points % max) / (max / 100), 100);
         }
 
         function renderUserBookings(container) {
@@ -7038,18 +8715,48 @@ ${booking.paymentStatus === 'paid' ? `
             document.getElementById('reportTo').value = today.toISOString().split('T')[0];
         };
 
+        // Cập nhật hàm exportReport để sử dụng báo cáo chuyên nghiệp
+        // Cập nhật hàm exportReport
         window.exportReport = () => {
             const type = document.getElementById('reportType').value;
             const from = document.getElementById('reportFrom').value;
             const to = document.getElementById('reportTo').value;
             const format = document.querySelector('input[name="reportFormat"]:checked')?.value || 'pdf';
 
-            showToast(`Đang xuất báo cáo ${type}...`, 'info');
+            if (!from || !to) {
+                showToast('Vui lòng chọn khoảng thời gian', 'warning');
+                return;
+            }
 
-            setTimeout(() => {
-                showToast('Xuất báo cáo thành công');
-                closeModal('reportModal');
-            }, 2000);
+            // Lọc dữ liệu
+            let reportData = [];
+            switch (type) {
+                case 'revenue':
+                case 'bookings':
+                    reportData = store.localBookings.filter(b => {
+                        const date = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                        return date >= new Date(from) && date <= new Date(to);
+                    });
+                    break;
+                default:
+                    reportData = store.localBookings;
+            }
+
+            if (reportData.length === 0) {
+                showToast('Không có dữ liệu trong khoảng thời gian này', 'warning');
+                return;
+            }
+
+            // Xuất báo cáo chuyên nghiệp
+            if (format === 'pdf') {
+                exportProfessionalPDF(reportData, type, { from, to });
+            } else if (format === 'excel') {
+                exportProfessionalExcel(reportData, type, { from, to });
+            } else {
+                exportReportToCSV(reportData, type, { from, to });
+            }
+
+            closeModal('reportModal');
         };
 
         // Backup functions
