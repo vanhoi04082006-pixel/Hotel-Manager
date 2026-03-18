@@ -4732,38 +4732,50 @@
         });
 
         window.handleLogout = async () => {
-            try {
-                await signOut(auth);
-                showToast('Đã đăng xuất', 'info');
+    try {
+        // 1. Fade out nhẹ nhàng
+        const appContainer = document.body;
+        appContainer.style.transition = 'opacity 0.3s ease';
+        appContainer.style.opacity = '0.5';
+        
+        await signOut(auth);
+        showToast('Đã đăng xuất', 'info');
 
-                // Clear local data
-                store.localRooms = [];
-                store.localBookings = [];
-                store.localServices = [];
-                store.localUsers = [];
-                store.localPromotions = [];
-                store.localStaff = [];
-                store.localReviews = [];
-                store.localGallery = [];
-                store.localInvoices = [];
-                store.localLogs = [];
-                store.localMessages = [];
+        // Clear local data
+        store.localRooms = [];
+        store.localBookings = [];
+        store.localServices = [];
+        store.localUsers = [];
+        store.localPromotions = [];
+        store.localStaff = [];
+        store.localReviews = [];
+        store.localGallery = [];
+        store.localInvoices = [];
+        store.localLogs = [];
+        store.localMessages = [];
 
-                if (store.unsubRooms) store.unsubRooms();
-                if (store.unsubBookings) store.unsubBookings();
-                if (store.unsubServices) store.unsubServices();
-                if (store.unsubUsers) store.unsubUsers();
-                if (store.unsubPromotions) store.unsubPromotions();
-                if (store.unsubStaff) store.unsubStaff();
-                if (store.unsubReviews) store.unsubReviews();
-                if (store.unsubGallery) store.unsubGallery();
-                if (store.unsubInvoices) store.unsubInvoices();
-                if (store.unsubLogs) store.unsubLogs();
-                if (store.unsubMessages) store.unsubMessages();
-            } catch (error) {
-                showToast('Lỗi khi đăng xuất: ' + error.message, 'error');
-            }
-        };
+        if (store.unsubRooms) store.unsubRooms();
+        if (store.unsubBookings) store.unsubBookings();
+        if (store.unsubServices) store.unsubServices();
+        if (store.unsubUsers) store.unsubUsers();
+        if (store.unsubPromotions) store.unsubPromotions();
+        if (store.unsubStaff) store.unsubStaff();
+        if (store.unsubReviews) store.unsubReviews();
+        if (store.unsubGallery) store.unsubGallery();
+        if (store.unsubInvoices) store.unsubInvoices();
+        if (store.unsubLogs) store.unsubLogs();
+        if (store.unsubMessages) store.unsubMessages();
+
+        // 2. Reload nhưng có fade in/out
+        setTimeout(() => {
+            window.location.reload();
+        }, 300);
+        
+    } catch (error) {
+        document.body.style.opacity = '1';
+        showToast('Lỗi khi đăng xuất: ' + error.message, 'error');
+    }
+};
 
         // ==================== DATA LISTENERS ====================
         async function initDataListeners() {
