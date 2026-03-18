@@ -48,6 +48,42 @@
             min-height: 100vh;
         }
 
+        /* Search Modal Styles */
+        #searchModal .modal-backdrop {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        #searchResults {
+            scroll-behavior: smooth;
+        }
+
+        #searchResults .cursor-pointer {
+            transition: all 0.2s ease;
+        }
+
+        #searchResults .cursor-pointer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Animation cho search modal */
+        @keyframes searchModalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        #searchModal:not(.hidden)>div {
+            animation: searchModalFadeIn 0.2s ease-out;
+        }
+
         .font-playfair {
             font-family: 'Playfair Display', serif;
         }
@@ -533,6 +569,7 @@
     </div>
 
     <!-- ==================== ADMIN VIEW ==================== -->
+    <!-- ==================== ADMIN VIEW ==================== -->
     <div id="admin-view" class="hidden h-screen w-full overflow-hidden bg-slate-50">
         <div class="flex h-full">
             <!-- Sidebar -->
@@ -549,7 +586,7 @@
                     </div>
                 </div>
 
-                <!-- Navigation -->
+                <!-- Navigation (giữ nguyên) -->
                 <div class="flex-1 overflow-y-auto py-6 px-4">
                     <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 px-4">Tổng quan</p>
                     <nav class="space-y-1">
@@ -636,7 +673,7 @@
                     </nav>
                 </div>
 
-                <!-- Admin Info -->
+                <!-- Admin Info (giữ nguyên) -->
                 <div class="p-6 border-t border-slate-700 bg-slate-900/50">
                     <div class="flex items-center">
                         <div
@@ -658,10 +695,26 @@
 
             <!-- Main Content -->
             <div class="flex-1 flex flex-col h-full overflow-hidden">
-                <!-- Header -->
+                <!-- Header với Search Bar tích hợp sẵn -->
                 <header
                     class="h-20 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-8">
                     <h2 id="admin-page-title" class="text-2xl font-playfair font-bold text-slate-900">Dashboard</h2>
+
+                    <!-- Search Bar - Đã có sẵn trong HTML, không cần chờ load -->
+                    <div class="flex-1 max-w-md mx-8">
+                        <div class="relative group">
+                            <i
+                                class="fa-solid fa-magnifying-glass absolute left-4 top-3 text-slate-400 group-hover:text-blue-500 transition-colors"></i>
+                            <input type="text" id="adminSearchInput" placeholder="Tìm kiếm nhanh (Ctrl+K)"
+                                class="w-full pl-11 pr-12 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer hover:border-blue-300"
+                                onclick="openSearchModal()" readonly>
+                            <div
+                                class="absolute right-3 top-2 text-xs bg-slate-100 px-2 py-1 rounded-md text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                                Ctrl+K
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center space-x-2 bg-slate-100 px-4 py-2 rounded-full">
                             <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
@@ -3424,118 +3477,7 @@
             type: 'all', // all, rooms, staff, customers, bookings, services
             results: [],
             showResults: false
-        };
-
-        // Create search modal HTML
-        function createSearchModal() {
-            const modal = document.createElement('div');
-            modal.id = 'searchModal';
-            modal.className = 'fixed inset-0 modal-backdrop z-[100] hidden flex items-start justify-center pt-20 p-4';
-            modal.innerHTML = `
-        <div class="bg-white rounded-3xl w-full max-w-4xl max-h-[80vh] overflow-hidden shadow-2xl">
-            <div class="p-6 border-b border-slate-200">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-2xl font-playfair font-bold text-slate-900">Tìm kiếm toàn hệ thống</h3>
-                    <button onclick="closeSearchModal()" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-                
-                <!-- Search Input -->
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-slate-400"></i>
-                    <input type="text" id="globalSearchInput" 
-                           class="form-input pl-11 pr-12 py-4 text-lg" 
-                           placeholder="Tìm kiếm phòng, nhân viên, khách hàng, đặt phòng..."
-                           onkeyup="handleSearchKeyUp(event)"
-                           autocomplete="off">
-                    <button onclick="clearSearch()" id="clearSearchBtn" 
-                            class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 hidden">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-                
-                <!-- Search Filters -->
-                <div class="flex flex-wrap gap-2 mt-4">
-                    <button onclick="setSearchType('all')" id="searchTypeAll" 
-                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-slate-900 text-white">
-                        Tất cả
-                    </button>
-                    <button onclick="setSearchType('rooms')" id="searchTypeRooms" 
-                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
-                        <i class="fa-solid fa-door-open mr-1"></i> Phòng
-                    </button>
-                    <button onclick="setSearchType('staff')" id="searchTypeStaff" 
-                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
-                        <i class="fa-solid fa-user-tie mr-1"></i> Nhân viên
-                    </button>
-                    <button onclick="setSearchType('customers')" id="searchTypeCustomers" 
-                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
-                        <i class="fa-solid fa-users mr-1"></i> Khách hàng
-                    </button>
-                    <button onclick="setSearchType('bookings')" id="searchTypeBookings" 
-                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
-                        <i class="fa-solid fa-calendar-check mr-1"></i> Đặt phòng
-                    </button>
-                    <button onclick="setSearchType('services')" id="searchTypeServices" 
-                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
-                        <i class="fa-solid fa-concierge-bell mr-1"></i> Dịch vụ
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Search Results -->
-            <div id="searchResults" class="overflow-y-auto p-6 max-h-[60vh] bg-slate-50">
-                <!-- Results will be populated here -->
-                <div class="text-center py-12 text-slate-500">
-                    <i class="fa-solid fa-magnifying-glass text-5xl mb-4 opacity-30"></i>
-                    <p class="text-lg">Nhập từ khóa để bắt đầu tìm kiếm</p>
-                    <p class="text-sm mt-2">Tìm kiếm theo mã phòng, tên nhân viên, email, số điện thoại...</p>
-                </div>
-            </div>
-            
-            <!-- Search Stats -->
-            <div class="p-4 border-t border-slate-200 bg-white flex justify-between items-center">
-                <div id="searchStats" class="text-sm text-slate-500">0 kết quả</div>
-                <div class="flex space-x-2">
-                    <button onclick="exportSearchResults()" class="btn-secondary text-sm py-2 px-4" id="exportSearchBtn" disabled>
-                        <i class="fa-regular fa-file-excel mr-2"></i>Xuất kết quả
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-            document.body.appendChild(modal);
-        }
-
-        // Initialize search functionality
-        window.initSearch = function () {
-            createSearchModal();
-
-            // Add keyboard shortcut (Ctrl+K or Cmd+K)
-            document.addEventListener('keydown', function (e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                    e.preventDefault();
-                    openSearchModal();
-                }
-            });
-
-            // Add search button to admin header
-            const adminHeader = document.querySelector('#admin-view header .flex.items-center.space-x-4');
-            if (adminHeader) {
-                const searchBtn = document.createElement('button');
-                searchBtn.className = 'relative group';
-                searchBtn.innerHTML = `
-            <div class="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl transition-all cursor-pointer"
-                 onclick="openSearchModal()">
-                <i class="fa-solid fa-magnifying-glass text-slate-600"></i>
-                <span class="text-sm text-slate-600 hidden md:inline">Tìm kiếm...</span>
-                <span class="text-xs bg-slate-300 px-2 py-1 rounded-md text-slate-700">Ctrl+K</span>
-            </div>
-        `;
-                adminHeader.prepend(searchBtn);
-            }
-        };
+        };        
 
         // Open search modal
         window.openSearchModal = function () {
@@ -4037,23 +3979,6 @@
             }
         };
 
-        // Add quick search to admin header
-        function addQuickSearchToHeader() {
-            const header = document.querySelector('#admin-view header');
-            if (header) {
-                const quickSearch = document.createElement('div');
-                quickSearch.className = 'relative flex-1 max-w-md mx-4';
-                quickSearch.innerHTML = `
-            <i class="fa-solid fa-magnifying-glass absolute left-4 top-3 text-slate-400"></i>
-            <input type="text" 
-                   placeholder="Tìm kiếm nhanh (Ctrl+K)" 
-                   class="w-full pl-11 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                   onfocus="openSearchModal()"
-                   readonly>
-        `;
-                header.insertBefore(quickSearch, header.children[1]);
-            }
-        }
 
         // Initialize search on admin view
         const originalNavigateAdmin = window.navigateAdmin;
@@ -4071,11 +3996,6 @@
         // Call init on page load
         document.addEventListener('DOMContentLoaded', function () {
             // Check if we're in admin view after auth
-            setTimeout(() => {
-                if (!document.getElementById('searchModal') && store.userRole === 'admin') {
-                    initSearch();
-                }
-            }, 2000);
         });
 
         // Sample Data
@@ -4732,50 +4652,50 @@
         });
 
         window.handleLogout = async () => {
-    try {
-        // 1. Fade out nhẹ nhàng
-        const appContainer = document.body;
-        appContainer.style.transition = 'opacity 0.3s ease';
-        appContainer.style.opacity = '0.5';
-        
-        await signOut(auth);
-        showToast('Đã đăng xuất', 'info');
+            try {
+                // 1. Fade out nhẹ nhàng
+                const appContainer = document.body;
+                appContainer.style.transition = 'opacity 0.3s ease';
+                appContainer.style.opacity = '0.5';
 
-        // Clear local data
-        store.localRooms = [];
-        store.localBookings = [];
-        store.localServices = [];
-        store.localUsers = [];
-        store.localPromotions = [];
-        store.localStaff = [];
-        store.localReviews = [];
-        store.localGallery = [];
-        store.localInvoices = [];
-        store.localLogs = [];
-        store.localMessages = [];
+                await signOut(auth);
+                showToast('Đã đăng xuất', 'info');
 
-        if (store.unsubRooms) store.unsubRooms();
-        if (store.unsubBookings) store.unsubBookings();
-        if (store.unsubServices) store.unsubServices();
-        if (store.unsubUsers) store.unsubUsers();
-        if (store.unsubPromotions) store.unsubPromotions();
-        if (store.unsubStaff) store.unsubStaff();
-        if (store.unsubReviews) store.unsubReviews();
-        if (store.unsubGallery) store.unsubGallery();
-        if (store.unsubInvoices) store.unsubInvoices();
-        if (store.unsubLogs) store.unsubLogs();
-        if (store.unsubMessages) store.unsubMessages();
+                // Clear local data
+                store.localRooms = [];
+                store.localBookings = [];
+                store.localServices = [];
+                store.localUsers = [];
+                store.localPromotions = [];
+                store.localStaff = [];
+                store.localReviews = [];
+                store.localGallery = [];
+                store.localInvoices = [];
+                store.localLogs = [];
+                store.localMessages = [];
 
-        // 2. Reload nhưng có fade in/out
-        setTimeout(() => {
-            window.location.reload();
-        }, 300);
-        
-    } catch (error) {
-        document.body.style.opacity = '1';
-        showToast('Lỗi khi đăng xuất: ' + error.message, 'error');
-    }
-};
+                if (store.unsubRooms) store.unsubRooms();
+                if (store.unsubBookings) store.unsubBookings();
+                if (store.unsubServices) store.unsubServices();
+                if (store.unsubUsers) store.unsubUsers();
+                if (store.unsubPromotions) store.unsubPromotions();
+                if (store.unsubStaff) store.unsubStaff();
+                if (store.unsubReviews) store.unsubReviews();
+                if (store.unsubGallery) store.unsubGallery();
+                if (store.unsubInvoices) store.unsubInvoices();
+                if (store.unsubLogs) store.unsubLogs();
+                if (store.unsubMessages) store.unsubMessages();
+
+                // 2. Reload nhưng có fade in/out
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300);
+
+            } catch (error) {
+                document.body.style.opacity = '1';
+                showToast('Lỗi khi đăng xuất: ' + error.message, 'error');
+            }
+        };
 
         // ==================== DATA LISTENERS ====================
         async function initDataListeners() {
@@ -9556,6 +9476,78 @@ ${booking.paymentStatus === 'paid' ? `
             }
         };
     </script>
+    <!-- ==================== SEARCH MODAL ==================== -->
+    <div id="searchModal" class="fixed inset-0 modal-backdrop z-[100] hidden flex items-start justify-center pt-20 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-4xl max-h-[80vh] overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-slate-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-2xl font-playfair font-bold text-slate-900">Tìm kiếm toàn hệ thống</h3>
+                    <button onclick="closeSearchModal()"
+                        class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Search Input -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-slate-400"></i>
+                    <input type="text" id="globalSearchInput" class="form-input pl-11 pr-12 py-4 text-lg"
+                        placeholder="Tìm kiếm phòng, nhân viên, khách hàng, đặt phòng..."
+                        onkeyup="handleSearchKeyUp(event)" autocomplete="off">
+                    <button onclick="clearSearch()" id="clearSearchBtn"
+                        class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 hidden">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Search Filters -->
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button onclick="setSearchType('all')" id="searchTypeAll"
+                        class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-slate-900 text-white">
+                        Tất cả
+                    </button>
+                    <button onclick="setSearchType('rooms')" id="searchTypeRooms"
+                        class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-door-open mr-1"></i> Phòng
+                    </button>
+                    <button onclick="setSearchType('staff')" id="searchTypeStaff"
+                        class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-user-tie mr-1"></i> Nhân viên
+                    </button>
+                    <button onclick="setSearchType('customers')" id="searchTypeCustomers"
+                        class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-users mr-1"></i> Khách hàng
+                    </button>
+                    <button onclick="setSearchType('bookings')" id="searchTypeBookings"
+                        class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-calendar-check mr-1"></i> Đặt phòng
+                    </button>
+                    <button onclick="setSearchType('services')" id="searchTypeServices"
+                        class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-concierge-bell mr-1"></i> Dịch vụ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <div id="searchResults" class="overflow-y-auto p-6 max-h-[60vh] bg-slate-50">
+                <div class="text-center py-12 text-slate-500">
+                    <i class="fa-solid fa-magnifying-glass text-5xl mb-4 opacity-30"></i>
+                    <p class="text-lg">Nhập từ khóa để bắt đầu tìm kiếm</p>
+                    <p class="text-sm mt-2">Tìm kiếm theo mã phòng, tên nhân viên, email, số điện thoại...</p>
+                </div>
+            </div>
+
+            <!-- Search Stats -->
+            <div class="p-4 border-t border-slate-200 bg-white flex justify-between items-center">
+                <div id="searchStats" class="text-sm text-slate-500">0 kết quả</div>
+                <button onclick="exportSearchResults()" class="btn-secondary text-sm py-2 px-4" id="exportSearchBtn"
+                    disabled>
+                    <i class="fa-regular fa-file-excel mr-2"></i>Xuất kết quả
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
