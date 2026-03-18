@@ -3416,6 +3416,668 @@
 
         const ADMIN_EMAIL = 'lunanewyear@gmail.com';
 
+        // ==================== SEARCH FUNCTIONALITY ====================
+
+        // Global search state
+        const searchState = {
+            query: '',
+            type: 'all', // all, rooms, staff, customers, bookings, services
+            results: [],
+            showResults: false
+        };
+
+        // Create search modal HTML
+        function createSearchModal() {
+            const modal = document.createElement('div');
+            modal.id = 'searchModal';
+            modal.className = 'fixed inset-0 modal-backdrop z-[100] hidden flex items-start justify-center pt-20 p-4';
+            modal.innerHTML = `
+        <div class="bg-white rounded-3xl w-full max-w-4xl max-h-[80vh] overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-slate-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-2xl font-playfair font-bold text-slate-900">Tìm kiếm toàn hệ thống</h3>
+                    <button onclick="closeSearchModal()" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Search Input -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-slate-400"></i>
+                    <input type="text" id="globalSearchInput" 
+                           class="form-input pl-11 pr-12 py-4 text-lg" 
+                           placeholder="Tìm kiếm phòng, nhân viên, khách hàng, đặt phòng..."
+                           onkeyup="handleSearchKeyUp(event)"
+                           autocomplete="off">
+                    <button onclick="clearSearch()" id="clearSearchBtn" 
+                            class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 hidden">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                
+                <!-- Search Filters -->
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button onclick="setSearchType('all')" id="searchTypeAll" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-slate-900 text-white">
+                        Tất cả
+                    </button>
+                    <button onclick="setSearchType('rooms')" id="searchTypeRooms" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-door-open mr-1"></i> Phòng
+                    </button>
+                    <button onclick="setSearchType('staff')" id="searchTypeStaff" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-user-tie mr-1"></i> Nhân viên
+                    </button>
+                    <button onclick="setSearchType('customers')" id="searchTypeCustomers" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-users mr-1"></i> Khách hàng
+                    </button>
+                    <button onclick="setSearchType('bookings')" id="searchTypeBookings" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-calendar-check mr-1"></i> Đặt phòng
+                    </button>
+                    <button onclick="setSearchType('services')" id="searchTypeServices" 
+                            class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900">
+                        <i class="fa-solid fa-concierge-bell mr-1"></i> Dịch vụ
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Search Results -->
+            <div id="searchResults" class="overflow-y-auto p-6 max-h-[60vh] bg-slate-50">
+                <!-- Results will be populated here -->
+                <div class="text-center py-12 text-slate-500">
+                    <i class="fa-solid fa-magnifying-glass text-5xl mb-4 opacity-30"></i>
+                    <p class="text-lg">Nhập từ khóa để bắt đầu tìm kiếm</p>
+                    <p class="text-sm mt-2">Tìm kiếm theo mã phòng, tên nhân viên, email, số điện thoại...</p>
+                </div>
+            </div>
+            
+            <!-- Search Stats -->
+            <div class="p-4 border-t border-slate-200 bg-white flex justify-between items-center">
+                <div id="searchStats" class="text-sm text-slate-500">0 kết quả</div>
+                <div class="flex space-x-2">
+                    <button onclick="exportSearchResults()" class="btn-secondary text-sm py-2 px-4" id="exportSearchBtn" disabled>
+                        <i class="fa-regular fa-file-excel mr-2"></i>Xuất kết quả
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+            document.body.appendChild(modal);
+        }
+
+        // Initialize search functionality
+        window.initSearch = function () {
+            createSearchModal();
+
+            // Add keyboard shortcut (Ctrl+K or Cmd+K)
+            document.addEventListener('keydown', function (e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    openSearchModal();
+                }
+            });
+
+            // Add search button to admin header
+            const adminHeader = document.querySelector('#admin-view header .flex.items-center.space-x-4');
+            if (adminHeader) {
+                const searchBtn = document.createElement('button');
+                searchBtn.className = 'relative group';
+                searchBtn.innerHTML = `
+            <div class="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl transition-all cursor-pointer"
+                 onclick="openSearchModal()">
+                <i class="fa-solid fa-magnifying-glass text-slate-600"></i>
+                <span class="text-sm text-slate-600 hidden md:inline">Tìm kiếm...</span>
+                <span class="text-xs bg-slate-300 px-2 py-1 rounded-md text-slate-700">Ctrl+K</span>
+            </div>
+        `;
+                adminHeader.prepend(searchBtn);
+            }
+        };
+
+        // Open search modal
+        window.openSearchModal = function () {
+            document.getElementById('searchModal').classList.remove('hidden');
+            document.getElementById('globalSearchInput').focus();
+            searchState.showResults = true;
+        };
+
+        // Close search modal
+        window.closeSearchModal = function () {
+            document.getElementById('searchModal').classList.add('hidden');
+            searchState.showResults = false;
+        };
+
+        // Clear search
+        window.clearSearch = function () {
+            document.getElementById('globalSearchInput').value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            searchState.query = '';
+            performSearch();
+        };
+
+        // Handle search key up
+        window.handleSearchKeyUp = function (e) {
+            const query = e.target.value.trim();
+            searchState.query = query;
+
+            // Show/hide clear button
+            if (query.length > 0) {
+                document.getElementById('clearSearchBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('clearSearchBtn').classList.add('hidden');
+            }
+
+            // Perform search with debounce
+            clearTimeout(window.searchDebounce);
+            window.searchDebounce = setTimeout(() => {
+                performSearch();
+            }, 300);
+        };
+
+        // Set search type
+        window.setSearchType = function (type) {
+            searchState.type = type;
+
+            // Update button styles
+            const types = ['all', 'rooms', 'staff', 'customers', 'bookings', 'services'];
+            types.forEach(t => {
+                const btn = document.getElementById(`searchType${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (btn) {
+                    if (t === type) {
+                        btn.className = 'px-4 py-2 rounded-full text-sm font-medium transition-all bg-slate-900 text-white';
+                    } else {
+                        btn.className = 'px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900';
+                    }
+                }
+            });
+
+            performSearch();
+        };
+
+        // Perform search
+        function performSearch() {
+            const resultsContainer = document.getElementById('searchResults');
+            const statsContainer = document.getElementById('searchStats');
+            const exportBtn = document.getElementById('exportSearchBtn');
+
+            if (!searchState.query || searchState.query.length < 2) {
+                resultsContainer.innerHTML = `
+            <div class="text-center py-12 text-slate-500">
+                <i class="fa-solid fa-magnifying-glass text-5xl mb-4 opacity-30"></i>
+                <p class="text-lg">Nhập ít nhất 2 ký tự</p>
+            </div>
+        `;
+                statsContainer.textContent = '0 kết quả';
+                exportBtn.disabled = true;
+                searchState.results = [];
+                return;
+            }
+
+            const query = searchState.query.toLowerCase();
+            let results = [];
+
+            // Search rooms
+            if (searchState.type === 'all' || searchState.type === 'rooms') {
+                const roomResults = store.localRooms.filter(room =>
+                    room.code?.toLowerCase().includes(query) ||
+                    room.name?.toLowerCase().includes(query) ||
+                    room.type?.toLowerCase().includes(query) ||
+                    room.description?.toLowerCase().includes(query) ||
+                    room.amenities?.some(a => a.toLowerCase().includes(query))
+                ).map(room => ({ type: 'room', data: room }));
+                results = [...results, ...roomResults];
+            }
+
+            // Search staff
+            if (searchState.type === 'all' || searchState.type === 'staff') {
+                const staffResults = store.localStaff.filter(staff =>
+                    staff.name?.toLowerCase().includes(query) ||
+                    staff.email?.toLowerCase().includes(query) ||
+                    staff.phone?.toLowerCase().includes(query) ||
+                    staff.position?.toLowerCase().includes(query) ||
+                    staff.department?.toLowerCase().includes(query)
+                ).map(staff => ({ type: 'staff', data: staff }));
+                results = [...results, ...staffResults];
+            }
+
+            // Search customers
+            if (searchState.type === 'all' || searchState.type === 'customers') {
+                const customerResults = store.localUsers.filter(user =>
+                    user.role !== 'admin' && (
+                        user.name?.toLowerCase().includes(query) ||
+                        user.email?.toLowerCase().includes(query) ||
+                        user.phone?.toLowerCase().includes(query) ||
+                        user.id?.toLowerCase().includes(query)
+                    )
+                ).map(user => ({ type: 'customer', data: user }));
+                results = [...results, ...customerResults];
+            }
+
+            // Search bookings
+            if (searchState.type === 'all' || searchState.type === 'bookings') {
+                const bookingResults = store.localBookings.filter(booking =>
+                    booking.roomCode?.toLowerCase().includes(query) ||
+                    booking.userName?.toLowerCase().includes(query) ||
+                    booking.userEmail?.toLowerCase().includes(query) ||
+                    booking.userPhone?.toLowerCase().includes(query) ||
+                    booking.id?.toLowerCase().includes(query) ||
+                    booking.status?.toLowerCase().includes(query)
+                ).map(booking => ({ type: 'booking', data: booking }));
+                results = [...results, ...bookingResults];
+            }
+
+            // Search services
+            if (searchState.type === 'all' || searchState.type === 'services') {
+                const serviceResults = store.localServices.filter(service =>
+                    service.name?.toLowerCase().includes(query) ||
+                    service.description?.toLowerCase().includes(query) ||
+                    service.category?.toLowerCase().includes(query)
+                ).map(service => ({ type: 'service', data: service }));
+                results = [...results, ...serviceResults];
+            }
+
+            searchState.results = results;
+
+            // Render results
+            renderSearchResults(results);
+
+            // Update stats
+            statsContainer.textContent = `${results.length} kết quả`;
+            exportBtn.disabled = results.length === 0;
+        }
+
+        // Render search results
+        function renderSearchResults(results) {
+            const container = document.getElementById('searchResults');
+
+            if (results.length === 0) {
+                container.innerHTML = `
+            <div class="text-center py-12 text-slate-500">
+                <i class="fa-regular fa-face-frown text-5xl mb-4 opacity-30"></i>
+                <p class="text-lg">Không tìm thấy kết quả phù hợp</p>
+                <p class="text-sm mt-2">Thử lại với từ khóa khác hoặc chọn danh mục cụ thể</p>
+            </div>
+        `;
+                return;
+            }
+
+            let html = '';
+            let currentType = '';
+
+            results.forEach((result, index) => {
+                // Add section header if type changes
+                if (result.type !== currentType) {
+                    currentType = result.type;
+                    const typeNames = {
+                        room: '🏨 PHÒNG',
+                        staff: '👤 NHÂN VIÊN',
+                        customer: '👥 KHÁCH HÀNG',
+                        booking: '📅 ĐẶT PHÒNG',
+                        service: '⚙️ DỊCH VỤ'
+                    };
+                    html += `
+                <div class="mb-4 mt-${index > 0 ? '8' : '0'}">
+                    <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider">${typeNames[result.type]}</h4>
+                </div>
+            `;
+                }
+
+                // Render based on type
+                switch (result.type) {
+                    case 'room':
+                        html += renderRoomResult(result.data);
+                        break;
+                    case 'staff':
+                        html += renderStaffResult(result.data);
+                        break;
+                    case 'customer':
+                        html += renderCustomerResult(result.data);
+                        break;
+                    case 'booking':
+                        html += renderBookingResult(result.data);
+                        break;
+                    case 'service':
+                        html += renderServiceResult(result.data);
+                        break;
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Render room result
+        function renderRoomResult(room) {
+            const statusColors = {
+                available: 'bg-green-100 text-green-700',
+                occupied: 'bg-blue-100 text-blue-700',
+                maintenance: 'bg-yellow-100 text-yellow-700'
+            };
+            const statusText = {
+                available: 'Còn trống',
+                occupied: 'Đã đặt',
+                maintenance: 'Bảo trì'
+            };
+
+            return `
+        <div class="bg-white rounded-xl p-4 mb-3 hover:shadow-md transition-all cursor-pointer border border-slate-200"
+             onclick="navigateToItem('room', '${room.id}')">
+            <div class="flex items-center">
+                <div class="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden mr-4">
+                    <img src="${room.image}" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h5 class="font-bold text-slate-900">Phòng ${room.code}</h5>
+                        <span class="text-xs px-2 py-1 rounded-full ${statusColors[room.status]}">${statusText[room.status]}</span>
+                        <span class="text-xs text-slate-400">${room.type}</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-1">${room.name}</p>
+                    <div class="flex items-center gap-4 text-xs text-slate-500">
+                        <span><i class="fa-regular fa-square mr-1"></i>${room.area}m²</span>
+                        <span><i class="fa-regular fa-user mr-1"></i>${room.capacity} người</span>
+                        <span class="font-mono font-bold text-blue-600">${formatCurrency(room.price)}/đêm</span>
+                    </div>
+                </div>
+                <button onclick="event.stopPropagation(); openRoomModal('${room.id}')" 
+                        class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+            </div>
+        </div>
+    `;
+        }
+
+        // Render staff result
+        function renderStaffResult(staff) {
+            return `
+        <div class="bg-white rounded-xl p-4 mb-3 hover:shadow-md transition-all cursor-pointer border border-slate-200"
+             onclick="navigateToItem('staff', '${staff.id}')">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white font-bold text-lg mr-4">
+                    ${staff.name?.charAt(0) || 'S'}
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h5 class="font-bold text-slate-900">${staff.name}</h5>
+                        <span class="text-xs px-2 py-1 rounded-full ${staff.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                            ${staff.status === 'active' ? 'Đang làm' : 'Nghỉ'}
+                        </span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-1">${staff.position} • ${staff.department}</p>
+                    <div class="flex items-center gap-4 text-xs text-slate-500">
+                        <span><i class="fa-regular fa-envelope mr-1"></i>${staff.email}</span>
+                        <span><i class="fa-regular fa-phone mr-1"></i>${staff.phone}</span>
+                    </div>
+                </div>
+                <button onclick="event.stopPropagation(); openStaffModal('${staff.id}')" 
+                        class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+            </div>
+        </div>
+    `;
+        }
+
+        // Render customer result
+        function renderCustomerResult(customer) {
+            const customerBookings = store.localBookings.filter(b => b.userId === customer.id);
+            const totalSpent = customerBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+            return `
+        <div class="bg-white rounded-xl p-4 mb-3 hover:shadow-md transition-all cursor-pointer border border-slate-200"
+             onclick="navigateToItem('customer', '${customer.id}')">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center text-white font-bold text-lg mr-4">
+                    ${(customer.name || customer.email || 'U').charAt(0)}
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h5 class="font-bold text-slate-900">${customer.name || 'Chưa có tên'}</h5>
+                        <span class="badge ${customer.role === 'vip' ? 'badge-warning' : 'badge-info'}">
+                            ${customer.role === 'vip' ? 'VIP' : customer.role === 'corporate' ? 'Doanh nghiệp' : 'Thường'}
+                        </span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-1">${customer.email}</p>
+                    <div class="flex items-center gap-4 text-xs text-slate-500">
+                        <span><i class="fa-regular fa-phone mr-1"></i>${customer.phone || 'Chưa có SĐT'}</span>
+                        <span><i class="fa-regular fa-calendar mr-1"></i>${customerBookings.length} đặt</span>
+                        <span class="font-mono text-amber-600">${formatCurrency(totalSpent)}</span>
+                    </div>
+                </div>
+                <button onclick="event.stopPropagation(); openCustomerModal('${customer.id}')" 
+                        class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+            </div>
+        </div>
+    `;
+        }
+
+        // Render booking result
+        function renderBookingResult(booking) {
+            const statusColors = {
+                pending: 'badge-warning',
+                confirmed: 'badge-info',
+                completed: 'badge-success',
+                cancelled: 'badge-danger'
+            };
+            const statusText = {
+                pending: 'Chờ duyệt',
+                confirmed: 'Đã xác nhận',
+                completed: 'Hoàn tất',
+                cancelled: 'Đã hủy'
+            };
+
+            return `
+        <div class="bg-white rounded-xl p-4 mb-3 hover:shadow-md transition-all cursor-pointer border border-slate-200"
+             onclick="navigateToItem('booking', '${booking.id}')">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mr-4">
+                    <i class="fa-solid fa-calendar-check text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h5 class="font-bold text-slate-900">${booking.userName || booking.userEmail}</h5>
+                        <span class="badge ${statusColors[booking.status]}">${statusText[booking.status]}</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-1">Phòng ${booking.roomCode} • ${booking.nights || 1} đêm</p>
+                    <div class="flex items-center gap-4 text-xs text-slate-500">
+                        <span><i class="fa-regular fa-calendar mr-1"></i>${formatDate(booking.checkIn)} - ${formatDate(booking.checkOut)}</span>
+                        <span class="font-mono font-bold text-blue-600">${formatCurrency(booking.totalPrice || 0)}</span>
+                    </div>
+                </div>
+                <button onclick="event.stopPropagation(); viewBookingDetails('${booking.id}')" 
+                        class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+        </div>
+    `;
+        }
+
+        // Render service result
+        function renderServiceResult(service) {
+            return `
+        <div class="bg-white rounded-xl p-4 mb-3 hover:shadow-md transition-all cursor-pointer border border-slate-200"
+             onclick="navigateToItem('service', '${service.id}')">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mr-4">
+                    <i class="fa-solid fa-${service.icon || 'utensils'} text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h5 class="font-bold text-slate-900">${service.name}</h5>
+                        <span class="badge ${service.available ? 'badge-success' : 'badge-danger'}">
+                            ${service.available ? 'Đang hoạt động' : 'Tạm dừng'}
+                        </span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-1">${service.description || 'Không có mô tả'}</p>
+                    <div class="flex items-center gap-4 text-xs text-slate-500">
+                        <span class="font-mono font-bold text-green-600">${formatCurrency(service.price)}</span>
+                        <span>${service.unit === 'person' ? '/người' : service.unit === 'room' ? '/phòng' : '/giờ'}</span>
+                    </div>
+                </div>
+                <button onclick="event.stopPropagation(); openServiceModal('${service.id}')" 
+                        class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+            </div>
+        </div>
+    `;
+        }
+
+        // Navigate to item
+        window.navigateToItem = function (type, id) {
+            closeSearchModal();
+
+            switch (type) {
+                case 'room':
+                    openRoomModal(id);
+                    break;
+                case 'staff':
+                    openStaffModal(id);
+                    break;
+                case 'customer':
+                    openCustomerModal(id);
+                    break;
+                case 'booking':
+                    viewBookingDetails(id);
+                    break;
+                case 'service':
+                    openServiceModal(id);
+                    break;
+            }
+        };
+
+        // Export search results
+        window.exportSearchResults = function () {
+            if (searchState.results.length === 0) {
+                showToast('Không có dữ liệu để xuất', 'warning');
+                return;
+            }
+
+            try {
+                // Prepare data for export
+                const exportData = searchState.results.map(result => {
+                    switch (result.type) {
+                        case 'room':
+                            return {
+                                'Loại': 'Phòng',
+                                'Mã': result.data.code,
+                                'Tên': result.data.name,
+                                'Hạng': result.data.type,
+                                'Giá': result.data.price,
+                                'Trạng thái': result.data.status,
+                                'Diện tích': result.data.area,
+                                'Sức chứa': result.data.capacity
+                            };
+                        case 'staff':
+                            return {
+                                'Loại': 'Nhân viên',
+                                'Tên': result.data.name,
+                                'Email': result.data.email,
+                                'SĐT': result.data.phone,
+                                'Chức vụ': result.data.position,
+                                'Phòng ban': result.data.department,
+                                'Lương': result.data.salary,
+                                'Trạng thái': result.data.status
+                            };
+                        case 'customer':
+                            return {
+                                'Loại': 'Khách hàng',
+                                'Tên': result.data.name || 'N/A',
+                                'Email': result.data.email,
+                                'SĐT': result.data.phone || 'N/A',
+                                'Hạng': result.data.role || 'regular',
+                                'Ngày tham gia': formatDate(result.data.memberSince)
+                            };
+                        case 'booking':
+                            return {
+                                'Loại': 'Đặt phòng',
+                                'Mã': result.data.id.slice(-8),
+                                'Khách hàng': result.data.userName || result.data.userEmail,
+                                'Phòng': result.data.roomCode,
+                                'Nhận phòng': formatDate(result.data.checkIn),
+                                'Trả phòng': formatDate(result.data.checkOut),
+                                'Tổng tiền': result.data.totalPrice,
+                                'Trạng thái': result.data.status
+                            };
+                        case 'service':
+                            return {
+                                'Loại': 'Dịch vụ',
+                                'Tên': result.data.name,
+                                'Mô tả': result.data.description || 'N/A',
+                                'Giá': result.data.price,
+                                'Đơn vị': result.data.unit,
+                                'Trạng thái': result.data.available ? 'Hoạt động' : 'Tạm dừng'
+                            };
+                        default:
+                            return {};
+                    }
+                });
+
+                // Create worksheet
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(exportData);
+
+                // Add to workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'SearchResults');
+
+                // Save file
+                const fileName = `Luna_Search_Results_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+
+                showToast(`Đã xuất ${exportData.length} kết quả`, 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('Lỗi khi xuất dữ liệu: ' + error.message, 'error');
+            }
+        };
+
+        // Add quick search to admin header
+        function addQuickSearchToHeader() {
+            const header = document.querySelector('#admin-view header');
+            if (header) {
+                const quickSearch = document.createElement('div');
+                quickSearch.className = 'relative flex-1 max-w-md mx-4';
+                quickSearch.innerHTML = `
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-3 text-slate-400"></i>
+            <input type="text" 
+                   placeholder="Tìm kiếm nhanh (Ctrl+K)" 
+                   class="w-full pl-11 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                   onfocus="openSearchModal()"
+                   readonly>
+        `;
+                header.insertBefore(quickSearch, header.children[1]);
+            }
+        }
+
+        // Initialize search on admin view
+        const originalNavigateAdmin = window.navigateAdmin;
+        window.navigateAdmin = function (route, isRefresh = false) {
+            originalNavigateAdmin(route, isRefresh);
+
+            // Add search button if not exists
+            setTimeout(() => {
+                if (!document.getElementById('searchModal')) {
+                    initSearch();
+                }
+            }, 500);
+        };
+
+        // Call init on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if we're in admin view after auth
+            setTimeout(() => {
+                if (!document.getElementById('searchModal') && store.userRole === 'admin') {
+                    initSearch();
+                }
+            }, 2000);
+        });
+
         // Sample Data
         const SAMPLE_ROOMS = [
             {
