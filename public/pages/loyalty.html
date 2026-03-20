@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luna Hotel - Thẻ Thành Viên</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .slide-in-right {
+            animation: slideInRight 0.5s ease-out forwards;
+        }
+
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .loader {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        .btn-primary {
+            background: #1e293b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .perspective-1000 {
+            perspective: 1500px;
+        }
+
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading-screen" class="fixed inset-0 bg-white z-[9999] flex items-center justify-center flex-col">
+        <div class="text-center">
+            <div
+                class="w-24 h-24 bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                <i class="fa-solid fa-hotel text-4xl text-white"></i></div>
+            <div class="loader mx-auto mb-4"></div>
+            <h2 class="text-2xl font-playfair font-bold text-slate-900 mb-2">Luna Hotel</h2>
+            <p class="text-slate-500">Đang tải thông tin thẻ thành viên...</p>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3"></div>
+
+    <header
+        class="h-20 bg-white/95 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 shadow-sm">
+        <div class="flex items-center cursor-pointer" onclick="window.location.href='../index.html'">
+            <div
+                class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                <i class="fa-solid fa-hotel text-lg md:text-xl text-white"></i></div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-playfair font-bold text-slate-900">LUNA HOTEL</h1>
+                <p class="text-xs text-slate-500 hidden md:block">Nơi khởi nguồn cảm hứng</p>
+            </div>
+        </div>
+        <nav class="hidden md:flex items-center space-x-8"><a href="../HomePage.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Trang
+                chủ</a><a href="rooms.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Phòng</a><a
+                href="services.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Dịch vụ</a><a
+                href="booking-lookup.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900"><i
+                    class="fa-solid fa-magnifying-glass mr-1"></i>Tra cứu</a><a id="nav-my-bookings"
+                href="my-bookings.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Đặt phòng của
+                tôi</a><a id="nav-profile" href="profile.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Hồ sơ</a><a
+                id="nav-loyalty" href="loyalty.html"
+                class="font-medium py-2 border-b-2 border-slate-900 text-slate-900">Thẻ thành viên</a><a id="nav-offers"
+                href="offers.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Ưu đãi</a>
+        </nav>
+        <button class="md:hidden p-2" onclick="toggleMobileMenu()"><i
+                class="fa-solid fa-bars text-xl text-slate-700"></i></button>
+        <div class="hidden md:flex items-center space-x-4">
+            <div class="flex items-center space-x-3">
+                <div
+                    class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">
+                    <span id="user-avatar">K</span></div><span class="text-sm font-medium text-slate-700"
+                    id="user-name-display">Khách</span>
+            </div><a href="../login.html" id="loginButton"
+                class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700"><i
+                    class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Đăng nhập</a><button onclick="handleLogout()"
+                id="logoutButton"
+                class="border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold hidden"><i
+                    class="fa-solid fa-right-from-bracket md:mr-2"></i><span>Đăng xuất</span></button>
+        </div>
+    </header>
+
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 p-4">
+        <div class="space-y-2"><a href="../index.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Trang
+                chủ</a><a href="rooms.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Phòng</a><a
+                href="services.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Dịch vụ</a><a
+                href="booking-lookup.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg"><i
+                    class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu</a><a href="my-bookings.html"
+                class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Đặt phòng của tôi</a><a href="profile.html"
+                class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Hồ sơ</a><a href="loyalty.html"
+                class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Thẻ thành viên</a><a href="offers.html"
+                class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Ưu đãi</a>
+            <div class="border-t my-2 pt-2"><button onclick="handleLogout()" id="mobileLogoutBtn"
+                    class="hidden w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"><i
+                        class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</button></div>
+        </div>
+    </div>
+
+    <main class="min-h-screen bg-gradient-to-b from-white to-slate-50">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-playfair font-bold text-slate-900 mb-4">Chương trình khách hàng thân thiết</h2>
+                <p class="text-xl text-slate-600">Tích điểm mỗi lần đặt phòng - Nhận ưu đãi đặc biệt</p>
+            </div>
+
+            <div class="relative max-w-4xl mx-auto mb-16 group perspective-1000" style="perspective: 1500px;">
+                <div class="relative transform transition-all duration-700 group-hover:rotate-y-180 group-hover:shadow-2xl"
+                    style="transform-style: preserve-3d; min-height: 400px;" id="loyalty-card">
+                    <div class="absolute inset-0 backface-hidden rounded-3xl overflow-hidden shadow-2xl"
+                        style="backface-visibility: hidden;">
+                        <div class="absolute inset-0 bg-gradient-to-br from-amber-600 to-amber-800 opacity-90"
+                            id="card-gradient"></div><img
+                            src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2000"
+                            class="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30">
+                        <div class="relative p-8 text-white">
+                            <div class="flex justify-between items-start mb-8">
+                                <div>
+                                    <p class="text-sm opacity-80 mb-1">LUNA HOTEL & RESORT</p>
+                                    <h3 class="text-3xl font-playfair font-bold">Thẻ thành viên</h3>
+                                </div><i class="fa-solid fa-seedling text-5xl opacity-80" id="tier-icon"></i>
+                            </div>
+                            <div class="mb-8">
+                                <p class="text-sm opacity-80 mb-1">Hạng thành viên</p>
+                                <p class="text-4xl font-bold mb-2" id="member-tier">Bronze</p>
+                                <p class="text-2xl font-mono tracking-wider" id="member-number">**** **** **** 0000</p>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <p class="text-sm opacity-80 mb-1">Điểm tích lũy</p>
+                                    <p class="text-5xl font-bold" id="points-total">0</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm opacity-80" id="member-name">Khách hàng</p>
+                                    <p class="text-xs opacity-60" id="member-date">Thành viên từ --/--/----</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute inset-0 backface-hidden bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 shadow-2xl transform rotate-y-180"
+                        style="backface-visibility: hidden; transform: rotateY(180deg);">
+                        <div class="h-full flex flex-col justify-between">
+                            <div>
+                                <h4 class="text-2xl font-playfair font-bold text-white mb-6">Điều khoản & Quyền lợi</h4>
+                                <ul class="space-y-4 text-slate-300">
+                                    <li class="flex items-start"><i
+                                            class="fa-solid fa-check-circle text-green-400 mr-3 mt-1"></i><span>Thẻ có
+                                            giá trị đến hết ngày 31/12/2026</span></li>
+                                    <li class="flex items-start"><i
+                                            class="fa-solid fa-check-circle text-green-400 mr-3 mt-1"></i><span>Không
+                                            được chuyển nhượng</span></li>
+                                    <li class="flex items-start"><i
+                                            class="fa-solid fa-check-circle text-green-400 mr-3 mt-1"></i><span>Điểm
+                                            thưởng có giá trị 12 tháng</span></li>
+                                    <li class="flex items-start"><i
+                                            class="fa-solid fa-check-circle text-green-400 mr-3 mt-1"></i><span>Liên hệ
+                                            reception để biết thêm chi tiết</span></li>
+                                </ul>
+                            </div>
+                            <div class="text-center text-slate-400 text-sm"><i
+                                    class="fa-solid fa-circle-info mr-2"></i>Quẹt thẻ này khi nhận phòng để tích điểm
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
+                <div
+                    class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white transform hover:scale-105">
+                    <i class="fa-solid fa-crown text-3xl mb-3"></i>
+                    <h4 class="font-bold text-lg mb-2">Platinum</h4>
+                    <p class="text-2xl font-bold">20%</p>
+                    <p class="text-sm opacity-80">Giảm giá</p>
+                </div>
+                <div
+                    class="bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-2xl p-6 text-white transform hover:scale-105">
+                    <i class="fa-solid fa-medal text-3xl mb-3"></i>
+                    <h4 class="font-bold text-lg mb-2">Gold</h4>
+                    <p class="text-2xl font-bold">15%</p>
+                    <p class="text-sm opacity-80">Giảm giá</p>
+                </div>
+                <div
+                    class="bg-gradient-to-br from-slate-400 to-slate-600 rounded-2xl p-6 text-white transform hover:scale-105">
+                    <i class="fa-solid fa-star text-3xl mb-3"></i>
+                    <h4 class="font-bold text-lg mb-2">Silver</h4>
+                    <p class="text-2xl font-bold">10%</p>
+                    <p class="text-sm opacity-80">Giảm giá</p>
+                </div>
+                <div
+                    class="bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl p-6 text-white transform hover:scale-105">
+                    <i class="fa-solid fa-seedling text-3xl mb-3"></i>
+                    <h4 class="font-bold text-lg mb-2">Bronze</h4>
+                    <p class="text-2xl font-bold">5%</p>
+                    <p class="text-sm opacity-80">Giảm giá</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-8 shadow-xl mb-16">
+                <h3 class="text-2xl font-playfair font-bold text-slate-900 mb-6">So sánh quyền lợi</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-slate-200">
+                                <th class="py-4 text-left">Quyền lợi</th>
+                                <th class="py-4 text-center">Bronze</th>
+                                <th class="py-4 text-center">Silver</th>
+                                <th class="py-4 text-center">Gold</th>
+                                <th class="py-4 text-center">Platinum</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="py-4">Giảm giá phòng</td>
+                                <td class="py-4 text-center font-bold text-green-600">5%</td>
+                                <td class="py-4 text-center font-bold text-green-600">10%</td>
+                                <td class="py-4 text-center font-bold text-green-600">15%</td>
+                                <td class="py-4 text-center font-bold text-green-600">20%</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Giảm giá dịch vụ</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">5%</td>
+                                <td class="py-4 text-center">10%</td>
+                                <td class="py-4 text-center">15%</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Nâng cấp phòng</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">30% phí</td>
+                                <td class="py-4 text-center">50% phí</td>
+                                <td class="py-4 text-center">Miễn phí</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Check-in sớm</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">Theo yêu cầu</td>
+                                <td class="py-4 text-center">Đảm bảo</td>
+                                <td class="py-4 text-center">Đảm bảo</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Check-out muộn</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">14:00</td>
+                                <td class="py-4 text-center">16:00</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Phòng chờ lounge</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">-</td>
+                                <td class="py-4 text-center">Có phí</td>
+                                <td class="py-4 text-center">Miễn phí</td>
+                            </tr>
+                            <tr>
+                                <td class="py-4">Tích điểm thưởng</td>
+                                <td class="py-4 text-center">1x</td>
+                                <td class="py-4 text-center">1.2x</td>
+                                <td class="py-4 text-center">1.5x</td>
+                                <td class="py-4 text-center">2x</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-8 shadow-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-playfair font-bold text-slate-900">Lịch sử tích điểm</h3><span
+                        class="text-sm text-slate-500">Điểm hiện tại: <span class="font-bold text-amber-600"
+                            id="current-points">0</span></span>
+                </div>
+                <div id="points-history" class="space-y-4">
+                    <p class="text-center text-slate-500 py-4">Chưa có lịch sử tích điểm</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-12">
+        <div class="max-w-7xl mx-auto px-4 md:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start mb-4">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3"><i
+                                class="fa-solid fa-hotel text-white"></i></div>
+                        <h3 class="text-xl font-playfair font-bold text-white">Luna Hotel</h3>
+                    </div>
+                    <p class="text-sm leading-relaxed">Trải nghiệm đẳng cấp thế giới, nơi mỗi khoảnh khắc đều đáng nhớ.
+                    </p>
+                </div>
+                <div class="text-center md:text-left">
+                    <h4 class="text-white font-semibold mb-4">Liên hệ</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><i class="fa-solid fa-location-dot w-6 text-blue-400 mr-2"></i> 123 Nguyễn Huệ, Q.1, TP.HCM
+                        </li>
+                        <li><i class="fa-solid fa-phone w-6 text-blue-400 mr-2"></i> +84 28 1234 5678</li>
+                        <li><i class="fa-solid fa-envelope w-6 text-blue-400 mr-2"></i> info@lunahotel.com</li>
+                    </ul>
+                </div>
+                <div class="text-center md:text-left">
+                    <h4 class="text-white font-semibold mb-4">Dịch vụ</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li>Nhà hàng 5 sao</li>
+                        <li>Hồ bơi vô cực</li>
+                        <li>Spa & Gym</li>
+                        <li>Tour du lịch</li>
+                    </ul>
+                </div>
+                <div class="text-center md:text-left">
+                    <h4 class="text-white font-semibold mb-4">Kết nối</h4>
+                    <div class="flex justify-center md:justify-start space-x-4"><a href="#"
+                            class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600"><i
+                                class="fa-brands fa-facebook-f"></i></a><a href="#"
+                            class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600"><i
+                                class="fa-brands fa-instagram"></i></a><a href="#"
+                            class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600"><i
+                                class="fa-brands fa-twitter"></i></a></div>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 mt-8 pt-8 text-center text-sm">
+                <p>&copy; 2026 Luna Hotel & Resort. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
+            authDomain: "hotel-manager-2442d.firebaseapp.com",
+            projectId: "hotel-manager-2442d",
+            storageBucket: "hotel-manager-2442d.firebasestorage.app",
+            messagingSenderId: "379010173725",
+            appId: "1:379010173725:web:20908f11fb0589ca432ff4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let currentUser = null;
+        let userProfile = {};
+
+        function formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
+        function formatDate(dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icons = { success: 'fa-circle-check text-green-400', error: 'fa-circle-exclamation text-red-400', warning: 'fa-triangle-exclamation text-yellow-400', info: 'fa-circle-info text-blue-400' };
+            const bgColors = { success: 'bg-green-50 border-green-200 text-green-800', error: 'bg-red-50 border-red-200 text-red-800', warning: 'bg-yellow-50 border-yellow-200 text-yellow-800', info: 'bg-blue-50 border-blue-200 text-blue-800' };
+            toast.className = `flex items-center p-4 rounded-xl shadow-lg border ${bgColors[type]} slide-in max-w-md`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type]} mr-3 text-xl"></i><span class="font-medium">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+        function updateUserUI() {
+            const nameSpan = document.getElementById('user-name-display'); const avatar = document.getElementById('user-avatar');
+            const loginBtn = document.getElementById('loginButton'); const logoutBtn = document.getElementById('logoutButton');
+            const mobileLogout = document.getElementById('mobileLogoutBtn');
+            if (currentUser) {
+                const name = userProfile.name || currentUser.email?.split('@')[0] || 'Khách';
+                if (nameSpan) nameSpan.textContent = name;
+                if (avatar) avatar.textContent = name.charAt(0).toUpperCase();
+                if (loginBtn) loginBtn.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+                if (mobileLogout) mobileLogout.classList.remove('hidden');
+            } else {
+                if (nameSpan) nameSpan.textContent = 'Khách';
+                if (avatar) avatar.textContent = 'K';
+                if (loginBtn) loginBtn.classList.remove('hidden');
+                if (logoutBtn) logoutBtn.classList.add('hidden');
+                if (mobileLogout) mobileLogout.classList.add('hidden');
+            }
+        }
+
+        async function handleLogout() { if (confirm('Đăng xuất?')) { try { await signOut(auth); localStorage.removeItem('currentUser'); window.location.href = '../index.html'; } catch (error) { showToast('Lỗi: ' + error.message, 'error'); } } }
+
+        function getMemberTier(points) {
+            if (points >= 10000) return { tier: 'Platinum', icon: 'fa-crown', color: 'from-purple-600 to-purple-800', discount: 20, nextPoints: points, progress: 100 };
+            if (points >= 5000) return { tier: 'Gold', icon: 'fa-medal', color: 'from-yellow-500 to-yellow-700', discount: 15, nextPoints: 10000, progress: ((points - 5000) / 5000) * 100 };
+            if (points >= 1000) return { tier: 'Silver', icon: 'fa-star', color: 'from-slate-400 to-slate-600', discount: 10, nextPoints: 5000, progress: ((points - 1000) / 4000) * 100 };
+            return { tier: 'Bronze', icon: 'fa-seedling', color: 'from-amber-600 to-amber-800', discount: 5, nextPoints: 1000, progress: (points / 1000) * 100 };
+        }
+
+        async function loadLoyaltyData() {
+            if (!currentUser) { window.location.href = '../login.html'; return; }
+
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                userProfile = userDoc.data() || {};
+                const q = query(collection(db, 'bookings'), where('userEmail', '==', currentUser.email), where('status', '==', 'completed'));
+                const querySnapshot = await getDocs(q);
+                const completedBookings = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const totalSpent = completedBookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
+                const points = Math.floor(totalSpent / 100000);
+                const tier = getMemberTier(points);
+
+                document.getElementById('card-gradient').className = `absolute inset-0 bg-gradient-to-br ${tier.color} opacity-90`;
+                document.getElementById('tier-icon').className = `fa-solid ${tier.icon} text-5xl opacity-80`;
+                document.getElementById('member-tier').textContent = tier.tier;
+                document.getElementById('points-total').textContent = points.toLocaleString();
+                document.getElementById('current-points').textContent = points.toLocaleString();
+                document.getElementById('member-name').textContent = userProfile.name || currentUser.email.split('@')[0];
+                document.getElementById('member-date').textContent = `Thành viên từ ${formatDate(userProfile.createdAt || new Date())}`;
+                document.getElementById('member-number').textContent = `**** **** **** ${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
+                const historyContainer = document.getElementById('points-history');
+                if (completedBookings.length === 0) historyContainer.innerHTML = '<p class="text-center text-slate-500 py-4">Chưa có lịch sử tích điểm</p>';
+                else historyContainer.innerHTML = completedBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5).map((b, i) => `<div class="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl hover:shadow-md transition-all transform hover:scale-[1.02]" style="animation: slideInRight 0.5s ease-out ${i * 0.1}s both;"><div class="flex items-center"><div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white mr-4"><i class="fa-solid fa-hotel"></i></div><div><p class="font-bold text-slate-900">Phòng ${b.roomCode}</p><p class="text-sm text-slate-500">${formatDate(b.checkIn)} • ${b.nights} đêm</p></div></div><div class="text-right"><p class="text-2xl font-bold text-amber-600">+${Math.floor(b.totalPrice / 100000)}</p><p class="text-xs text-slate-400">điểm</p></div></div>`).join('');
+            } catch (error) { console.error(error); showToast('Lỗi tải dữ liệu', 'error'); }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            setTimeout(() => { document.getElementById('loading-screen').style.opacity = '0'; setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 500); }, 1000);
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify({ uid: user.uid, email: user.email }));
+                updateUserUI();
+                await loadLoyaltyData();
+            } else { window.location.href = '../login.html'; }
+        });
+    </script>
+</body>
+
+</html>

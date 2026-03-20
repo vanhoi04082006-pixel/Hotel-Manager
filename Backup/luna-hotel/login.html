@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luna Hotel - Đăng Nhập / Đăng Ký</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; min-height: 100vh; }
+        .font-playfair { font-family: 'Playfair Display', serif; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loader { border: 3px solid #e2e8f0; border-top: 3px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; display: inline-block; }
+        .btn-primary { background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
+        .form-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; transition: all 0.3s ease; background: white; }
+        .form-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 8px; }
+        .form-error { color: #ef4444; font-size: 12px; margin-top: 4px; }
+    </style>
+</head>
+
+<body>
+    <div class="min-h-screen w-full bg-white">
+        <div class="flex min-h-screen">
+            <div class="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden">
+                <div class="absolute inset-0 bg-black/50 z-10"></div>
+                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2000&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover opacity-90">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-20"></div>
+                <div class="relative z-30 mt-auto p-16 text-white">
+                    <div class="flex space-x-1 mb-6"><i class="fa-solid fa-star text-yellow-400"></i><i class="fa-solid fa-star text-yellow-400"></i><i class="fa-solid fa-star text-yellow-400"></i><i class="fa-solid fa-star text-yellow-400"></i><i class="fa-solid fa-star text-yellow-400"></i></div>
+                    <h1 class="text-5xl font-playfair font-bold mb-6 leading-tight">Chào Mừng Đến<br>Luna Hotel</h1>
+                    <p class="text-lg text-slate-300 max-w-md leading-relaxed mb-8">Trải nghiệm đẳng cấp 5 sao với dịch vụ hoàn hảo và không gian sang trọng bậc nhất.</p>
+                    <div class="grid grid-cols-3 gap-6"><div><p class="text-3xl font-bold text-white">500+</p><p class="text-sm text-slate-400">Phòng cao cấp</p></div><div><p class="text-3xl font-bold text-white">50k+</p><p class="text-sm text-slate-400">Khách hàng</p></div><div><p class="text-3xl font-bold text-white">4.9</p><p class="text-sm text-slate-400">Đánh giá</p></div></div>
+                </div>
+            </div>
+
+            <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 to-white">
+                <div class="w-full max-w-md">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-slate-900 to-blue-900 rounded-2xl mb-6 shadow-xl"><i class="fa-solid fa-hotel text-3xl text-white"></i></div>
+                        <h2 class="text-3xl font-playfair font-bold text-slate-900 mb-2" id="auth-title">Đăng Nhập</h2>
+                        <p class="text-slate-500" id="auth-subtitle">Đăng nhập để trải nghiệm dịch vụ 5 sao</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <button onclick="handleGoogleLogin()" class="flex items-center justify-center gap-2 w-full bg-white border border-slate-200 rounded-xl py-3 font-medium text-slate-700 hover:bg-slate-50 transition-all"><i class="fa-brands fa-google text-red-500"></i> Google</button>
+                        <button onclick="handleFacebookLogin()" class="flex items-center justify-center gap-2 w-full bg-white border border-slate-200 rounded-xl py-3 font-medium text-slate-700 hover:bg-slate-50 transition-all"><i class="fa-brands fa-facebook-f text-blue-600"></i> Facebook</button>
+                    </div>
+
+                    <div class="relative mb-6"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div><div class="relative flex justify-center text-sm"><span class="px-4 bg-white text-slate-500">Hoặc tiếp tục với email</span></div></div>
+
+                    <form id="auth-form" class="space-y-5">
+                        <div><label class="form-label">Email</label><div class="relative"><i class="fa-regular fa-envelope absolute left-4 top-4 text-slate-400"></i><input type="email" id="auth-email" required class="form-input pl-11" placeholder="your@email.com"></div></div>
+                        <div><label class="form-label">Mật khẩu</label><div class="relative"><i class="fa-solid fa-lock absolute left-4 top-4 text-slate-400"></i><input type="password" id="auth-password" required class="form-input pl-11" placeholder="••••••••"></div></div>
+                        <div id="confirm-password-field" class="hidden"><label class="form-label">Xác nhận mật khẩu</label><div class="relative"><i class="fa-solid fa-lock absolute left-4 top-4 text-slate-400"></i><input type="password" id="auth-confirm-password" class="form-input pl-11" placeholder="••••••••"></div><div id="password-error" class="form-error hidden"></div></div>
+                        <button type="submit" id="auth-submit-btn" class="btn-primary w-full"><span>Đăng Nhập</span></button>
+                    </form>
+
+                    <div class="mt-6 text-center"><p class="text-slate-600"><span id="auth-toggle-text">Chưa có tài khoản?</span><button onclick="toggleAuthMode()" class="text-blue-600 font-bold hover:text-blue-800 transition-colors ml-1" id="auth-toggle-btn">Đăng ký ngay</button></p></div>
+                    <div class="mt-4 text-center"><button onclick="handleForgotPassword()" class="text-sm text-slate-500 hover:text-blue-600">Quên mật khẩu?</button></div>
+                    <div class="mt-6 text-center"><a href="index.html" class="text-sm text-slate-500 hover:text-blue-600"><i class="fa-solid fa-arrow-left mr-1"></i> Quay lại trang chủ</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
+            authDomain: "hotel-manager-2442d.firebaseapp.com",
+            projectId: "hotel-manager-2442d",
+            storageBucket: "hotel-manager-2442d.firebasestorage.app",
+            messagingSenderId: "379010173725",
+            appId: "1:379010173725:web:20908f11fb0589ca432ff4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+        const facebookProvider = new FacebookAuthProvider();
+        const ADMIN_EMAIL = 'lunanewyear@gmail.com';
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icons = { success: 'fa-circle-check text-green-400', error: 'fa-circle-exclamation text-red-400', warning: 'fa-triangle-exclamation text-yellow-400', info: 'fa-circle-info text-blue-400' };
+            const bgColors = { success: 'bg-green-50 border-green-200 text-green-800', error: 'bg-red-50 border-red-200 text-red-800', warning: 'bg-yellow-50 border-yellow-200 text-yellow-800', info: 'bg-blue-50 border-blue-200 text-blue-800' };
+            toast.className = `flex items-center p-4 rounded-xl shadow-lg border ${bgColors[type]} max-w-md`;
+            toast.style.animation = 'slideIn 0.3s ease-out';
+            toast.innerHTML = `<i class="fa-solid ${icons[type]} mr-3 text-xl"></i><span class="font-medium">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        let isLoginMode = true;
+
+        window.toggleAuthMode = function() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('auth-title').textContent = isLoginMode ? 'Đăng Nhập' : 'Đăng Ký Tài Khoản';
+            document.getElementById('auth-subtitle').textContent = isLoginMode ? 'Đăng nhập để trải nghiệm dịch vụ 5 sao' : 'Tạo tài khoản để nhận nhiều ưu đãi đặc biệt';
+            document.getElementById('auth-submit-btn').innerHTML = `<span>${isLoginMode ? 'Đăng Nhập' : 'Đăng Ký'}</span>`;
+            document.getElementById('auth-toggle-text').textContent = isLoginMode ? 'Chưa có tài khoản?' : 'Đã có tài khoản?';
+            document.getElementById('auth-toggle-btn').textContent = isLoginMode ? 'Đăng ký ngay' : 'Đăng nhập';
+            const confirmField = document.getElementById('confirm-password-field');
+            if (confirmField) {
+                if (isLoginMode) { confirmField.classList.add('hidden'); document.getElementById('auth-confirm-password').removeAttribute('required'); }
+                else { confirmField.classList.remove('hidden'); document.getElementById('auth-confirm-password').setAttribute('required', 'required'); }
+            }
+        };
+
+        window.handleGoogleLogin = async function() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (!userDoc.exists()) {
+                    await setDoc(doc(db, 'users', user.uid), { email: user.email, name: user.displayName || '', role: user.email === ADMIN_EMAIL ? 'admin' : 'user', createdAt: new Date().toISOString() });
+                }
+                const role = user.email === ADMIN_EMAIL ? 'admin' : 'user';
+                localStorage.setItem('currentUser', JSON.stringify({ uid: user.uid, email: user.email, name: user.displayName || '', role: role }));
+                showToast('Đăng nhập thành công!', 'success');
+                window.location.href = role === 'admin' ? 'admin/index.html' : 'index.html';
+            } catch (error) { showToast('Lỗi: ' + error.message, 'error'); }
+        };
+
+        window.handleFacebookLogin = async function() {
+            try {
+                const result = await signInWithPopup(auth, facebookProvider);
+                const user = result.user;
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (!userDoc.exists()) {
+                    await setDoc(doc(db, 'users', user.uid), { email: user.email, name: user.displayName || '', role: user.email === ADMIN_EMAIL ? 'admin' : 'user', createdAt: new Date().toISOString() });
+                }
+                const role = user.email === ADMIN_EMAIL ? 'admin' : 'user';
+                localStorage.setItem('currentUser', JSON.stringify({ uid: user.uid, email: user.email, name: user.displayName || '', role: role }));
+                showToast('Đăng nhập thành công!', 'success');
+                window.location.href = role === 'admin' ? 'admin/index.html' : 'index.html';
+            } catch (error) { showToast('Lỗi: ' + error.message, 'error'); }
+        };
+
+        window.handleForgotPassword = async function() {
+            const email = document.getElementById('auth-email').value;
+            if (!email) { showToast('Vui lòng nhập email', 'warning'); return; }
+            try { await sendPasswordResetEmail(auth, email); showToast('Email khôi phục đã gửi!', 'success'); }
+            catch (error) { showToast('Lỗi: ' + error.message, 'error'); }
+        };
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const confirmPassword = document.getElementById('auth-confirm-password')?.value;
+            const btn = document.getElementById('auth-submit-btn');
+            const errorDiv = document.getElementById('password-error');
+
+            if (!isLoginMode && password !== confirmPassword) { errorDiv.textContent = 'Mật khẩu xác nhận không khớp'; errorDiv.classList.remove('hidden'); return; }
+            else { errorDiv.classList.add('hidden'); }
+
+            btn.innerHTML = '<div class="loader" style="width:24px;height:24px;"></div>';
+            btn.disabled = true;
+
+            try {
+                if (isLoginMode) {
+                    const userCred = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCred.user;
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    const role = userDoc.exists() ? userDoc.data().role : (user.email === ADMIN_EMAIL ? 'admin' : 'user');
+                    localStorage.setItem('currentUser', JSON.stringify({ uid: user.uid, email: user.email, name: userDoc.data()?.name || email.split('@')[0], role: role }));
+                    showToast('Đăng nhập thành công!', 'success');
+                    window.location.href = role === 'admin' ? 'admin/index.html' : 'index.html';
+                } else {
+                    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                    const role = email === ADMIN_EMAIL ? 'admin' : 'user';
+                    await setDoc(doc(db, 'users', userCred.user.uid), { email: email, name: email.split('@')[0], role: role, createdAt: new Date().toISOString() });
+                    localStorage.setItem('currentUser', JSON.stringify({ uid: userCred.user.uid, email: email, name: email.split('@')[0], role: role }));
+                    showToast('Đăng ký thành công!', 'success');
+                    window.location.href = role === 'admin' ? 'admin/index.html' : 'index.html';
+                }
+            } catch (error) {
+                let message = error.message;
+                if (error.code === 'auth/invalid-credential') message = 'Email hoặc mật khẩu không đúng';
+                else if (error.code === 'auth/email-already-in-use') message = 'Email đã được đăng ký';
+                else if (error.code === 'auth/weak-password') message = 'Mật khẩu phải có ít nhất 6 ký tự';
+                showToast(message, 'error');
+                btn.innerHTML = `<span>${isLoginMode ? 'Đăng Nhập' : 'Đăng Ký'}</span>`;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

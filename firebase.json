@@ -1,13 +1,56 @@
 {
   "hosting": {
-    "site": "lunahotel-777",
-    "public": "public",
+    "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "/",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/trang-chu",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/phong",
+        "destination": "/pages/rooms.html"
+      },
+      {
+        "source": "/dich-vu",
+        "destination": "/pages/services.html"
+      },
+      {
+        "source": "/tra-cuu",
+        "destination": "/pages/booking-lookup.html"
+      },
+      {
+        "source": "/dat-phong-cua-toi",
+        "destination": "/pages/my-bookings.html"
+      },
+      {
+        "source": "/ho-so",
+        "destination": "/pages/profile.html"
+      },
+      {
+        "source": "/the-thanh-vien",
+        "destination": "/pages/loyalty.html"
+      },
+      {
+        "source": "/uu-dai",
+        "destination": "/pages/offers.html"
+      },
+      {
+        "source": "/admin",
+        "destination": "/admin/index.html"
+      },
+      {
+        "source": "/dang-nhap",
+        "destination": "/login.html"
+      },
       {
         "source": "**",
         "destination": "/index.html"
