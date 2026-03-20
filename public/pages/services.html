@@ -150,23 +150,29 @@
                 <p class="text-xs text-slate-500 hidden md:block">Nơi khởi nguồn cảm hứng</p>
             </div>
         </div>
-        <nav class="hidden md:flex items-center space-x-8"><a href="../index.html"
+        <nav class="hidden md:flex items-center space-x-8">
+            <a href="../index.html"
                 class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Trang
-                chủ</a><a href="rooms.html"
-                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Phòng</a><a
-                href="services.html" class="font-medium py-2 border-b-2 border-slate-900 text-slate-900">Dịch vụ</a><a
-                href="booking-lookup.html"
+                chủ</a>
+            <a href="rooms.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Phòng</a>
+            <a href="services.html" class="font-medium py-2 border-b-2 border-slate-900 text-slate-900">Dịch vụ</a>
+            <a href="booking-lookup.html"
                 class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900"><i
-                    class="fa-solid fa-magnifying-glass mr-1"></i>Tra cứu</a><a id="nav-my-bookings"
-                href="my-bookings.html"
+                    class="fa-solid fa-magnifying-glass mr-1"></i>Tra cứu</a>
+            <a id="nav-my-bookings" href="my-bookings.html"
                 class="hidden text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Đặt
-                phòng của tôi</a><a id="nav-profile" href="profile.html"
+                phòng của tôi</a>
+            <a id="nav-profile" href="profile.html"
                 class="hidden text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Hồ
-                sơ</a><a id="nav-loyalty" href="loyalty.html"
+                sơ</a>
+            <a id="nav-loyalty" href="loyalty.html"
                 class="hidden text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Thẻ
-                thành viên</a><a id="nav-offers" href="offers.html"
+                thành viên</a>
+            <a id="nav-offers" href="offers.html"
                 class="hidden text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Ưu
-                đãi</a></nav>
+                đãi</a>
+        </nav>
         <button class="md:hidden p-2" onclick="toggleMobileMenu()"><i
                 class="fa-solid fa-bars text-xl text-slate-700"></i></button>
         <div class="hidden md:flex items-center space-x-4">
@@ -175,30 +181,32 @@
                     class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">
                     <span id="user-avatar">K</span></div><span class="text-sm font-medium text-slate-700"
                     id="user-name-display">Khách</span>
-            </div><a href="../login.html" id="loginButton"
+            </div>
+            <a href="../login.html" id="loginButton"
                 class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700"><i
-                    class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Đăng nhập</a><button onclick="handleLogout()"
-                id="logoutButton"
+                    class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Đăng nhập</a>
+            <button onclick="handleLogout()" id="logoutButton"
                 class="border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold hidden"><i
                     class="fa-solid fa-right-from-bracket md:mr-2"></i><span>Đăng xuất</span></button>
         </div>
     </header>
 
     <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 p-4">
-        <div class="space-y-2"><a href="../index.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Trang
-                chủ</a><a href="rooms.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Phòng</a><a
-                href="services.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Dịch vụ</a><a
-                href="booking-lookup.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg"><i
-                    class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu</a><a id="mobile-my-bookings"
-                href="my-bookings.html" class="hidden block px-4 py-2 hover:bg-slate-50 rounded-lg">Đặt phòng của
-                tôi</a><a id="mobile-profile" href="profile.html"
-                class="hidden block px-4 py-2 hover:bg-slate-50 rounded-lg">Hồ sơ</a><a id="mobile-loyalty"
-                href="loyalty.html" class="hidden block px-4 py-2 hover:bg-slate-50 rounded-lg">Thẻ thành viên</a><a
-                id="mobile-offers" href="offers.html" class="hidden block px-4 py-2 hover:bg-slate-50 rounded-lg">Ưu
-                đãi</a>
-            <div class="border-t my-2 pt-2"><button onclick="handleLogout()" id="mobileLogoutBtn"
+        <div class="space-y-2">
+            <a href="../index.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Trang chủ</a>
+            <a href="rooms.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Phòng</a>
+            <a href="services.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Dịch vụ</a>
+            <a href="booking-lookup.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg"><i
+                    class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu</a>
+            <a id="mobile-my-bookings" href="my-bookings.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg hidden">Đặt phòng của tôi</a>
+            <a id="mobile-profile" href="profile.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg hidden">Hồ sơ</a>
+            <a id="mobile-loyalty" href="loyalty.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg hidden">Thẻ thành viên</a>
+            <a id="mobile-offers" href="offers.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg hidden">Ưu đãi</a>
+            <div class="border-t my-2 pt-2">
+                <button onclick="handleLogout()" id="mobileLogoutBtn"
                     class="hidden w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"><i
-                        class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</button></div>
+                        class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</button>
+            </div>
         </div>
     </div>
 
@@ -222,19 +230,19 @@
                     class="category-btn px-8 py-3 rounded-full text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/30"
                     data-category="All">✨ Tất cả</button>
                 <button onclick="filterServices('dining')"
-                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200"
+                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-blue-400 hover:text-blue-600"
                     data-category="dining">🍽️ Nhà hàng</button>
                 <button onclick="filterServices('spa')"
-                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200"
+                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-blue-400 hover:text-blue-600"
                     data-category="spa">💆 Spa</button>
                 <button onclick="filterServices('wellness')"
-                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200"
+                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-blue-400 hover:text-blue-600"
                     data-category="wellness">🏋️ Sức khỏe</button>
                 <button onclick="filterServices('transport')"
-                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200"
+                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-blue-400 hover:text-blue-600"
                     data-category="transport">🚗 Di chuyển</button>
                 <button onclick="filterServices('activities')"
-                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200"
+                    class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-blue-400 hover:text-blue-600"
                     data-category="activities">🎉 Hoạt động</button>
             </div>
 
@@ -316,22 +324,41 @@
         let localServices = [];
         let currentCategory = 'All';
 
-        function formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
+        // Kiểm tra localStorage ngay khi script chạy
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+        }
+
+        function formatCurrency(amount) { 
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); 
+        }
+        
         function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container'); const toast = document.createElement('div');
+            const container = document.getElementById('toast-container'); 
+            const toast = document.createElement('div');
             const icons = { success: 'fa-circle-check text-green-400', error: 'fa-circle-exclamation text-red-400', warning: 'fa-triangle-exclamation text-yellow-400', info: 'fa-circle-info text-blue-400' };
             const bgColors = { success: 'bg-green-50 border-green-200 text-green-800', error: 'bg-red-50 border-red-200 text-red-800', warning: 'bg-yellow-50 border-yellow-200 text-yellow-800', info: 'bg-blue-50 border-blue-200 text-blue-800' };
+            
             toast.className = `flex items-center p-4 rounded-xl shadow-lg border ${bgColors[type]} slide-in max-w-md`;
             toast.innerHTML = `<i class="fa-solid ${icons[type]} mr-3 text-xl"></i><span class="font-medium">${message}</span>`;
-            container.appendChild(toast); setTimeout(() => toast.remove(), 3000);
+            
+            container.appendChild(toast); 
+            setTimeout(() => toast.remove(), 3000);
         }
-        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+        window.toggleMobileMenu = function() { 
+            document.getElementById('mobile-menu').classList.toggle('hidden'); 
+        }
 
         function updateUserUI() {
-            const nameSpan = document.getElementById('user-name-display'); const avatar = document.getElementById('user-avatar');
-            const loginBtn = document.getElementById('loginButton'); const logoutBtn = document.getElementById('logoutButton');
+            const nameSpan = document.getElementById('user-name-display'); 
+            const avatar = document.getElementById('user-avatar');
+            const loginBtn = document.getElementById('loginButton'); 
+            const logoutBtn = document.getElementById('logoutButton');
             const mobileLogout = document.getElementById('mobileLogoutBtn');
             const navItems = ['my-bookings', 'profile', 'loyalty', 'offers'];
+            
             if (currentUser) {
                 const name = currentUser.name || currentUser.email?.split('@')[0] || 'Khách';
                 if (nameSpan) nameSpan.textContent = name;
@@ -340,8 +367,10 @@
                 if (logoutBtn) logoutBtn.classList.remove('hidden');
                 if (mobileLogout) mobileLogout.classList.remove('hidden');
                 navItems.forEach(item => {
-                    const desktop = document.getElementById(`nav-${item}`); if (desktop) desktop.classList.remove('hidden');
-                    const mobile = document.getElementById(`mobile-${item}`); if (mobile) mobile.classList.remove('hidden');
+                    const desktop = document.getElementById(`nav-${item}`); 
+                    if (desktop) desktop.classList.remove('hidden');
+                    const mobile = document.getElementById(`mobile-${item}`); 
+                    if (mobile) mobile.classList.remove('hidden');
                 });
             } else {
                 if (nameSpan) nameSpan.textContent = 'Khách';
@@ -350,27 +379,60 @@
                 if (logoutBtn) logoutBtn.classList.add('hidden');
                 if (mobileLogout) mobileLogout.classList.add('hidden');
                 navItems.forEach(item => {
-                    const desktop = document.getElementById(`nav-${item}`); if (desktop) desktop.classList.add('hidden');
-                    const mobile = document.getElementById(`mobile-${item}`); if (mobile) mobile.classList.add('hidden');
+                    const desktop = document.getElementById(`nav-${item}`); 
+                    if (desktop) desktop.classList.add('hidden');
+                    const mobile = document.getElementById(`mobile-${item}`); 
+                    if (mobile) mobile.classList.add('hidden');
                 });
             }
         }
 
-        async function handleLogout() { if (confirm('Đăng xuất?')) { try { await signOut(auth); localStorage.removeItem('currentUser'); window.location.href = '../index.html'; } catch (error) { showToast('Lỗi: ' + error.message, 'error'); } } }
+        if (currentUser) updateUserUI();
+
+        window.handleLogout = async function() { 
+            if (confirm('Bạn có chắc muốn đăng xuất?')) { 
+                try { 
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) {
+                        loadingDiv.style.opacity = '1';
+                        loadingDiv.style.display = 'flex';
+                    }
+                    await signOut(auth); 
+                    localStorage.removeItem('currentUser'); 
+                    currentUser = null;
+                    updateUserUI();
+                    showToast('Đã đăng xuất', 'success');
+                    setTimeout(() => {
+                        window.location.href = '../index.html'; 
+                    }, 500);
+                } catch (error) { 
+                    console.error('Logout error:', error);
+                    showToast('Lỗi đăng xuất: ' + error.message, 'error'); 
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
+                } 
+            } 
+        }
 
         async function loadServices() {
             try {
                 const servicesSnap = await getDocs(collection(db, 'services'));
                 localServices = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderServices();
-            } catch (error) { console.error(error); showToast('Lỗi tải dịch vụ', 'error'); }
+            } catch (error) { 
+                console.error(error); 
+                showToast('Lỗi tải dịch vụ', 'error'); 
+            }
         }
 
-        function filterServices(category) {
+        window.filterServices = function(category) {
             currentCategory = category;
             document.querySelectorAll('.category-btn').forEach(btn => {
-                if (btn.getAttribute('data-category') === category) btn.className = 'category-btn px-8 py-3 rounded-full text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/30';
-                else btn.className = 'category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-blue-400 hover:text-blue-600';
+                if (btn.getAttribute('data-category') === category) {
+                    btn.className = 'category-btn px-8 py-3 rounded-full text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/30';
+                } else {
+                    btn.className = 'category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-blue-400 hover:text-blue-600';
+                }
             });
             renderServices();
         }
@@ -378,30 +440,70 @@
         function renderServices() {
             const container = document.getElementById('services-container');
             const filtered = currentCategory === 'All' ? localServices : localServices.filter(s => s.category === currentCategory);
-            if (filtered.length === 0) { container.innerHTML = '<div class="col-span-3 text-center py-20"><div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-magnifying-glass text-4xl text-slate-400"></i></div><h3 class="text-2xl font-bold text-slate-900 mb-2">Không tìm thấy dịch vụ</h3><p class="text-slate-500">Vui lòng thử lại với danh mục khác</p></div>'; return; }
+            
+            if (filtered.length === 0) { 
+                container.innerHTML = '<div class="col-span-3 text-center py-20"><div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-magnifying-glass text-4xl text-slate-400"></i></div><h3 class="text-2xl font-bold text-slate-900 mb-2">Không tìm thấy dịch vụ</h3><p class="text-slate-500">Vui lòng thử lại với danh mục khác</p></div>'; 
+                return; 
+            }
 
             container.innerHTML = filtered.map((s, i) => `
                 <div class="group bg-white rounded-3xl shadow-xl overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl" style="animation: fadeInUp 0.6s ease-out ${i * 0.1}s both;">
-                    <div class="h-64 overflow-hidden relative"><img src="${s.image || 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"><div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-70"></div><div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold shadow-lg"><span class="text-blue-600">${s.unit === 'person' ? '👤' : s.unit === 'room' ? '🏠' : '⏰'}</span><span class="ml-1">${s.unit === 'person' ? '/người' : s.unit === 'room' ? '/phòng' : '/giờ'}</span></div></div>
-                    <div class="p-8"><div class="flex items-center mb-4"><div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white mr-4"><i class="fa-solid fa-${s.icon || 'utensils'} text-2xl"></i></div><div><h3 class="text-2xl font-bold text-slate-900 group-hover:text-blue-600">${s.name}</h3><p class="text-sm text-slate-500">${s.category === 'dining' ? 'Nhà hàng' : s.category === 'spa' ? 'Spa & Wellness' : s.category === 'wellness' ? 'Sức khỏe' : s.category === 'transport' ? 'Di chuyển' : 'Giải trí'}</p></div></div>
-                    <p class="text-slate-600 mb-6">${s.description || ''}</p><div class="flex items-center justify-between mb-6"><div><p class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">${formatCurrency(s.price)}</p><div class="flex items-center text-sm text-slate-500"><i class="fa-regular fa-clock mr-2"></i><span>${s.unit === 'person' ? 'Tính theo người' : s.unit === 'room' ? 'Tính theo phòng' : 'Tính theo giờ'}</span></div></div><div class="flex items-center bg-yellow-50 px-3 py-2 rounded-xl"><i class="fa-solid fa-star text-yellow-400 mr-1"></i><span class="font-bold">${s.rating || 4.9}</span><span class="text-xs text-slate-500 ml-1">(${s.reviews || 100})</span></div></div>
-                    <button onclick="addToCart('${s.id}')" class="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-4 rounded-xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all"><i class="fa-regular fa-plus mr-2"></i>Thêm vào đặt phòng</button></div>
+                    <div class="h-64 overflow-hidden relative">
+                        <img src="${s.image || 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-70"></div>
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                            <span class="text-blue-600">${s.unit === 'person' ? '👤' : s.unit === 'room' ? '🏠' : '⏰'}</span>
+                            <span class="ml-1">${s.unit === 'person' ? '/người' : s.unit === 'room' ? '/phòng' : '/giờ'}</span>
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex items-center mb-4">
+                            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white mr-4">
+                                <i class="fa-solid fa-${s.icon || 'utensils'} text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900 group-hover:text-blue-600">${s.name}</h3>
+                                <p class="text-sm text-slate-500">${s.category === 'dining' ? 'Nhà hàng' : s.category === 'spa' ? 'Spa & Wellness' : s.category === 'wellness' ? 'Sức khỏe' : s.category === 'transport' ? 'Di chuyển' : 'Giải trí'}</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-600 mb-6">${s.description || ''}</p>
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <p class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">${formatCurrency(s.price)}</p>
+                                <div class="flex items-center text-sm text-slate-500"><i class="fa-regular fa-clock mr-2"></i><span>${s.unit === 'person' ? 'Tính theo người' : s.unit === 'room' ? 'Tính theo phòng' : 'Tính theo giờ'}</span></div>
+                            </div>
+                            <div class="flex items-center bg-yellow-50 px-3 py-2 rounded-xl"><i class="fa-solid fa-star text-yellow-400 mr-1"></i><span class="font-bold">${s.rating || 4.9}</span><span class="text-xs text-slate-500 ml-1">(${s.reviews || 100})</span></div>
+                        </div>
+                        <button onclick="addToCart('${s.id}')" class="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-4 rounded-xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all"><i class="fa-regular fa-plus mr-2"></i>Thêm vào đặt phòng</button>
+                    </div>
                 </div>
             `).join('');
         }
 
-        function addToCart(serviceId) {
+        window.addToCart = function(serviceId) {
             const service = localServices.find(s => s.id === serviceId);
-            if (service) { showToast(`Đã thêm ${service.name} vào đặt phòng`, 'success'); sessionStorage.setItem('selectedService', JSON.stringify(service)); }
+            if (service) { 
+                showToast(`Đã thêm ${service.name} vào đặt phòng`, 'success'); 
+                sessionStorage.setItem('selectedService', JSON.stringify(service)); 
+            }
         }
 
         onAuthStateChanged(auth, async (user) => {
-            setTimeout(() => { document.getElementById('loading-screen').style.opacity = '0'; setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 500); }, 1000);
+            setTimeout(() => { 
+                document.getElementById('loading-screen').style.opacity = '0'; 
+                setTimeout(() => { 
+                    document.getElementById('loading-screen').style.display = 'none'; 
+                }, 500); 
+            }, 1000);
+            
             if (user) {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 currentUser = { uid: user.uid, email: user.email, name: userDoc.data()?.name || user.email.split('@')[0] };
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            } else { currentUser = null; localStorage.removeItem('currentUser'); }
+            } else { 
+                currentUser = null; 
+                localStorage.removeItem('currentUser'); 
+            }
             updateUserUI();
             await loadServices();
         });

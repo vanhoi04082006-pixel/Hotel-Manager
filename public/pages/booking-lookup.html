@@ -80,6 +80,16 @@
             box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
         }
 
+        .btn-secondary {
+            background: white;
+            color: #1e293b;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
         .form-input {
             width: 100%;
             padding: 12px 16px;
@@ -143,7 +153,8 @@
         <div class="text-center">
             <div
                 class="w-24 h-24 bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                <i class="fa-solid fa-hotel text-4xl text-white"></i></div>
+                <i class="fa-solid fa-hotel text-4xl text-white"></i>
+            </div>
             <div class="loader mx-auto mb-4"></div>
             <h2 class="text-2xl font-playfair font-bold text-slate-900 mb-2">Luna Hotel</h2>
             <p class="text-slate-500">Đang kết nối hệ thống...</p>
@@ -157,7 +168,8 @@
         <div class="flex items-center cursor-pointer" onclick="window.location.href='../index.html'">
             <div
                 class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-xl flex items-center justify-center mr-3 shadow-lg">
-                <i class="fa-solid fa-hotel text-lg md:text-xl text-white"></i></div>
+                <i class="fa-solid fa-hotel text-lg md:text-xl text-white"></i>
+            </div>
             <div>
                 <h1 class="text-xl md:text-2xl font-playfair font-bold text-slate-900">LUNA HOTEL</h1>
                 <p class="text-xs text-slate-500 hidden md:block">Nơi khởi nguồn cảm hứng</p>
@@ -196,8 +208,8 @@
             <div class="flex items-center space-x-3">
                 <div
                     class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">
-                    <span id="user-avatar">K</span></div><span class="text-sm font-medium text-slate-700"
-                    id="user-name-display">Khách</span>
+                    <span id="user-avatar">K</span>
+                </div><span class="text-sm font-medium text-slate-700" id="user-name-display">Khách</span>
             </div>
             <a href="../login.html" id="loginButton"
                 class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"><i
@@ -211,7 +223,7 @@
 
     <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 p-4">
         <div class="space-y-2">
-            <a href="../HomePage.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Trang chủ</a>
+            <a href="../index.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Trang chủ</a>
             <a href="rooms.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Phòng</a>
             <a href="services.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Dịch vụ</a>
             <a href="booking-lookup.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg"><i
@@ -297,7 +309,6 @@
         </div>
     </footer>
 
-    <!-- Payment Modal -->
     <div id="paymentModal" class="fixed inset-0 modal-backdrop z-[100] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div class="p-6 md:p-8">
@@ -310,10 +321,11 @@
                             class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 <div id="payment-content" class="space-y-6"></div>
-                <div class="flex justify-end space-x-3 pt-6 border-t border-slate-200"><button
-                        onclick="closeModal('paymentModal')" class="btn-secondary">Đóng</button><button
-                        onclick="processPayment()" class="btn-primary"><i
-                            class="fa-regular fa-credit-card mr-2"></i>Thanh toán ngay</button></div>
+                <div class="flex justify-end space-x-3 pt-6 border-t border-slate-200">
+                    <button onclick="closeModal('paymentModal')" class="btn-secondary">Đóng</button>
+                    <button onclick="processPayment()" class="btn-primary"><i
+                            class="fa-regular fa-credit-card mr-2"></i>Thanh toán ngay</button>
+                </div>
             </div>
         </div>
     </div>
@@ -347,20 +359,36 @@
             const toast = document.createElement('div');
             const icons = { success: 'fa-circle-check text-green-400', error: 'fa-circle-exclamation text-red-400', warning: 'fa-triangle-exclamation text-yellow-400', info: 'fa-circle-info text-blue-400' };
             const bgColors = { success: 'bg-green-50 border-green-200 text-green-800', error: 'bg-red-50 border-red-200 text-red-800', warning: 'bg-yellow-50 border-yellow-200 text-yellow-800', info: 'bg-blue-50 border-blue-200 text-blue-800' };
+
             toast.className = `flex items-center p-4 rounded-xl shadow-lg border ${bgColors[type]} slide-in max-w-md`;
             toast.innerHTML = `<i class="fa-solid ${icons[type]} mr-3 text-xl"></i><span class="font-medium">${message}</span>`;
             container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3000);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
-        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        // Expose functions to global window object
+        window.toggleMobileMenu = function () {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        };
+
+        window.closeModal = function (id) {
+            document.getElementById(id).classList.add('hidden');
+        };
 
         function updateUserUI() {
-            const nameSpan = document.getElementById('user-name-display'); const avatar = document.getElementById('user-avatar');
-            const loginBtn = document.getElementById('loginButton'); const logoutBtn = document.getElementById('logoutButton');
+            const nameSpan = document.getElementById('user-name-display');
+            const avatar = document.getElementById('user-avatar');
+            const loginBtn = document.getElementById('loginButton');
+            const logoutBtn = document.getElementById('logoutButton');
             const mobileLogout = document.getElementById('mobileLogoutBtn');
             const navItems = ['my-bookings', 'profile', 'loyalty', 'offers'];
+
             if (currentUser) {
                 const name = currentUser.name || currentUser.email?.split('@')[0] || 'Khách';
                 if (nameSpan) nameSpan.textContent = name;
@@ -368,6 +396,7 @@
                 if (loginBtn) loginBtn.classList.add('hidden');
                 if (logoutBtn) logoutBtn.classList.remove('hidden');
                 if (mobileLogout) mobileLogout.classList.remove('hidden');
+
                 navItems.forEach(item => {
                     const desktop = document.getElementById(`nav-${item}`); if (desktop) desktop.classList.remove('hidden');
                     const mobile = document.getElementById(`mobile-${item}`); if (mobile) mobile.classList.remove('hidden');
@@ -378,6 +407,7 @@
                 if (loginBtn) loginBtn.classList.remove('hidden');
                 if (logoutBtn) logoutBtn.classList.add('hidden');
                 if (mobileLogout) mobileLogout.classList.add('hidden');
+
                 navItems.forEach(item => {
                     const desktop = document.getElementById(`nav-${item}`); if (desktop) desktop.classList.add('hidden');
                     const mobile = document.getElementById(`mobile-${item}`); if (mobile) mobile.classList.add('hidden');
@@ -385,13 +415,31 @@
             }
         }
 
-        async function handleLogout() { if (confirm('Đăng xuất?')) { try { await signOut(auth); localStorage.removeItem('currentUser'); window.location.href = '../index.html'; } catch (error) { showToast('Lỗi: ' + error.message, 'error'); } } }
+        window.handleLogout = async function () {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
+                try {
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) {
+                        loadingDiv.style.opacity = '1';
+                        loadingDiv.style.display = 'flex';
+                    }
+                    await signOut(auth);
+                    localStorage.removeItem('currentUser');
+                    window.location.href = '../index.html';
+                } catch (error) {
+                    showToast('Lỗi: ' + error.message, 'error');
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
+                }
+            }
+        };
 
         window.lookupBooking = async function (e) {
             e.preventDefault();
             const email = document.getElementById('lookupEmail').value;
             const bookingId = document.getElementById('lookupBookingId').value.replace('#', '').trim();
             const resultDiv = document.getElementById('lookupResult');
+
             resultDiv.innerHTML = '<div class="loader mx-auto"></div>';
             resultDiv.classList.remove('hidden');
 
@@ -423,7 +471,10 @@
 
                 resultDiv.innerHTML = `
                     <div class="bg-green-50 p-6 rounded-xl">
-                        <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg text-slate-900">Thông tin đặt phòng</h3><span class="badge ${statusColors[foundBooking.status]}">${statusText[foundBooking.status]}</span></div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg text-slate-900">Thông tin đặt phòng</h3>
+                            <span class="badge ${statusColors[foundBooking.status]}">${statusText[foundBooking.status]}</span>
+                        </div>
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between"><span class="text-slate-500">Mã đặt phòng:</span><span class="font-mono font-bold">#${foundBooking.id.slice(-8)}</span></div>
                             <div class="flex justify-between"><span class="text-slate-500">Phòng:</span><span class="font-bold">${foundBooking.roomCode}</span></div>
@@ -432,7 +483,10 @@
                             <div class="flex justify-between"><span class="text-slate-500">Số đêm:</span><span>${foundBooking.nights}</span></div>
                             <div class="flex justify-between"><span class="text-slate-500">Khách:</span><span>${foundBooking.adultCount} người lớn, ${foundBooking.childCount || 0} trẻ em</span></div>
                             ${foundBooking.services?.length ? `<div class="flex justify-between"><span class="text-slate-500">Dịch vụ:</span><span>${foundBooking.services.map(s => s.name).join(', ')}</span></div>` : ''}
-                            <div class="flex justify-between border-t border-green-200 pt-3 mt-3"><span class="text-slate-700 font-bold">Tổng tiền:</span><span class="text-xl font-bold text-blue-600 font-mono">${formatCurrency(foundBooking.totalPrice)}</span></div>
+                            <div class="flex justify-between border-t border-green-200 pt-3 mt-3">
+                                <span class="text-slate-700 font-bold">Tổng tiền:</span>
+                                <span class="text-xl font-bold text-blue-600 font-mono">${formatCurrency(foundBooking.totalPrice)}</span>
+                            </div>
                         </div>
                         ${foundBooking.paymentStatus !== 'paid' && foundBooking.status !== 'cancelled' ? `<button onclick="openPaymentModal('${foundBooking.id}')" class="mt-4 w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700"><i class="fa-regular fa-credit-card mr-2"></i>Thanh toán ngay</button>` : foundBooking.paymentStatus === 'paid' ? `<div class="mt-4 p-3 bg-green-100 rounded-lg text-green-700 text-center"><i class="fa-solid fa-circle-check mr-2"></i>Đã thanh toán</div>` : ''}
                     </div>
@@ -444,28 +498,116 @@
         };
 
         window.openPaymentModal = async function (bookingId) {
-            const booking = currentBooking || await (async () => { const docSnap = await getDoc(doc(db, 'bookings', bookingId)); return { id: docSnap.id, ...docSnap.data() }; })();
-            if (!booking) { showToast('Không tìm thấy thông tin đặt phòng', 'error'); return; }
+            const booking = currentBooking || await (async () => {
+                const docSnap = await getDoc(doc(db, 'bookings', bookingId));
+                return { id: docSnap.id, ...docSnap.data() };
+            })();
+
+            if (!booking) {
+                showToast('Không tìm thấy thông tin đặt phòng', 'error');
+                return;
+            }
 
             const modal = document.getElementById('paymentModal');
             const content = document.getElementById('payment-content');
+
             let hiddenInput = document.getElementById('payment-booking-id');
-            if (!hiddenInput) { hiddenInput = document.createElement('input'); hiddenInput.type = 'hidden'; hiddenInput.id = 'payment-booking-id'; modal.querySelector('.p-6').appendChild(hiddenInput); }
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = 'payment-booking-id';
+                modal.querySelector('.p-6').appendChild(hiddenInput);
+            }
             hiddenInput.value = bookingId;
             document.getElementById('payment-booking-code').textContent = `Mã đặt phòng: #${bookingId.slice(-8)}`;
 
             content.innerHTML = `
-                <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-6 rounded-2xl text-white"><div class="flex justify-between items-center mb-4"><span class="text-sm opacity-90">Tổng tiền cần thanh toán</span><span class="text-3xl font-bold font-mono">${formatCurrency(booking.totalPrice)}</span></div><div class="flex justify-between text-sm opacity-80"><span>Phòng ${booking.roomCode}</span><span>${booking.nights || 1} đêm</span></div></div>
-                <div class="border border-slate-200 rounded-xl p-4"><h4 class="font-bold text-slate-900 mb-3">Chọn phương thức thanh toán</h4>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <label class="flex items-center p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400"><input type="radio" name="paymentMethod" value="cash" class="hidden peer" checked><div class="flex-1 text-center"><i class="fa-solid fa-money-bill-wave text-2xl text-green-600 mb-2"></i><span class="text-sm font-medium block">Tiền mặt</span></div></label>
-                    <label class="flex items-center p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400"><input type="radio" name="paymentMethod" value="bank" class="hidden peer"><div class="flex-1 text-center"><i class="fa-solid fa-building-columns text-2xl text-blue-600 mb-2"></i><span class="text-sm font-medium block">Chuyển khoản</span></div></label>
-                    <label class="flex items-center p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400"><input type="radio" name="paymentMethod" value="credit" class="hidden peer"><div class="flex-1 text-center"><i class="fa-regular fa-credit-card text-2xl text-purple-600 mb-2"></i><span class="text-sm font-medium block">Thẻ tín dụng</span></div></label>
-                    <label class="flex items-center p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400"><input type="radio" name="paymentMethod" value="wallet" class="hidden peer"><div class="flex-1 text-center"><i class="fa-solid fa-mobile-screen-button text-2xl text-orange-600 mb-2"></i><span class="text-sm font-medium block">Ví điện tử</span></div></label>
+                <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-6 rounded-2xl text-white">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm opacity-90">Tổng tiền cần thanh toán</span>
+                        <span class="text-3xl font-bold font-mono">${formatCurrency(booking.totalPrice)}</span>
+                    </div>
+                    <div class="flex justify-between text-sm opacity-80">
+                        <span>Phòng ${booking.roomCode}</span>
+                        <span>${booking.nights || 1} đêm</span>
+                    </div>
                 </div>
-                <div id="payment-bank-details" class="mt-4 p-4 bg-blue-50 rounded-xl hidden"><h4 class="font-bold text-blue-800 mb-3">Thông tin chuyển khoản</h4><div class="space-y-2 text-sm text-blue-700"><div class="flex justify-between"><span>Ngân hàng:</span><span class="font-mono font-bold">Vietcombank</span></div><div class="flex justify-between"><span>Số tài khoản:</span><span class="font-mono font-bold">1234 5678 9012 3456</span></div><div class="flex justify-between"><span>Chủ tài khoản:</span><span class="font-mono font-bold">LUNA HOTEL & RESORT</span></div><div class="flex justify-between"><span>Nội dung:</span><span class="font-mono font-bold text-xs" id="payment-bank-content">THANH TOAN ${bookingId.slice(-8)}</span></div></div><button onclick="copyBankInfo()" class="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-700"><i class="fa-regular fa-copy mr-2"></i>Sao chép thông tin</button></div>
-                <div id="payment-credit-form" class="mt-4 space-y-4 hidden"><div class="bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-xl text-white"><div class="flex justify-between items-center mb-6"><i class="fa-brands fa-cc-visa text-3xl"></i><i class="fa-brands fa-cc-mastercard text-3xl"></i></div><div class="mb-4"><p class="text-xs opacity-80 mb-1">Số thẻ</p><p class="text-xl font-mono tracking-wider" id="payment-card-number">**** **** **** ****</p></div><div class="flex justify-between"><div><p class="text-xs opacity-80 mb-1">Hạn</p><p class="font-mono" id="payment-card-expiry">**/**</p></div><div><p class="text-xs opacity-80 mb-1">CVV</p><p class="font-mono" id="payment-card-cvv">***</p></div></div></div><div><label class="form-label">Số thẻ</label><input type="text" id="payment-card-number-input" maxlength="19" placeholder="1234 5678 9012 3456" class="form-input"></div><div class="grid grid-cols-2 gap-4"><div><label class="form-label">Hạn (MM/YY)</label><input type="text" id="payment-card-expiry-input" maxlength="5" placeholder="MM/YY" class="form-input"></div><div><label class="form-label">CVV</label><input type="text" id="payment-card-cvv-input" maxlength="3" placeholder="123" class="form-input"></div></div><div><label class="form-label">Tên chủ thẻ</label><input type="text" id="payment-card-name" placeholder="NGUYEN VAN A" class="form-input"></div></div>
-                <div id="payment-wallet-details" class="mt-4 p-4 bg-orange-50 rounded-xl hidden"><h4 class="font-bold text-orange-800 mb-3">Quét mã QR để thanh toán</h4><div class="flex justify-center"><div class="w-48 h-48 bg-white p-2 rounded-xl shadow-lg"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LUNA%20HOTEL%20${bookingId}" alt="QR Code" class="w-full h-full"></div></div><p class="text-sm text-orange-700 text-center mt-3">Sử dụng ứng dụng Momo, ZaloPay hoặc VietQR để quét mã</p></div></div>
+                <div class="border border-slate-200 rounded-xl p-4">
+                    <h4 class="font-bold text-slate-900 mb-3">Chọn phương thức thanh toán</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <label class="flex items-center p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400">
+                            <input type="radio" name="paymentMethod" value="cash" class="hidden peer" checked>
+                            <div class="flex-1 text-center">
+                                <i class="fa-solid fa-money-bill-wave text-2xl text-green-600 mb-2"></i>
+                                <span class="text-sm font-medium block">Tiền mặt</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400">
+                            <input type="radio" name="paymentMethod" value="bank" class="hidden peer">
+                            <div class="flex-1 text-center">
+                                <i class="fa-solid fa-building-columns text-2xl text-blue-600 mb-2"></i>
+                                <span class="text-sm font-medium block">Chuyển khoản</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400">
+                            <input type="radio" name="paymentMethod" value="credit" class="hidden peer">
+                            <div class="flex-1 text-center">
+                                <i class="fa-regular fa-credit-card text-2xl text-purple-600 mb-2"></i>
+                                <span class="text-sm font-medium block">Thẻ tín dụng</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-blue-400">
+                            <input type="radio" name="paymentMethod" value="wallet" class="hidden peer">
+                            <div class="flex-1 text-center">
+                                <i class="fa-solid fa-mobile-screen-button text-2xl text-orange-600 mb-2"></i>
+                                <span class="text-sm font-medium block">Ví điện tử</span>
+                            </div>
+                        </label>
+                    </div>
+                    <div id="payment-bank-details" class="mt-4 p-4 bg-blue-50 rounded-xl hidden">
+                        <h4 class="font-bold text-blue-800 mb-3">Thông tin chuyển khoản</h4>
+                        <div class="space-y-2 text-sm text-blue-700">
+                            <div class="flex justify-between"><span>Ngân hàng:</span><span class="font-mono font-bold">Vietcombank</span></div>
+                            <div class="flex justify-between"><span>Số tài khoản:</span><span class="font-mono font-bold">1234 5678 9012 3456</span></div>
+                            <div class="flex justify-between"><span>Chủ tài khoản:</span><span class="font-mono font-bold">LUNA HOTEL & RESORT</span></div>
+                            <div class="flex justify-between"><span>Nội dung:</span><span class="font-mono font-bold text-xs" id="payment-bank-content">THANH TOAN ${bookingId.slice(-8)}</span></div>
+                        </div>
+                        <button onclick="copyBankInfo()" class="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-700">
+                            <i class="fa-regular fa-copy mr-2"></i>Sao chép thông tin
+                        </button>
+                    </div>
+                    <div id="payment-credit-form" class="mt-4 space-y-4 hidden">
+                        <div class="bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-xl text-white">
+                            <div class="flex justify-between items-center mb-6">
+                                <i class="fa-brands fa-cc-visa text-3xl"></i>
+                                <i class="fa-brands fa-cc-mastercard text-3xl"></i>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-xs opacity-80 mb-1">Số thẻ</p>
+                                <p class="text-xl font-mono tracking-wider" id="payment-card-number">**** **** **** ****</p>
+                            </div>
+                            <div class="flex justify-between">
+                                <div><p class="text-xs opacity-80 mb-1">Hạn</p><p class="font-mono" id="payment-card-expiry">**/**</p></div>
+                                <div><p class="text-xs opacity-80 mb-1">CVV</p><p class="font-mono" id="payment-card-cvv">***</p></div>
+                            </div>
+                        </div>
+                        <div><label class="form-label">Số thẻ</label><input type="text" id="payment-card-number-input" maxlength="19" placeholder="1234 5678 9012 3456" class="form-input"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="form-label">Hạn (MM/YY)</label><input type="text" id="payment-card-expiry-input" maxlength="5" placeholder="MM/YY" class="form-input"></div>
+                            <div><label class="form-label">CVV</label><input type="text" id="payment-card-cvv-input" maxlength="3" placeholder="123" class="form-input"></div>
+                        </div>
+                        <div><label class="form-label">Tên chủ thẻ</label><input type="text" id="payment-card-name" placeholder="NGUYEN VAN A" class="form-input"></div>
+                    </div>
+                    <div id="payment-wallet-details" class="mt-4 p-4 bg-orange-50 rounded-xl hidden">
+                        <h4 class="font-bold text-orange-800 mb-3">Quét mã QR để thanh toán</h4>
+                        <div class="flex justify-center">
+                            <div class="w-48 h-48 bg-white p-2 rounded-xl shadow-lg">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LUNA%20HOTEL%20${bookingId}" alt="QR Code" class="w-full h-full">
+                            </div>
+                        </div>
+                        <p class="text-sm text-orange-700 text-center mt-3">Sử dụng ứng dụng Momo, ZaloPay hoặc VietQR để quét mã</p>
+                    </div>
+                </div>
             `;
 
             document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
@@ -473,6 +615,7 @@
                     document.getElementById('payment-bank-details').classList.add('hidden');
                     document.getElementById('payment-credit-form').classList.add('hidden');
                     document.getElementById('payment-wallet-details').classList.add('hidden');
+
                     if (e.target.value === 'bank') document.getElementById('payment-bank-details').classList.remove('hidden');
                     else if (e.target.value === 'credit') document.getElementById('payment-credit-form').classList.remove('hidden');
                     else if (e.target.value === 'wallet') document.getElementById('payment-wallet-details').classList.remove('hidden');
@@ -480,15 +623,22 @@
             });
 
             document.getElementById('payment-card-number-input')?.addEventListener('input', function (e) {
-                let value = e.target.value.replace(/\D/g, ''), formatted = '';
-                for (let i = 0; i < value.length; i++) { if (i > 0 && i % 4 === 0) formatted += ' '; formatted += value[i]; }
-                e.target.value = formatted; document.getElementById('payment-card-number').textContent = formatted || '**** **** **** ****';
+                let value = e.target.value.replace(/\D/g, '');
+                let formatted = '';
+                for (let i = 0; i < value.length; i++) {
+                    if (i > 0 && i % 4 === 0) formatted += ' ';
+                    formatted += value[i];
+                }
+                e.target.value = formatted;
+                document.getElementById('payment-card-number').textContent = formatted || '**** **** **** ****';
             });
+
             document.getElementById('payment-card-expiry-input')?.addEventListener('input', function (e) {
                 let value = e.target.value.replace(/\D/g, '');
                 e.target.value = value.length >= 2 ? value.slice(0, 2) + '/' + value.slice(2, 4) : value;
                 document.getElementById('payment-card-expiry').textContent = e.target.value || '**/**';
             });
+
             document.getElementById('payment-card-cvv-input')?.addEventListener('input', function (e) {
                 document.getElementById('payment-card-cvv').textContent = e.target.value.padEnd(3, '*');
             });
@@ -505,29 +655,45 @@
             try {
                 const bookingId = document.getElementById('payment-booking-id')?.value;
                 if (!bookingId) throw new Error('Không tìm thấy mã đặt phòng');
+
                 const method = document.querySelector('input[name="paymentMethod"]:checked')?.value;
                 if (!method) throw new Error('Vui lòng chọn phương thức thanh toán');
 
                 const bookingRef = doc(db, 'bookings', bookingId);
                 const bookingDoc = await getDoc(bookingRef);
                 if (!bookingDoc.exists()) throw new Error('Không tìm thấy thông tin đặt phòng');
+
                 const booking = bookingDoc.data();
 
                 const paymentData = {
-                    bookingId: bookingId, amount: booking.totalPrice, method: method, status: 'completed',
+                    bookingId: bookingId,
+                    amount: booking.totalPrice,
+                    method: method,
+                    status: 'completed',
                     transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase(),
-                    createdAt: new Date().toISOString(), completedAt: new Date().toISOString(),
-                    userEmail: booking.userEmail, roomCode: booking.roomCode
+                    createdAt: new Date().toISOString(),
+                    completedAt: new Date().toISOString(),
+                    userEmail: booking.userEmail,
+                    roomCode: booking.roomCode
                 };
+
                 if (currentUser) paymentData.userId = currentUser.uid;
                 else paymentData.isGuest = true;
 
                 const paymentRef = await addDoc(collection(db, 'payments'), paymentData);
-                await updateDoc(bookingRef, { paymentStatus: 'paid', paymentId: paymentRef.id, updatedAt: new Date().toISOString() });
+                await updateDoc(bookingRef, {
+                    paymentStatus: 'paid',
+                    paymentId: paymentRef.id,
+                    updatedAt: new Date().toISOString()
+                });
 
                 showToast('Thanh toán thành công!', 'success');
-                closeModal('paymentModal');
-                setTimeout(() => { const searchBtn = document.querySelector('button[onclick="lookupBooking(event)"]'); if (searchBtn) searchBtn.click(); }, 500);
+                window.closeModal('paymentModal');
+
+                setTimeout(() => {
+                    const searchBtn = document.querySelector('button[type="submit"]');
+                    if (searchBtn) searchBtn.click();
+                }, 500);
             } catch (error) {
                 console.error('Payment error:', error);
                 showToast('Lỗi thanh toán: ' + error.message, 'error');
@@ -543,13 +709,36 @@
             showToast('Đã sao chép thông tin', 'success');
         };
 
+        // Initial check for currentUser in localStorage
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+        }
+
         onAuthStateChanged(auth, async (user) => {
-            setTimeout(() => { document.getElementById('loading-screen').style.opacity = '0'; setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 500); }, 1000);
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+            }, 1000);
+
             if (user) {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
-                currentUser = { uid: user.uid, email: user.email, name: userDoc.data()?.name || user.email.split('@')[0] };
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    name: userDoc.data()?.name || user.displayName || user.email.split('@')[0]
+                };
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            } else { currentUser = null; localStorage.removeItem('currentUser'); }
+            } else {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+            }
+
             updateUserUI();
         });
     </script>

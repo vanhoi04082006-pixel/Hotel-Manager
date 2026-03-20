@@ -268,7 +268,6 @@
                     <p class="text-lg text-slate-600">Lựa chọn phòng phù hợp với nhu cầu của bạn</p>
                 </div>
 
-                <!-- Filters -->
                 <div class="flex flex-wrap justify-center gap-3 mb-8" id="room-filters">
                     <button onclick="filterRooms('All')"
                         class="filter-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-slate-900 text-white"
@@ -293,7 +292,6 @@
                         data-filter="Executive">Executive</button>
                 </div>
 
-                <!-- Room Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="rooms-container">
                     <div class="col-span-3 text-center py-12">
                         <div class="loader mx-auto mb-4"></div>
@@ -301,7 +299,6 @@
                     </div>
                 </div>
 
-                <!-- Load More Button -->
                 <div class="text-center mt-8" id="load-more-container">
                     <button onclick="loadMoreRooms()" class="btn-secondary hidden">Xem thêm phòng</button>
                 </div>
@@ -360,7 +357,6 @@
         </footer>
     </div>
 
-    <!-- Booking Modal -->
     <div id="bookingModal" class="fixed inset-0 modal-backdrop z-[100] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div class="p-6 md:p-8">
@@ -522,7 +518,8 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        function closeModal(id) {
+        // Đưa hàm closeModal ra window để gọi từ HTML
+        window.closeModal = function (id) {
             document.getElementById(id).classList.add('hidden');
         }
 
@@ -563,16 +560,30 @@
             }
         }
 
-        async function handleLogout() {
-            if (confirm('Đăng xuất?')) {
+        // Đưa handleLogout ra window
+        window.handleLogout = async function () {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
                 try {
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) {
+                        loadingDiv.style.opacity = '1';
+                        loadingDiv.style.display = 'flex';
+                    }
+
                     await signOut(auth);
                     localStorage.removeItem('currentUser');
                     currentUser = null;
                     updateUserUI();
-                    window.location.href = '../index.html';
+                    showToast('Đã đăng xuất', 'success');
+
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 500);
                 } catch (error) {
-                    showToast('Lỗi: ' + error.message, 'error');
+                    console.error('Logout error:', error);
+                    showToast('Lỗi đăng xuất: ' + error.message, 'error');
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
                 }
             }
         }
@@ -843,7 +854,7 @@
             try {
                 const docRef = await addDoc(collection(db, 'bookings'), bookingData);
                 showToast('Đặt phòng thành công! Mã đặt: #' + docRef.id.slice(-8), 'success');
-                closeModal('bookingModal');
+                window.closeModal('bookingModal');
             } catch (error) {
                 console.error(error);
                 showToast('Lỗi: ' + error.message, 'error');
@@ -890,7 +901,7 @@
             if (bookId) {
                 setTimeout(() => {
                     const room = allRooms.find(r => r.id === bookId);
-                    if (room) openBookingModal(bookId);
+                    if (room) window.openBookingModal(bookId);
                 }, 1000);
             }
         });

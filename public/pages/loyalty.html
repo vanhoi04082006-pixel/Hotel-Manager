@@ -130,7 +130,8 @@
         <div class="text-center">
             <div
                 class="w-24 h-24 bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                <i class="fa-solid fa-hotel text-4xl text-white"></i></div>
+                <i class="fa-solid fa-hotel text-4xl text-white"></i>
+            </div>
             <div class="loader mx-auto mb-4"></div>
             <h2 class="text-2xl font-playfair font-bold text-slate-900 mb-2">Luna Hotel</h2>
             <p class="text-slate-500">Đang tải thông tin thẻ thành viên...</p>
@@ -144,29 +145,35 @@
         <div class="flex items-center cursor-pointer" onclick="window.location.href='../index.html'">
             <div
                 class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-xl flex items-center justify-center mr-3 shadow-lg">
-                <i class="fa-solid fa-hotel text-lg md:text-xl text-white"></i></div>
+                <i class="fa-solid fa-hotel text-lg md:text-xl text-white"></i>
+            </div>
             <div>
                 <h1 class="text-xl md:text-2xl font-playfair font-bold text-slate-900">LUNA HOTEL</h1>
                 <p class="text-xs text-slate-500 hidden md:block">Nơi khởi nguồn cảm hứng</p>
             </div>
         </div>
-        <nav class="hidden md:flex items-center space-x-8"><a href="../index.html"
+        <nav class="hidden md:flex items-center space-x-8">
+            <a href="../index.html"
                 class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Trang
-                chủ</a><a href="rooms.html"
-                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Phòng</a><a
-                href="services.html"
-                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Dịch vụ</a><a
-                href="booking-lookup.html"
+                chủ</a>
+            <a href="rooms.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Phòng</a>
+            <a href="services.html"
+                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Dịch vụ</a>
+            <a href="booking-lookup.html"
                 class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900"><i
-                    class="fa-solid fa-magnifying-glass mr-1"></i>Tra cứu</a><a id="nav-my-bookings"
-                href="my-bookings.html"
-                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Đặt phòng của
-                tôi</a><a id="nav-profile" href="profile.html"
-                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Hồ sơ</a><a
-                id="nav-loyalty" href="loyalty.html"
-                class="font-medium py-2 border-b-2 border-slate-900 text-slate-900">Thẻ thành viên</a><a id="nav-offers"
-                href="offers.html"
-                class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Ưu đãi</a>
+                    class="fa-solid fa-magnifying-glass mr-1"></i>Tra cứu</a>
+            <a id="nav-my-bookings" href="my-bookings.html"
+                class="hidden text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Đặt
+                phòng của tôi</a>
+            <a id="nav-profile" href="profile.html"
+                class="hidden text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Hồ
+                sơ</a>
+            <a id="nav-loyalty" href="loyalty.html"
+                class="hidden font-medium py-2 border-b-2 border-slate-900 text-slate-900">Thẻ thành viên</a>
+            <a id="nav-offers" href="offers.html"
+                class="hidden text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900">Ưu
+                đãi</a>
         </nav>
         <button class="md:hidden p-2" onclick="toggleMobileMenu()"><i
                 class="fa-solid fa-bars text-xl text-slate-700"></i></button>
@@ -174,8 +181,8 @@
             <div class="flex items-center space-x-3">
                 <div
                     class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">
-                    <span id="user-avatar">K</span></div><span class="text-sm font-medium text-slate-700"
-                    id="user-name-display">Khách</span>
+                    <span id="user-avatar">K</span>
+                </div><span class="text-sm font-medium text-slate-700" id="user-name-display">Khách</span>
             </div><a href="../login.html" id="loginButton"
                 class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700"><i
                     class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Đăng nhập</a><button onclick="handleLogout()"
@@ -186,18 +193,25 @@
     </header>
 
     <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 p-4">
-        <div class="space-y-2"><a href="../index.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Trang
-                chủ</a><a href="rooms.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Phòng</a><a
-                href="services.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Dịch vụ</a><a
-                href="booking-lookup.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg"><i
-                    class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu</a><a href="my-bookings.html"
-                class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Đặt phòng của tôi</a><a href="profile.html"
-                class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Hồ sơ</a><a href="loyalty.html"
-                class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Thẻ thành viên</a><a href="offers.html"
-                class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Ưu đãi</a>
-            <div class="border-t my-2 pt-2"><button onclick="handleLogout()" id="mobileLogoutBtn"
+        <div class="space-y-2">
+            <a href="../index.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Trang chủ</a>
+            <a href="rooms.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Phòng</a>
+            <a href="services.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Dịch vụ</a>
+            <a href="booking-lookup.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg"><i
+                    class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu</a>
+            <a id="mobile-my-bookings" href="my-bookings.html"
+                class="hidden block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Đặt phòng của tôi</a>
+            <a id="mobile-profile" href="profile.html"
+                class="hidden block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Hồ sơ</a>
+            <a id="mobile-loyalty" href="loyalty.html"
+                class="hidden block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Thẻ thành viên</a>
+            <a id="mobile-offers" href="offers.html"
+                class="hidden block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Ưu đãi</a>
+            <div class="border-t my-2 pt-2">
+                <button onclick="handleLogout()" id="mobileLogoutBtn"
                     class="hidden w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"><i
-                        class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</button></div>
+                        class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</button>
+            </div>
         </div>
     </div>
 
@@ -449,41 +463,104 @@
         let currentUser = null;
         let userProfile = {};
 
-        function formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
-        function formatDate(dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
+        // Kiểm tra localStorage ngay khi script chạy
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const d = new Date(dateString);
+            return d.toLocaleDateString('vi-VN');
+        }
+
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const icons = { success: 'fa-circle-check text-green-400', error: 'fa-circle-exclamation text-red-400', warning: 'fa-triangle-exclamation text-yellow-400', info: 'fa-circle-info text-blue-400' };
             const bgColors = { success: 'bg-green-50 border-green-200 text-green-800', error: 'bg-red-50 border-red-200 text-red-800', warning: 'bg-yellow-50 border-yellow-200 text-yellow-800', info: 'bg-blue-50 border-blue-200 text-blue-800' };
+
             toast.className = `flex items-center p-4 rounded-xl shadow-lg border ${bgColors[type]} slide-in max-w-md`;
             toast.innerHTML = `<i class="fa-solid ${icons[type]} mr-3 text-xl"></i><span class="font-medium">${message}</span>`;
+
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
-        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+        window.toggleMobileMenu = function () {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
 
         function updateUserUI() {
-            const nameSpan = document.getElementById('user-name-display'); const avatar = document.getElementById('user-avatar');
-            const loginBtn = document.getElementById('loginButton'); const logoutBtn = document.getElementById('logoutButton');
+            const nameSpan = document.getElementById('user-name-display');
+            const avatar = document.getElementById('user-avatar');
+            const loginBtn = document.getElementById('loginButton');
+            const logoutBtn = document.getElementById('logoutButton');
             const mobileLogout = document.getElementById('mobileLogoutBtn');
+            const navItems = ['my-bookings', 'profile', 'loyalty', 'offers'];
+
             if (currentUser) {
-                const name = userProfile.name || currentUser.email?.split('@')[0] || 'Khách';
+                const name = userProfile.name || currentUser.name || currentUser.email?.split('@')[0] || 'Khách';
                 if (nameSpan) nameSpan.textContent = name;
                 if (avatar) avatar.textContent = name.charAt(0).toUpperCase();
                 if (loginBtn) loginBtn.classList.add('hidden');
                 if (logoutBtn) logoutBtn.classList.remove('hidden');
                 if (mobileLogout) mobileLogout.classList.remove('hidden');
+
+                navItems.forEach(item => {
+                    const desktop = document.getElementById(`nav-${item}`);
+                    const mobile = document.getElementById(`mobile-${item}`);
+                    if (desktop) desktop.classList.remove('hidden');
+                    if (mobile) mobile.classList.remove('hidden');
+                });
             } else {
                 if (nameSpan) nameSpan.textContent = 'Khách';
                 if (avatar) avatar.textContent = 'K';
                 if (loginBtn) loginBtn.classList.remove('hidden');
                 if (logoutBtn) logoutBtn.classList.add('hidden');
                 if (mobileLogout) mobileLogout.classList.add('hidden');
+
+                navItems.forEach(item => {
+                    const desktop = document.getElementById(`nav-${item}`);
+                    const mobile = document.getElementById(`mobile-${item}`);
+                    if (desktop) desktop.classList.add('hidden');
+                    if (mobile) mobile.classList.add('hidden');
+                });
             }
         }
 
-        async function handleLogout() { if (confirm('Đăng xuất?')) { try { await signOut(auth); localStorage.removeItem('currentUser'); window.location.href = '../index.html'; } catch (error) { showToast('Lỗi: ' + error.message, 'error'); } } }
+        if (currentUser) updateUserUI();
+
+        window.handleLogout = async function () {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
+                try {
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) {
+                        loadingDiv.style.opacity = '1';
+                        loadingDiv.style.display = 'flex';
+                    }
+                    await signOut(auth);
+                    localStorage.removeItem('currentUser');
+                    currentUser = null;
+                    updateUserUI();
+                    showToast('Đã đăng xuất', 'success');
+
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 500);
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    showToast('Lỗi đăng xuất: ' + error.message, 'error');
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
+                }
+            }
+        }
 
         function getMemberTier(points) {
             if (points >= 10000) return { tier: 'Platinum', icon: 'fa-crown', color: 'from-purple-600 to-purple-800', discount: 20, nextPoints: points, progress: 100 };
@@ -493,41 +570,93 @@
         }
 
         async function loadLoyaltyData() {
-            if (!currentUser) { window.location.href = '../login.html'; return; }
+            if (!currentUser) {
+                window.location.href = '../login.html';
+                return;
+            }
 
             try {
                 const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
                 userProfile = userDoc.data() || {};
+
                 const q = query(collection(db, 'bookings'), where('userEmail', '==', currentUser.email), where('status', '==', 'completed'));
                 const querySnapshot = await getDocs(q);
                 const completedBookings = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
                 const totalSpent = completedBookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
                 const points = Math.floor(totalSpent / 100000);
                 const tier = getMemberTier(points);
 
+                // Cập nhật thông tin thẻ
                 document.getElementById('card-gradient').className = `absolute inset-0 bg-gradient-to-br ${tier.color} opacity-90`;
                 document.getElementById('tier-icon').className = `fa-solid ${tier.icon} text-5xl opacity-80`;
                 document.getElementById('member-tier').textContent = tier.tier;
                 document.getElementById('points-total').textContent = points.toLocaleString();
                 document.getElementById('current-points').textContent = points.toLocaleString();
+
                 document.getElementById('member-name').textContent = userProfile.name || currentUser.email.split('@')[0];
                 document.getElementById('member-date').textContent = `Thành viên từ ${formatDate(userProfile.createdAt || new Date())}`;
-                document.getElementById('member-number').textContent = `**** **** **** ${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
+                // Tạo số thẻ ảo ngẫu nhiên
+                const randomCardNumber = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                document.getElementById('member-number').textContent = `**** **** **** ${randomCardNumber}`;
 
                 const historyContainer = document.getElementById('points-history');
-                if (completedBookings.length === 0) historyContainer.innerHTML = '<p class="text-center text-slate-500 py-4">Chưa có lịch sử tích điểm</p>';
-                else historyContainer.innerHTML = completedBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5).map((b, i) => `<div class="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl hover:shadow-md transition-all transform hover:scale-[1.02]" style="animation: slideInRight 0.5s ease-out ${i * 0.1}s both;"><div class="flex items-center"><div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white mr-4"><i class="fa-solid fa-hotel"></i></div><div><p class="font-bold text-slate-900">Phòng ${b.roomCode}</p><p class="text-sm text-slate-500">${formatDate(b.checkIn)} • ${b.nights} đêm</p></div></div><div class="text-right"><p class="text-2xl font-bold text-amber-600">+${Math.floor(b.totalPrice / 100000)}</p><p class="text-xs text-slate-400">điểm</p></div></div>`).join('');
-            } catch (error) { console.error(error); showToast('Lỗi tải dữ liệu', 'error'); }
+
+                if (completedBookings.length === 0) {
+                    historyContainer.innerHTML = '<p class="text-center text-slate-500 py-4">Chưa có lịch sử tích điểm</p>';
+                } else {
+                    const sortedBookings = completedBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+
+                    historyContainer.innerHTML = sortedBookings.map((b, i) => `
+                        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl hover:shadow-md transition-all transform hover:scale-[1.02]" style="animation: slideInRight 0.5s ease-out ${i * 0.1}s both;">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white mr-4">
+                                    <i class="fa-solid fa-hotel"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-900">Phòng ${b.roomCode}</p>
+                                    <p class="text-sm text-slate-500">${formatDate(b.checkIn)} • ${b.nights} đêm</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-amber-600">+${Math.floor(b.totalPrice / 100000)}</p>
+                                <p class="text-xs text-slate-400">điểm</p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Lỗi tải dữ liệu', 'error');
+            }
         }
 
         onAuthStateChanged(auth, async (user) => {
-            setTimeout(() => { document.getElementById('loading-screen').style.opacity = '0'; setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 500); }, 1000);
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+            }, 1000);
+
             if (user) {
-                currentUser = user;
-                localStorage.setItem('currentUser', JSON.stringify({ uid: user.uid, email: user.email }));
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    name: user.displayName || user.email.split('@')[0]
+                };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 updateUserUI();
                 await loadLoyaltyData();
-            } else { window.location.href = '../login.html'; }
+            } else {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                window.location.href = '../login.html';
+            }
         });
     </script>
 </body>

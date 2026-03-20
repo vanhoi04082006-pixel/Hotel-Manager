@@ -188,7 +188,7 @@
         class="h-20 bg-white/95 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 shadow-sm">
         <div class="flex items-center cursor-pointer" onclick="window.location.href='../index.html'">
             <div
-                class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                class="w-10 h-10 md:w-12 h-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-xl flex items-center justify-center mr-3 shadow-lg">
                 <i class="fa-solid fa-hotel text-lg md:text-xl text-white"></i>
             </div>
             <div>
@@ -242,10 +242,12 @@
             <a href="services.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Dịch vụ</a>
             <a href="booking-lookup.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg"><i
                     class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu</a>
-            <a href="my-bookings.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Đặt phòng của tôi</a>
-            <a href="profile.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Hồ sơ</a>
-            <a href="loyalty.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Thẻ thành viên</a>
-            <a href="offers.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Ưu đãi</a>
+            <a id="mobile-my-bookings" href="my-bookings.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Đặt
+                phòng của tôi</a>
+            <a id="mobile-profile" href="profile.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Hồ sơ</a>
+            <a id="mobile-loyalty" href="loyalty.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Thẻ thành
+                viên</a>
+            <a id="mobile-offers" href="offers.html" class="block px-4 py-2 hover:bg-slate-50 rounded-lg">Ưu đãi</a>
             <div class="border-t my-2 pt-2">
                 <button onclick="handleLogout()" id="mobileLogoutBtn"
                     class="hidden w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"><i
@@ -342,7 +344,52 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        // 1. Định nghĩa biến
         let currentUser = null;
+
+        // 2. Định nghĩa updateUserUI
+        function updateUserUI() {
+            const userNameDisplay = document.getElementById('user-name-display');
+            const userAvatar = document.getElementById('user-avatar');
+            const loginButton = document.getElementById('loginButton');
+            const logoutButton = document.getElementById('logoutButton');
+            const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+            const navItems = ['my-bookings', 'profile', 'loyalty', 'offers'];
+
+            if (currentUser) {
+                const name = currentUser.name || currentUser.email?.split('@')[0] || 'Khách';
+                if (userNameDisplay) userNameDisplay.textContent = name;
+                if (userAvatar) userAvatar.textContent = name.charAt(0).toUpperCase();
+                if (loginButton) loginButton.classList.add('hidden');
+                if (logoutButton) logoutButton.classList.remove('hidden');
+                if (mobileLogoutBtn) mobileLogoutBtn.classList.remove('hidden');
+                navItems.forEach(item => {
+                    const desktop = document.getElementById(`nav-${item}`);
+                    const mobile = document.getElementById(`mobile-${item}`);
+                    if (desktop) desktop.classList.remove('hidden');
+                    if (mobile) mobile.classList.remove('hidden');
+                });
+            } else {
+                if (userNameDisplay) userNameDisplay.textContent = 'Khách';
+                if (userAvatar) userAvatar.textContent = 'K';
+                if (loginButton) loginButton.classList.remove('hidden');
+                if (logoutButton) logoutButton.classList.add('hidden');
+                if (mobileLogoutBtn) mobileLogoutBtn.classList.add('hidden');
+                navItems.forEach(item => {
+                    const desktop = document.getElementById(`nav-${item}`);
+                    const mobile = document.getElementById(`mobile-${item}`);
+                    if (desktop) desktop.classList.add('hidden');
+                    if (mobile) mobile.classList.add('hidden');
+                });
+            }
+        }
+
+        // 3. Kiểm tra localStorage ngay khi script chạy
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            updateUserUI();
+        }
 
         function formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
         function formatDate(dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
@@ -358,43 +405,50 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
-
-        function updateUserUI() {
-            const nameSpan = document.getElementById('user-name-display');
-            const avatar = document.getElementById('user-avatar');
-            const loginBtn = document.getElementById('loginButton');
-            const logoutBtn = document.getElementById('logoutButton');
-            const mobileLogout = document.getElementById('mobileLogoutBtn');
-
-            if (currentUser) {
-                const name = currentUser.name || currentUser.email?.split('@')[0] || 'Khách';
-                if (nameSpan) nameSpan.textContent = name;
-                if (avatar) avatar.textContent = name.charAt(0).toUpperCase();
-                if (loginBtn) loginBtn.classList.add('hidden');
-                if (logoutBtn) logoutBtn.classList.remove('hidden');
-                if (mobileLogout) mobileLogout.classList.remove('hidden');
-            } else {
-                if (nameSpan) nameSpan.textContent = 'Khách';
-                if (avatar) avatar.textContent = 'K';
-                if (loginBtn) loginBtn.classList.remove('hidden');
-                if (logoutBtn) logoutBtn.classList.add('hidden');
-                if (mobileLogout) mobileLogout.classList.add('hidden');
-            }
+        // Đưa các hàm có gọi bằng onclick trong HTML ra window object để module có thể hoạt động
+        window.toggleMobileMenu = function () {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
         }
 
-        async function handleLogout() {
-            if (confirm('Đăng xuất?')) {
+        // 4. Định nghĩa lại handleLogout gán vào object window
+        window.handleLogout = async function () {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
                 try {
+                    // Hiển thị loading
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) {
+                        loadingDiv.style.opacity = '1';
+                        loadingDiv.style.display = 'flex';
+                    }
+
+                    // Đăng xuất Firebase
                     await signOut(auth);
+
+                    // Xóa localStorage
                     localStorage.removeItem('currentUser');
+
+                    // Reset currentUser
                     currentUser = null;
-                    window.location.href = '../index.html';
+
+                    // Cập nhật UI
+                    updateUserUI();
+
+                    // Hiển thị thông báo
+                    showToast('Đã đăng xuất', 'success');
+
+                    // Chuyển về trang chủ sau 0.5s
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 500);
+
                 } catch (error) {
-                    showToast('Lỗi: ' + error.message, 'error');
+                    console.error('Logout error:', error);
+                    showToast('Lỗi đăng xuất: ' + error.message, 'error');
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
                 }
             }
-        }
+        };
 
         async function loadMyBookings() {
             const container = document.getElementById('bookings-container');
@@ -452,7 +506,8 @@
             }
         }
 
-        async function cancelBooking(bookingId) {
+        // Gắn vào window để gọi từ HTML inline
+        window.cancelBooking = async function (bookingId) {
             if (confirm('Bạn có chắc muốn hủy đặt phòng này?')) {
                 try {
                     await updateDoc(doc(db, 'bookings', bookingId), { status: 'cancelled', updatedAt: new Date().toISOString() });
@@ -466,10 +521,13 @@
 
         onAuthStateChanged(auth, async (user) => {
             setTimeout(() => {
-                document.getElementById('loading-screen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loading-screen').style.display = 'none';
-                }, 500);
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
             }, 1000);
 
             if (user) {
