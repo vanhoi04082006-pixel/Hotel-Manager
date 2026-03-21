@@ -193,15 +193,19 @@
 
     <!-- Modal thanh toán trực tiếp -->
     <div id="paymentModal" class="fixed inset-0 modal-backdrop z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100">
+        <div
+            class="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100">
             <div class="p-6 md:p-8">
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <span class="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold mb-2"><i class="fa-solid fa-shield-halved mr-1"></i> Thanh toán an toàn</span>
+                        <span
+                            class="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold mb-2"><i
+                                class="fa-solid fa-shield-halved mr-1"></i> Thanh toán an toàn</span>
                         <h3 class="text-3xl font-playfair font-bold text-slate-900">Chi tiết thanh toán</h3>
                         <p id="payment-booking-code" class="text-slate-500 font-medium mt-1">Mã: #BK-001</p>
                     </div>
-                    <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center transition-all">
+                    <button onclick="closePaymentModal()"
+                        class="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center transition-all">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
@@ -211,8 +215,10 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
-                    <button onclick="closePaymentModal()" class="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all">Đóng</button>
-                    <button onclick="processDirectPayment()" id="btn-process-payment" class="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:-translate-y-0.5 transition-all">
+                    <button onclick="closePaymentModal()"
+                        class="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all">Đóng</button>
+                    <button onclick="processDirectPayment()" id="btn-process-payment"
+                        class="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:-translate-y-0.5 transition-all">
                         <i class="fa-regular fa-credit-card mr-2"></i>Xác nhận thanh toán
                     </button>
                 </div>
@@ -222,7 +228,7 @@
 
     <script type="module">
         import { loadHeader, loadFooter } from "../components.js";
-        
+
         loadHeader('my-bookings');
         loadFooter();
 
@@ -340,34 +346,34 @@
 
         async function applyPromoCode(code, originalAmount) {
             if (!code) return { success: false, discount: 0, message: 'Vui lòng nhập mã giảm giá' };
-            
+
             try {
                 const promotionsSnap = await getDocs(collection(db, 'promotions'));
                 const promotions = promotionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const promo = promotions.find(p => p.code === code.toUpperCase() && p.active === true);
-                
+
                 if (!promo) {
                     return { success: false, discount: 0, message: 'Mã giảm giá không hợp lệ hoặc đã hết hạn' };
                 }
-                
+
                 const now = new Date();
                 const endDate = new Date(promo.endDate);
                 if (endDate < now) {
                     return { success: false, discount: 0, message: 'Mã giảm giá đã hết hạn' };
                 }
-                
+
                 let discount = 0;
                 if (promo.type === 'percent') {
                     discount = originalAmount * promo.value / 100;
                 } else {
                     discount = promo.value;
                 }
-                
+
                 discount = Math.min(discount, originalAmount);
-                
-                return { 
-                    success: true, 
-                    discount: discount, 
+
+                return {
+                    success: true,
+                    discount: discount,
                     message: `Áp dụng thành công! Giảm ${promo.type === 'percent' ? promo.value + '%' : formatCurrency(promo.value)}`,
                     promo: promo
                 };
@@ -380,13 +386,13 @@
         window.openDirectPayment = async function (bookingId, booking) {
             const modal = document.getElementById('paymentModal');
             const content = document.getElementById('payment-content');
-            
+
             currentBookingForPayment = booking;
             currentDiscount = 0;
             currentDiscountCode = '';
-            
+
             document.getElementById('payment-booking-code').textContent = `Mã: #${bookingId.slice(-8).toUpperCase()}`;
-            
+
             content.innerHTML = `
                 <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-6 md:p-8 rounded-2xl text-white shadow-lg relative overflow-hidden">
                     <i class="fa-solid fa-wallet absolute -bottom-4 -right-4 text-8xl opacity-10 transform -rotate-12"></i>
@@ -522,7 +528,7 @@
                     </div>
                 </div>
             `;
-            
+
             // Gán sự kiện cho radio buttons
             document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
                 radio.addEventListener('change', function (e) {
@@ -533,12 +539,12 @@
                     });
                     e.target.parentElement.classList.remove('border-slate-100');
                     e.target.parentElement.classList.add('border-blue-500', 'ring-2', 'ring-blue-100');
-                    
+
                     // Hiển thị section tương ứng
                     document.getElementById('payment-bank-details').classList.add('hidden');
                     document.getElementById('payment-credit-form').classList.add('hidden');
                     document.getElementById('payment-wallet-details').classList.add('hidden');
-                    
+
                     if (e.target.value === 'bank') {
                         document.getElementById('payment-bank-details').classList.remove('hidden');
                     } else if (e.target.value === 'credit') {
@@ -548,13 +554,13 @@
                     }
                 });
             });
-            
+
             // Gán sự kiện cho card input
             setTimeout(() => {
                 const cardNumberInput = document.getElementById('payment-card-number-input');
                 const cardExpiryInput = document.getElementById('payment-card-expiry-input');
                 const cardCvvInput = document.getElementById('payment-card-cvv-input');
-                
+
                 if (cardNumberInput) {
                     cardNumberInput.addEventListener('input', function (e) {
                         let value = e.target.value.replace(/\D/g, '');
@@ -567,7 +573,7 @@
                         document.getElementById('payment-card-number').textContent = formatted || '**** **** **** ****';
                     });
                 }
-                
+
                 if (cardExpiryInput) {
                     cardExpiryInput.addEventListener('input', function (e) {
                         let value = e.target.value.replace(/\D/g, '');
@@ -575,17 +581,17 @@
                         document.getElementById('payment-card-expiry').textContent = e.target.value || '**/**';
                     });
                 }
-                
+
                 if (cardCvvInput) {
                     cardCvvInput.addEventListener('input', function (e) {
                         document.getElementById('payment-card-cvv').textContent = e.target.value.padEnd(3, '*');
                     });
                 }
             }, 100);
-            
+
             modal.classList.remove('hidden');
         };
-        
+
         window.applyPromoCodeToPayment = async function () {
             const promoInput = document.getElementById('promo-code-input');
             const promoMessage = document.getElementById('promo-message');
@@ -594,77 +600,91 @@
             const finalTotalSpan = document.getElementById('final-total-amount');
             const modalTotalSpan = document.getElementById('modal-total-amount');
             const subtotalSpan = document.getElementById('subtotal-amount');
-            
+
             const code = promoInput.value.trim();
             const originalAmount = currentBookingForPayment.totalPrice;
-            
+
             if (!code) {
                 promoMessage.textContent = 'Vui lòng nhập mã giảm giá';
                 promoMessage.className = 'text-xs mt-2 text-red-500';
                 promoMessage.classList.remove('hidden');
                 return;
             }
-            
+
             const result = await applyPromoCode(code, originalAmount);
-            
+
             if (result.success) {
                 currentDiscount = result.discount;
                 currentDiscountCode = code;
-                
+
                 const finalAmount = originalAmount - currentDiscount;
-                
+
+                // Cập nhật giao diện: Hiển thị tiền giảm và tiền tổng
                 discountSection.classList.remove('hidden');
                 discountAmountSpan.textContent = `-${formatCurrency(currentDiscount)}`;
+
+                // CẬP NHẬT QUAN TRỌNG: Cập nhật lại tất cả các số tổng tiền trên Modal
                 finalTotalSpan.textContent = formatCurrency(finalAmount);
-                modalTotalSpan.textContent = formatCurrency(finalAmount);
+
+                if (modalTotalSpan) {
+                    modalTotalSpan.textContent = formatCurrency(finalAmount);
+                }
+
                 promoMessage.textContent = result.message;
                 promoMessage.className = 'text-xs mt-2 text-green-600';
                 promoMessage.classList.remove('hidden');
             } else {
                 currentDiscount = 0;
                 currentDiscountCode = '';
+
                 discountSection.classList.add('hidden');
                 finalTotalSpan.textContent = formatCurrency(originalAmount);
-                modalTotalSpan.textContent = formatCurrency(originalAmount);
+
+                // Cũng nên thêm check an toàn ở đây khi reset lại giá trị cũ
+                if (modalTotalSpan) {
+                    modalTotalSpan.textContent = formatCurrency(originalAmount);
+                }
+
                 promoMessage.textContent = result.message;
                 promoMessage.className = 'text-xs mt-2 text-red-500';
                 promoMessage.classList.remove('hidden');
             }
         };
-        
         window.copyBankInfo = function () {
             const content = document.getElementById('payment-bank-content')?.textContent || '';
             navigator.clipboard.writeText(`Ngân hàng: Vietcombank\nSố TK: 1234 5678 9012 3456\nChủ TK: LUNA HOTEL & RESORT\nNội dung: ${content}`);
             showToast('Đã sao chép thông tin chuyển khoản', 'success');
         };
-        
+
         window.processDirectPayment = async function () {
             if (!currentBookingForPayment) {
                 showToast('Không tìm thấy thông tin đặt phòng', 'error');
                 return;
             }
-            
+
             const method = document.querySelector('input[name="paymentMethod"]:checked')?.value;
             if (!method) {
                 showToast('Vui lòng chọn phương thức thanh toán', 'warning');
                 return;
             }
-            
+
             const btn = document.getElementById('btn-process-payment');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Đang xử lý...';
             btn.disabled = true;
-            
+
             try {
+                // Tính toán số tiền cuối cùng sau khi trừ mã giảm giá
                 const finalAmount = currentBookingForPayment.totalPrice - currentDiscount;
                 const bookingRef = doc(db, 'bookings', currentBookingForPayment.id);
-                
+
+                // Đảm bảo object paymentData lưu đúng số tiền thực tế khách phải trả
                 const paymentData = {
                     bookingId: currentBookingForPayment.id,
-                    amount: finalAmount,
-                    originalAmount: currentBookingForPayment.totalPrice,
-                    discount: currentDiscount,
-                    discountCode: currentDiscountCode || null,
+                    amount: finalAmount, // Số tiền thực tế khách trả sau khi trừ mã
+                    originalAmount: currentBookingForPayment.totalPrice, // Số tiền gốc ban đầu
+                    discount: currentDiscount, // Số tiền được giảm
+                    discountCode: currentDiscountCode || null, // Mã giảm giá (nếu có)
                     method: method,
                     status: 'completed',
                     transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase(),
@@ -680,12 +700,17 @@
                         childCount: currentBookingForPayment.childCount
                     }
                 };
-                
-                if (currentUser) paymentData.userId = currentUser.uid;
-                else paymentData.isGuest = true;
-                
+
+                if (currentUser) {
+                    paymentData.userId = currentUser.uid;
+                } else {
+                    paymentData.isGuest = true;
+                }
+
+                // Lưu thông tin thanh toán vào collection 'payments'
                 const paymentRef = await addDoc(collection(db, 'payments'), paymentData);
-                
+
+                // Cập nhật lại trạng thái booking bên collection 'bookings'
                 await updateDoc(bookingRef, {
                     paymentStatus: 'paid',
                     paymentId: paymentRef.id,
@@ -694,15 +719,20 @@
                     finalPaidAmount: finalAmount,
                     updatedAt: new Date().toISOString()
                 });
-                
+
                 showToast('Thanh toán thành công!', 'success');
                 closePaymentModal();
-                await loadMyBookings();
-                
+
+                // Load lại danh sách phòng (bạn cần đảm bảo hàm này đã được định nghĩa)
+                if (typeof loadMyBookings === 'function') {
+                    await loadMyBookings();
+                }
+
             } catch (error) {
                 console.error('Payment error:', error);
                 showToast('Lỗi thanh toán: ' + error.message, 'error');
             } finally {
+                // Trả lại trạng thái ban đầu cho nút bấm
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
@@ -810,10 +840,15 @@
 
                         <div class="p-5 md:p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div>
-                                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Tổng chi phí</p>
-                                <p class="text-2xl font-bold text-blue-600 font-mono">${formatCurrency(b.totalPrice)}</p>
-                                ${b.discountApplied ? `<p class="text-xs text-green-600">Đã giảm ${formatCurrency(b.discountApplied)}</p>` : ''}
-                            </div>
+    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Tổng chi phí</p>
+    <p class="text-2xl font-bold text-blue-600 font-mono">
+        ${b.finalPaidAmount ? formatCurrency(b.finalPaidAmount) : formatCurrency(b.totalPrice)}
+    </p>
+    ${b.discountApplied ? `
+        <p class="text-[11px] text-slate-400 mt-1">Giá gốc: <del>${formatCurrency(b.totalPrice)}</del></p>
+        <p class="text-xs text-green-600 font-medium">Đã áp mã: -${formatCurrency(b.discountApplied)}</p>
+    ` : ''}
+</div>
                             <div class="flex gap-3 w-full sm:w-auto">
                                 ${b.status === 'pending' || (b.status === 'confirmed' && b.paymentStatus !== 'paid') ?
                             `<button onclick="cancelBooking('${b.id}')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-all text-sm">Hủy lịch</button>` : ''}
