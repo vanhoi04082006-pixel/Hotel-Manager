@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luna Hotel - Dịch Vụ</title>
+    <title>Luna Hotel - Dịch Vụ & Trải Nghiệm</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
         rel="stylesheet">
     <style>
         * {
@@ -22,6 +22,7 @@
             background: #f8fafc;
             overflow-x: hidden;
             min-height: 100vh;
+            color: #0f172a;
         }
 
         .font-playfair {
@@ -50,19 +51,6 @@
             }
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Hiệu ứng xuất hiện mượt mà từng item */
         @keyframes popInItem {
             0% {
                 opacity: 0;
@@ -77,21 +65,11 @@
 
         .animate-item {
             opacity: 0;
-            animation: popInItem 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: popInItem 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Container transition để fade ra/vào */
         #services-container {
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-
-        .hover-lift {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .hover-lift:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
         .loader {
@@ -103,88 +81,108 @@
             animation: spin 1s linear infinite;
         }
 
-        .perspective-1000 {
-            perspective: 1000px;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin-top: 32px;
-            flex-wrap: wrap;
-        }
-
-        .page-btn {
-            min-width: 40px;
-            height: 40px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 12px;
-            border-radius: 10px;
-            font-weight: 500;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            background: white;
-            border: 1px solid #e2e8f0;
-            color: #334155;
-        }
-
-        .page-btn:hover {
-            background: #f1f5f9;
-            border-color: #94a3b8;
-        }
-
-        .page-btn.active {
-            background: #1e293b;
-            border-color: #1e293b;
-            color: white;
-        }
-
-        .page-btn.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .search-container {
-            max-width: 500px;
-            margin: 0 auto 24px auto;
-        }
-
-        .search-input {
-            padding-left: 44px;
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
         #main-content {
             opacity: 0;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.5s ease;
         }
 
         #main-content.loaded {
             opacity: 1;
         }
+
+        /* Hero Banner cho Dịch vụ */
+        .hero-section {
+            background-image: url('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=2000&auto=format&fit=crop');
+            /* Ảnh spa/relax */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.3), rgba(0, 0, 0, 0.6));
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 48px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            min-width: 44px;
+            height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .page-btn:hover:not(.disabled):not(.active) {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            color: #0f172a;
+            transform: translateY(-2px);
+        }
+
+        .page-btn.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .page-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 </head>
 
 <body>
-    <div id="loading-screen" class="fixed inset-0 bg-white z-[9999] flex items-center justify-center flex-col">
+    <div id="loading-screen"
+        class="fixed inset-0 bg-white z-[9999] flex items-center justify-center flex-col transition-opacity duration-500">
         <div class="text-center">
-            <div
-                class="w-24 h-24 bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                <i class="fa-solid fa-hotel text-4xl text-white"></i>
+            <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-spa text-4xl text-blue-600"></i>
             </div>
+            <h2 class="text-3xl font-playfair font-bold text-slate-900 mb-4">Luna Hotel</h2>
             <div class="loader mx-auto mb-4"></div>
-            <h2 class="text-2xl font-playfair font-bold text-slate-900 mb-2">Luna Hotel</h2>
-            <p class="text-slate-500">Đang tải dữ liệu dịch vụ...</p>
+            <p class="text-slate-500 font-medium">Đang tải các dịch vụ đẳng cấp...</p>
         </div>
     </div>
 
@@ -192,143 +190,152 @@
 
     <div id="main-content">
         <header
-            class="h-20 bg-white/95 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 shadow-sm">
-            <div class="flex items-center cursor-pointer" onclick="window.location.href='../index.html'">
+            class="h-20 bg-white/80 backdrop-blur-lg border-b border-slate-100 flex items-center justify-between px-4 md:px-8 lg:px-12 sticky top-0 z-50 shadow-sm">
+            <div class="flex items-center cursor-pointer group" onclick="window.location.href='../index.html'">
                 <div
-                    class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-xl flex items-center justify-center mr-3 shadow-lg">
-                    <i class="fa-solid fa-hotel text-lg md:text-xl text-white"></i>
+                    class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center mr-3 shadow-md shadow-blue-600/20 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-hotel text-white text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl md:text-2xl font-playfair font-bold text-slate-900">LUNA HOTEL</h1>
-                    <p class="text-xs text-slate-500 hidden md:block">Nơi khởi nguồn cảm hứng</p>
+                    <h1 class="text-xl md:text-2xl font-playfair font-bold text-slate-900">LUNA</h1>
                 </div>
             </div>
 
-            <nav class="hidden md:flex items-center space-x-8">
+            <nav class="hidden md:flex items-center space-x-8 lg:space-x-10">
                 <a href="../index.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all">Trang
-                    chủ</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors">Trang chủ</a>
                 <a href="rooms.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all">Phòng</a>
-                <a href="services.html" class="font-medium py-2 border-b-2 border-slate-900 text-slate-900">Dịch vụ</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors">Phòng &
+                    Suite</a>
+                <a href="services.html"
+                    class="text-[15px] font-semibold text-blue-600 relative after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-0.5 after:bg-blue-600 after:rounded-full">Dịch
+                    vụ</a>
                 <a href="booking-lookup.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all"><i
-                        class="fa-solid fa-magnifying-glass mr-1"></i>Tra cứu</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors"><i
+                        class="fa-solid fa-magnifying-glass mr-2 text-sm"></i>Tra cứu</a>
                 <a id="nav-my-bookings" href="my-bookings.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all hidden">Đặt
-                    phòng của tôi</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors hidden">Đặt
+                    phòng</a>
                 <a id="nav-profile" href="profile.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all hidden">Hồ
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors hidden">Hồ
                     sơ</a>
                 <a id="nav-loyalty" href="loyalty.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all hidden">Thẻ
-                    thành viên</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors hidden">Thành
+                    viên</a>
                 <a id="nav-offers" href="offers.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all hidden">Ưu
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors hidden">Ưu
                     đãi</a>
             </nav>
 
-            <button class="md:hidden p-2" onclick="toggleMobileMenu()"><i
-                    class="fa-solid fa-bars text-xl text-slate-700"></i></button>
+            <button class="md:hidden p-2 text-slate-600" onclick="toggleMobileMenu()"><i
+                    class="fa-solid fa-bars text-2xl"></i></button>
 
-            <div class="hidden md:flex items-center space-x-4">
+            <div class="hidden md:flex items-center space-x-5">
                 <div class="flex items-center space-x-3">
                     <div
-                        class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">
+                        class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold">
                         <span id="user-avatar">K</span>
                     </div>
-                    <span class="text-sm font-medium text-slate-700" id="user-name-display">Khách</span>
+                    <span class="text-[15px] font-medium text-slate-700" id="user-name-display">Khách</span>
                 </div>
                 <a href="../login.html" id="loginButton"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"><i
-                        class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Đăng nhập</a>
+                    class="bg-slate-900 text-white px-6 py-2.5 rounded-full text-[15px] font-semibold hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300">Đăng
+                    nhập</a>
                 <button onclick="handleLogout()" id="logoutButton"
-                    class="border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all hidden"><i
-                        class="fa-solid fa-right-from-bracket md:mr-2"></i><span class="hidden md:inline">Đăng
-                        xuất</span></button>
+                    class="text-slate-500 hover:text-red-600 text-[15px] font-medium transition-colors hidden"><i
+                        class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</button>
             </div>
         </header>
 
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 p-4">
-            <div class="space-y-2">
-                <a href="../index.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Trang
+        <div id="mobile-menu"
+            class="hidden md:hidden bg-white border-b border-slate-100 p-4 shadow-lg absolute w-full z-40">
+            <div class="space-y-1">
+                <a href="../index.html"
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium">Trang
                     chủ</a>
-                <a href="rooms.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Phòng</a>
-                <a href="services.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Dịch
+                <a href="rooms.html"
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium">Phòng
+                    & Suite</a>
+                <a href="services.html"
+                    class="block w-full text-left px-4 py-3 bg-blue-50 text-blue-600 font-semibold rounded-xl">Dịch
                     vụ</a>
-                <a href="booking-lookup.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg"><i
-                        class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu</a>
+                <a href="booking-lookup.html"
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium">Tra
+                    cứu</a>
                 <a id="mobile-my-bookings" href="my-bookings.html"
-                    class="hidden block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Đặt phòng của tôi</a>
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium hidden">Đặt
+                    phòng của tôi</a>
                 <a id="mobile-profile" href="profile.html"
-                    class="hidden block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Hồ sơ</a>
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium hidden">Hồ
+                    sơ</a>
                 <a id="mobile-loyalty" href="loyalty.html"
-                    class="hidden block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Thẻ thành viên</a>
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium hidden">Thẻ
+                    thành viên</a>
                 <a id="mobile-offers" href="offers.html"
-                    class="hidden block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Ưu đãi</a>
-                <div class="border-t my-2 pt-2">
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium hidden">Ưu
+                    đãi</a>
+                <div class="border-t border-slate-100 my-2 pt-2">
                     <button onclick="handleLogout()" id="mobileLogoutBtn"
-                        class="hidden w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"><i
+                        class="hidden w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium"><i
                             class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</button>
                 </div>
             </div>
         </div>
 
-        <main class="user-main bg-gradient-to-b from-white to-slate-50">
-            <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
-                <div class="relative h-96 rounded-3xl overflow-hidden mb-16 group">
-                    <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2000"
-                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
-                    <div class="absolute bottom-0 left-0 p-12 text-white">
-                        <span class="text-blue-400 font-bold text-sm uppercase tracking-widest mb-4 block">TRẢI NGHIỆM
-                            ĐẲNG CẤP</span>
-                        <h2 class="text-5xl font-playfair font-bold mb-4">Dịch vụ 5 sao</h2>
-                        <p class="text-xl text-slate-200 max-w-2xl">Tận hưởng những dịch vụ đẳng cấp thế giới tại Luna
-                            Hotel</p>
-                    </div>
-                </div>
+        <main class="user-main">
+            <div class="hero-section py-24 md:py-36 flex items-center justify-center">
+                <div class="hero-overlay"></div>
+                <div class="max-w-4xl mx-auto px-4 text-center relative z-10 w-full">
+                    <span
+                        class="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-bold tracking-widest uppercase mb-6">Luna
+                        Hotel & Resort</span>
+                    <h2
+                        class="text-4xl md:text-6xl font-playfair font-bold text-white mb-6 leading-tight drop-shadow-lg">
+                        Trải Nghiệm Đẳng Cấp <br /><span class="italic font-light">Thư Giãn Tuyệt Đối</span>
+                    </h2>
 
-                <div class="search-container">
-                    <div class="relative">
-                        <i
-                            class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <div
+                        class="max-w-2xl mx-auto mt-10 relative group bg-white/20 backdrop-blur-lg p-2 rounded-2xl border border-white/30 shadow-2xl">
+                        <div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-magnifying-glass text-white/80 text-lg"></i>
+                        </div>
                         <input type="text" id="searchInput" placeholder="Tìm kiếm dịch vụ theo tên, mô tả..."
-                            class="form-input search-input w-full pl-11 pr-4 py-3 rounded-xl border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                            class="w-full pl-14 pr-12 py-4 bg-white/90 rounded-xl border-0 focus:ring-4 focus:ring-white/50 text-slate-800 placeholder-slate-400 font-medium text-lg outline-none transition-all"
                             onkeyup="handleSearch()">
                         <button onclick="clearSearch()" id="clearSearchBtn"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden">
+                            class="absolute inset-y-0 right-6 flex items-center text-slate-400 hover:text-slate-600 hidden">
                             <i class="fa-solid fa-circle-xmark text-xl"></i>
                         </button>
                     </div>
                 </div>
+            </div>
 
-                <div class="flex flex-wrap justify-center gap-3 mb-12" id="service-categories">
+            <div class="max-w-7xl mx-auto px-4 md:px-8 py-16">
+                <div class="flex flex-wrap justify-center gap-3 md:gap-4 mb-14" id="service-categories">
                     <button onclick="filterServices('All')"
-                        class="category-btn px-8 py-3 rounded-full text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/30 transform scale-105"
+                        class="category-btn px-6 py-2.5 rounded-full text-[15px] font-semibold transition-all bg-slate-900 text-white shadow-lg shadow-slate-900/20 transform scale-105"
                         data-category="All">✨ Tất cả</button>
                     <button onclick="filterServices('dining')"
-                        class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-slate-900"
+                        class="category-btn px-6 py-2.5 rounded-full text-[15px] font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-400 hover:bg-slate-50"
                         data-category="dining">🍽️ Nhà hàng</button>
                     <button onclick="filterServices('spa')"
-                        class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-slate-900"
+                        class="category-btn px-6 py-2.5 rounded-full text-[15px] font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-400 hover:bg-slate-50"
                         data-category="spa">💆 Spa</button>
                     <button onclick="filterServices('wellness')"
-                        class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-slate-900"
+                        class="category-btn px-6 py-2.5 rounded-full text-[15px] font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-400 hover:bg-slate-50"
                         data-category="wellness">🏋️ Sức khỏe</button>
                     <button onclick="filterServices('transport')"
-                        class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-slate-900"
+                        class="category-btn px-6 py-2.5 rounded-full text-[15px] font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-400 hover:bg-slate-50"
                         data-category="transport">🚗 Di chuyển</button>
                     <button onclick="filterServices('activities')"
-                        class="category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-slate-900"
+                        class="category-btn px-6 py-2.5 rounded-full text-[15px] font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-400 hover:bg-slate-50"
                         data-category="activities">🎉 Hoạt động</button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 perspective-1000"
-                    id="services-container">
-                    <div class="col-span-3 text-center py-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10" id="services-container">
+                    <div class="col-span-3 text-center py-20">
                         <div class="loader mx-auto mb-4"></div>
-                        <p class="text-slate-500">Đang tải dữ liệu dịch vụ...</p>
+                        <p class="text-slate-500 font-medium">Đang tải dữ liệu dịch vụ...</p>
                     </div>
                 </div>
 
@@ -336,53 +343,64 @@
             </div>
         </main>
 
-        <footer class="bg-slate-900 text-slate-400 py-12">
+        <footer class="bg-white border-t border-slate-200 py-16">
             <div class="max-w-7xl mx-auto px-4 md:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div class="text-center md:text-left">
-                        <div class="flex items-center justify-center md:justify-start mb-4">
-                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3"><i
-                                    class="fa-solid fa-hotel text-white"></i></div>
-                            <h3 class="text-xl font-playfair font-bold text-white">Luna Hotel</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+                    <div class="col-span-1 md:col-span-1">
+                        <div class="flex items-center mb-6">
+                            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center mr-3">
+                                <i class="fa-solid fa-hotel text-white text-lg"></i>
+                            </div>
+                            <h3 class="text-2xl font-playfair font-bold text-slate-900">LUNA</h3>
                         </div>
-                        <p class="text-sm leading-relaxed">Trải nghiệm đẳng cấp thế giới, nơi mỗi khoảnh khắc đều đáng
-                            nhớ.</p>
-                    </div>
-                    <div class="text-center md:text-left">
-                        <h4 class="text-white font-semibold mb-4">Liên hệ</h4>
-                        <ul class="space-y-2 text-sm">
-                            <li><i class="fa-solid fa-location-dot w-6 text-blue-400 mr-2"></i> 123 Nguyễn Huệ, Q.1,
-                                TP.HCM</li>
-                            <li><i class="fa-solid fa-phone w-6 text-blue-400 mr-2"></i> +84 28 1234 5678</li>
-                            <li><i class="fa-solid fa-envelope w-6 text-blue-400 mr-2"></i> info@lunahotel.com</li>
-                        </ul>
-                    </div>
-                    <div class="text-center md:text-left">
-                        <h4 class="text-white font-semibold mb-4">Dịch vụ</h4>
-                        <ul class="space-y-2 text-sm">
-                            <li>Nhà hàng 5 sao</li>
-                            <li>Hồ bơi vô cực</li>
-                            <li>Spa & Gym</li>
-                            <li>Tour du lịch</li>
-                        </ul>
-                    </div>
-                    <div class="text-center md:text-left">
-                        <h4 class="text-white font-semibold mb-4">Kết nối</h4>
-                        <div class="flex justify-center md:justify-start space-x-4">
+                        <p class="text-slate-500 text-[15px] leading-relaxed mb-6">Trải nghiệm đẳng cấp thế giới, nơi
+                            mỗi khoảnh khắc đều được trân trọng và tỏa sáng.</p>
+                        <div class="flex space-x-3">
                             <a href="#"
-                                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600"><i
+                                class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-all"><i
                                     class="fa-brands fa-facebook-f"></i></a>
                             <a href="#"
-                                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600"><i
+                                class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-all"><i
                                     class="fa-brands fa-instagram"></i></a>
                             <a href="#"
-                                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600"><i
+                                class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-all"><i
                                     class="fa-brands fa-twitter"></i></a>
                         </div>
                     </div>
+                    <div>
+                        <h4 class="text-slate-900 font-bold text-[15px] uppercase tracking-wider mb-6">Liên hệ</h4>
+                        <ul class="space-y-4 text-[15px] text-slate-600">
+                            <li class="flex items-start"><i
+                                    class="fa-solid fa-location-dot mt-1 text-blue-600 mr-3 w-4"></i> 123 Nguyễn Huệ,
+                                Q.1,<br>TP. Hồ Chí Minh</li>
+                            <li class="flex items-center"><i class="fa-solid fa-phone text-blue-600 mr-3 w-4"></i> +84
+                                28 1234 5678</li>
+                            <li class="flex items-center"><i class="fa-solid fa-envelope text-blue-600 mr-3 w-4"></i>
+                                hello@lunahotel.com</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-slate-900 font-bold text-[15px] uppercase tracking-wider mb-6">Khám phá</h4>
+                        <ul class="space-y-3 text-[15px] text-slate-600">
+                            <li><a href="#" class="hover:text-blue-600 transition-colors">Về chúng tôi</a></li>
+                            <li><a href="#" class="hover:text-blue-600 transition-colors">Nhà hàng & Bar</a></li>
+                            <li><a href="#" class="hover:text-blue-600 transition-colors">Spa & Thư giãn</a></li>
+                            <li><a href="#" class="hover:text-blue-600 transition-colors">Đánh giá khách hàng</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-slate-900 font-bold text-[15px] uppercase tracking-wider mb-6">Bản tin</h4>
+                        <p class="text-slate-600 text-[15px] mb-4">Đăng ký để nhận ưu đãi đặc quyền lên tới 30%.</p>
+                        <div class="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
+                            <input type="email" placeholder="Email của bạn"
+                                class="bg-transparent text-slate-900 px-4 py-2 w-full text-[15px] focus:outline-none">
+                            <button
+                                class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap">Gửi</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="border-t border-slate-800 mt-8 pt-8 text-center text-sm">
-                    <p>&copy; 2026 Luna Hotel & Resort. All rights reserved.</p>
+                <div class="border-t border-slate-200 mt-16 pt-8 text-center text-sm text-slate-500 font-medium">
+                    <p>&copy; 2026 LUNA HOTEL. ALL RIGHTS RESERVED.</p>
                 </div>
             </div>
         </footer>
@@ -426,14 +444,19 @@
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const icons = { success: 'fa-circle-check text-green-400', error: 'fa-circle-exclamation text-red-400', warning: 'fa-triangle-exclamation text-yellow-400', info: 'fa-circle-info text-blue-400' };
-            const bgColors = { success: 'bg-green-50 border-green-200 text-green-800', error: 'bg-red-50 border-red-200 text-red-800', warning: 'bg-yellow-50 border-yellow-200 text-yellow-800', info: 'bg-blue-50 border-blue-200 text-blue-800' };
+            const icons = { success: 'fa-check text-green-500', error: 'fa-xmark text-red-500', warning: 'fa-exclamation text-amber-500', info: 'fa-info text-blue-500' };
+            const bgColors = { success: 'bg-white border-green-100', error: 'bg-white border-red-100', warning: 'bg-white border-amber-100', info: 'bg-white border-blue-100' };
 
-            toast.className = `flex items-center p-4 rounded-xl shadow-lg border ${bgColors[type]} slide-in max-w-md`;
-            toast.innerHTML = `<i class="fa-solid ${icons[type]} mr-3 text-xl"></i><span class="font-medium">${message}</span>`;
+            toast.className = `flex items-center p-4 shadow-xl border rounded-2xl ${bgColors[type]} slide-in max-w-md bg-white/90 backdrop-blur-md z-[10000]`;
+            toast.innerHTML = `<div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center mr-3"><i class="fa-solid ${icons[type]} text-sm"></i></div><span class="font-semibold text-slate-800 text-[15px]">${message}</span>`;
 
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         window.toggleMobileMenu = function () {
@@ -499,7 +522,6 @@
             }
         }
 
-        // ---------- XỬ LÝ LỌC & TÌM KIẾM MƯỢT MÀ ----------
         window.handleSearch = function () {
             const searchInput = document.getElementById('searchInput');
             searchQuery = searchInput.value.trim().toLowerCase();
@@ -549,67 +571,75 @@
                 renderPagination();
                 container.style.opacity = '1';
                 container.style.transform = 'translateY(0)';
-            }, 200);
+            }, 300);
         }
 
         window.filterServices = function (category) {
             if (currentCategory === category) return;
-
             currentCategory = category;
 
             document.querySelectorAll('.category-btn').forEach(btn => {
                 if (btn.getAttribute('data-category') === category) {
-                    btn.className = 'category-btn px-8 py-3 rounded-full text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/30 transform scale-105';
+                    btn.className = 'category-btn px-6 py-2.5 rounded-full text-[15px] font-semibold transition-all bg-slate-900 text-white shadow-lg shadow-slate-900/20 transform scale-105';
                 } else {
-                    btn.className = 'category-btn px-8 py-3 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:border-slate-900 hover:text-slate-900';
+                    btn.className = 'category-btn px-6 py-2.5 rounded-full text-[15px] font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-400 hover:bg-slate-50';
                 }
             });
 
             applyFiltersAndSearch();
         };
 
+        /* HIỂN THỊ THẺ DỊCH VỤ DỰA TRÊN THIẾT KẾ PHÒNG MỚI */
         function renderServices() {
             const container = document.getElementById('services-container');
             const start = (currentPage - 1) * servicesPerPage;
             const paginatedServices = filteredServices.slice(start, start + servicesPerPage);
 
             if (filteredServices.length === 0) {
-                container.innerHTML = '<div class="col-span-3 text-center py-20"><div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-magnifying-glass text-4xl text-slate-400"></i></div><h3 class="text-2xl font-bold text-slate-900 mb-2">Không tìm thấy dịch vụ</h3><p class="text-slate-500">Vui lòng thử lại với từ khóa khác</p></div>';
+                container.innerHTML = '<div class="col-span-3 text-center py-20 bg-white rounded-3xl shadow-sm border border-slate-100"><div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-magnifying-glass text-2xl text-slate-300"></i></div><h3 class="text-xl font-bold text-slate-700 mb-2">Không tìm thấy dịch vụ</h3><p class="text-slate-500">Vui lòng thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm</p></div>';
                 return;
             }
 
-            container.innerHTML = paginatedServices.map((s, index) => `
-                <div class="animate-item bg-white rounded-3xl shadow-xl overflow-hidden transform hover:scale-105 hover:shadow-2xl" style="animation-delay: ${index * 0.08}s">
-                    <div class="h-64 overflow-hidden relative group">
-                        <img src="${s.image || 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-70"></div>
-                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold shadow-lg">
-                            <span class="text-blue-600">${s.unit === 'person' ? '👤' : s.unit === 'room' ? '🏠' : '⏰'}</span>
-                            <span class="ml-1">${s.unit === 'person' ? '/người' : s.unit === 'room' ? '/phòng' : '/giờ'}</span>
+            container.innerHTML = paginatedServices.map((s, index) => {
+                // Xác định tên hiển thị của danh mục
+                let catName = '';
+                if (s.category === 'dining') catName = '🍽️ Nhà hàng';
+                else if (s.category === 'spa') catName = '💆 Spa';
+                else if (s.category === 'wellness') catName = '🏋️ Sức khỏe';
+                else if (s.category === 'transport') catName = '🚗 Di chuyển';
+                else catName = '🎉 Hoạt động';
+
+                // Format chuỗi đơn vị tính
+                let unitStr = s.unit === 'person' ? '/ Người' : s.unit === 'room' ? '/ Phòng' : '/ Giờ';
+
+                return `
+                <div class="animate-item bg-white p-4 md:p-5 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(37,99,235,0.08)] border border-slate-100/50 flex flex-col h-full transition-all duration-300 group" style="animation-delay: ${index * 0.1}s">
+                    <div class="h-60 relative rounded-2xl overflow-hidden mb-6">
+                        <img src="${s.image || 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=800'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        
+                        <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-slate-800 shadow-sm">${catName}</div>
+                        <div class="absolute top-3 right-3 bg-blue-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center shadow-sm">
+                            <i class="fa-solid fa-star text-amber-300 mr-1 text-[10px]"></i> ${s.rating || 4.9}
                         </div>
                     </div>
-                    <div class="p-8">
-                        <div class="flex items-center mb-4">
-                            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white mr-4">
-                                <i class="fa-solid fa-${s.icon || 'utensils'} text-2xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-2xl font-bold text-slate-900">${s.name}</h3>
-                                <p class="text-sm text-slate-500">${s.category === 'dining' ? 'Nhà hàng' : s.category === 'spa' ? 'Spa & Wellness' : s.category === 'wellness' ? 'Sức khỏe' : s.category === 'transport' ? 'Di chuyển' : 'Giải trí'}</p>
+                    
+                    <div class="flex flex-col flex-grow px-2">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-2xl font-bold text-slate-900 leading-tight">${s.name}</h3>
+                            <div class="text-right whitespace-nowrap ml-4">
+                                <span class="text-xl font-bold text-blue-600 block">${formatCurrency(s.price)}</span>
+                                <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">${unitStr}</span>
                             </div>
                         </div>
-                        <p class="text-slate-600 mb-6">${s.description || ''}</p>
-                        <div class="flex items-center justify-between mb-6">
-                            <div>
-                                <p class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800">${formatCurrency(s.price)}</p>
-                                <div class="flex items-center text-sm text-slate-500"><i class="fa-regular fa-clock mr-2"></i><span>${s.unit === 'person' ? 'Tính theo người' : s.unit === 'room' ? 'Tính theo phòng' : 'Tính theo giờ'}</span></div>
-                            </div>
-                            <div class="flex items-center bg-yellow-50 px-3 py-2 rounded-xl"><i class="fa-solid fa-star text-yellow-400 mr-1"></i><span class="font-bold">${s.rating || 4.9}</span><span class="text-xs text-slate-500 ml-1">(${s.reviews || 100})</span></div>
-                        </div>
-                        <button onclick="addToCart('${s.id}')" class="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-4 rounded-xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all"><i class="fa-regular fa-plus mr-2"></i>Thêm vào đặt phòng</button>
+                        
+                        <p class="text-slate-500 text-[15px] mb-6 line-clamp-3 flex-grow">${s.description || 'Trải nghiệm dịch vụ tuyệt vời tại Luna Hotel, nâng niu từng khoảnh khắc.'}</p>
+                        
+                        <button onclick="addToCart('${s.id}')" class="w-full bg-slate-100 text-slate-800 py-3.5 rounded-xl font-bold text-[15px] hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-600/20 transition-all duration-300 mt-auto">
+                            <i class="fa-solid fa-plus mr-2"></i>Thêm vào đặt phòng
+                        </button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function renderPagination() {
@@ -623,7 +653,7 @@
 
             let paginationHtml = `
                 <button onclick="goToPage(${currentPage - 1})" class="page-btn ${currentPage === 1 ? 'disabled' : ''}" ${currentPage === 1 ? 'disabled' : ''}>
-                    <i class="fa-solid fa-chevron-left"></i>
+                    <i class="fa-solid fa-arrow-left text-sm"></i>
                 </button>
             `;
 
@@ -644,7 +674,7 @@
 
             paginationHtml += `
                 <button onclick="goToPage(${currentPage + 1})" class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" ${currentPage === totalPages ? 'disabled' : ''}>
-                    <i class="fa-solid fa-chevron-right"></i>
+                    <i class="fa-solid fa-arrow-right text-sm"></i>
                 </button>
             `;
 
@@ -666,7 +696,7 @@
                 container.style.opacity = '1';
                 container.style.transform = 'translateY(0)';
                 document.getElementById('service-categories').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 200);
+            }, 300);
         };
 
         window.addToCart = function (serviceId) {

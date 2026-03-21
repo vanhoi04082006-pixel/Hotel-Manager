@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luna Hotel - Trang Chủ</title>
+    <title>Luna Hotel - Tuyệt Tác Nghỉ Dưỡng</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
         rel="stylesheet">
     <style>
         * {
@@ -20,8 +20,10 @@
         body {
             font-family: 'Inter', sans-serif;
             background: #f8fafc;
+            /* slate-50 */
             overflow-x: hidden;
             min-height: 100vh;
+            color: #0f172a;
         }
 
         .font-playfair {
@@ -40,18 +42,6 @@
             }
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -62,21 +52,21 @@
             }
         }
 
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
+        @keyframes popInItem {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
-        .slide-in {
-            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        .hover-lift {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .hover-lift:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        .animate-item {
+            opacity: 0;
+            animation: popInItem 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .loader {
@@ -88,126 +78,60 @@
             animation: spin 1s linear infinite;
         }
 
-        .btn-primary {
-            background: #1e293b;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-primary:hover {
-            background: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #1e293b;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
-        }
-
-        .btn-secondary:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
-        }
-
-        .badge {
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .badge-success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .badge-warning {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-
-        .badge-danger {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .badge-info {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .user-layout {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .user-main {
-            flex: 1 0 auto;
-        }
-
-        .modal-backdrop {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(8px);
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 8px;
-        }
-
-        /* Ẩn nội dung chính cho đến khi load xong */
         #main-content {
             opacity: 0;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.5s ease;
         }
 
         #main-content.loaded {
             opacity: 1;
         }
+
+        /* Hero Banner */
+        .hero-section {
+            background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(0, 0, 0, 0.7));
+        }
+
+        /* Tùy chỉnh thanh cuộn */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 </head>
 
 <body>
-    <div id="loading-screen" class="fixed inset-0 bg-white z-[9999] flex items-center justify-center flex-col">
+    <div id="loading-screen"
+        class="fixed inset-0 bg-white z-[9999] flex items-center justify-center flex-col transition-opacity duration-500">
         <div class="text-center">
-            <div
-                class="w-24 h-24 bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                <i class="fa-solid fa-hotel text-4xl text-white"></i></div>
+            <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-hotel text-4xl text-blue-600"></i>
+            </div>
+            <h2 class="text-3xl font-playfair font-bold text-slate-900 mb-4">Luna Hotel</h2>
             <div class="loader mx-auto mb-4"></div>
-            <h2 class="text-2xl font-playfair font-bold text-slate-900 mb-2">Luna Hotel</h2>
-            <p class="text-slate-500">Đang kết nối hệ thống...</p>
+            <p class="text-slate-500 font-medium">Đang chuẩn bị không gian tuyệt vời...</p>
         </div>
     </div>
 
@@ -215,217 +139,270 @@
 
     <div id="main-content">
         <header
-            class="h-20 bg-white/95 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 shadow-sm">
-            <div class="flex items-center cursor-pointer" onclick="window.location.href='index.html'">
+            class="h-20 bg-white/80 backdrop-blur-lg border-b border-slate-100 flex items-center justify-between px-4 md:px-8 lg:px-12 sticky top-0 z-50 shadow-sm">
+            <div class="flex items-center cursor-pointer group" onclick="window.location.href='index.html'">
                 <div
-                    class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-xl flex items-center justify-center mr-3 shadow-lg">
-                    <i class="fa-solid fa-hotel text-lg md:text-xl text-white"></i></div>
+                    class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center mr-3 shadow-md shadow-blue-600/20 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-hotel text-white text-lg"></i>
+                </div>
                 <div>
-                    <h1 class="text-xl md:text-2xl font-playfair font-bold text-slate-900">LUNA HOTEL</h1>
-                    <p class="text-xs text-slate-500 hidden md:block">Nơi khởi nguồn cảm hứng</p>
+                    <h1 class="text-xl md:text-2xl font-playfair font-bold text-slate-900">LUNA</h1>
                 </div>
             </div>
 
-            <nav class="hidden md:flex items-center space-x-8">
-                <a href="index.html" class="font-medium py-2 border-b-2 border-slate-900 text-slate-900">Trang chủ</a>
+            <nav class="hidden md:flex items-center space-x-8 lg:space-x-10">
+                <a href="index.html"
+                    class="text-[15px] font-semibold text-blue-600 relative after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-0.5 after:bg-blue-600 after:rounded-full">Trang
+                    chủ</a>
                 <a href="pages/rooms.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all">Phòng</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors">Phòng &
+                    Suite</a>
                 <a href="pages/services.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all">Dịch
-                    vụ</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors">Dịch vụ</a>
                 <a href="pages/booking-lookup.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all"><i
-                        class="fa-solid fa-magnifying-glass mr-1"></i>Tra cứu</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors"><i
+                        class="fa-solid fa-magnifying-glass mr-2 text-sm"></i>Tra cứu</a>
                 <a id="nav-my-bookings" href="pages/my-bookings.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all hidden">Đặt
-                    phòng của tôi</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors hidden">Đặt
+                    phòng</a>
                 <a id="nav-profile" href="pages/profile.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all hidden">Hồ
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors hidden">Hồ
                     sơ</a>
                 <a id="nav-loyalty" href="pages/loyalty.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all hidden">Thẻ
-                    thành viên</a>
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors hidden">Thành
+                    viên</a>
                 <a id="nav-offers" href="pages/offers.html"
-                    class="text-slate-500 font-medium py-2 border-b-2 border-transparent hover:text-slate-900 transition-all hidden">Ưu
+                    class="text-[15px] text-slate-500 font-medium hover:text-blue-600 transition-colors hidden">Ưu
                     đãi</a>
             </nav>
 
-            <button class="md:hidden p-2" onclick="toggleMobileMenu()"><i
-                    class="fa-solid fa-bars text-xl text-slate-700"></i></button>
+            <button class="md:hidden p-2 text-slate-600" onclick="toggleMobileMenu()"><i
+                    class="fa-solid fa-bars text-2xl"></i></button>
 
-            <div class="hidden md:flex items-center space-x-4">
+            <div class="hidden md:flex items-center space-x-5">
                 <div class="flex items-center space-x-3">
                     <div
-                        class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">
-                        <span id="user-avatar">K</span></div>
-                    <span class="text-sm font-medium text-slate-700" id="user-name-display">Khách</span>
+                        class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold">
+                        <span id="user-avatar">K</span>
+                    </div>
+                    <span class="text-[15px] font-medium text-slate-700" id="user-name-display">Khách</span>
                 </div>
                 <a href="login.html" id="loginButton"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"><i
-                        class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Đăng nhập</a>
+                    class="bg-slate-900 text-white px-6 py-2.5 rounded-full text-[15px] font-semibold hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300">Đăng
+                    nhập</a>
                 <button onclick="handleLogout()" id="logoutButton"
-                    class="border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all hidden"><i
-                        class="fa-solid fa-right-from-bracket md:mr-2"></i><span class="hidden md:inline">Đăng
-                        xuất</span></button>
+                    class="text-slate-500 hover:text-red-600 text-[15px] font-medium transition-colors hidden"><i
+                        class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</button>
             </div>
         </header>
 
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 p-4">
-            <div class="space-y-2">
-                <a href="index.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Trang chủ</a>
+        <div id="mobile-menu"
+            class="hidden md:hidden bg-white border-b border-slate-100 p-4 shadow-lg absolute w-full z-40">
+            <div class="space-y-1">
+                <a href="index.html"
+                    class="block w-full text-left px-4 py-3 bg-blue-50 text-blue-600 font-semibold rounded-xl">Trang
+                    chủ</a>
                 <a href="pages/rooms.html"
-                    class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Phòng</a>
-                <a href="pages/services.html" class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg">Dịch
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium">Phòng
+                    & Suite</a>
+                <a href="pages/services.html"
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium">Dịch
                     vụ</a>
                 <a href="pages/booking-lookup.html"
-                    class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg"><i
-                        class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu</a>
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium">Tra
+                    cứu</a>
                 <a id="mobile-my-bookings" href="pages/my-bookings.html"
-                    class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg hidden">Đặt phòng của tôi</a>
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium hidden">Đặt
+                    phòng của tôi</a>
                 <a id="mobile-profile" href="pages/profile.html"
-                    class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg hidden">Hồ sơ</a>
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium hidden">Hồ
+                    sơ</a>
                 <a id="mobile-loyalty" href="pages/loyalty.html"
-                    class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg hidden">Thẻ thành viên</a>
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium hidden">Thẻ
+                    thành viên</a>
                 <a id="mobile-offers" href="pages/offers.html"
-                    class="block w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg hidden">Ưu đãi</a>
-                <div class="border-t border-slate-200 my-2 pt-2">
+                    class="block w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-slate-600 font-medium hidden">Ưu
+                    đãi</a>
+                <div class="border-t border-slate-100 my-2 pt-2">
                     <button onclick="handleLogout()" id="mobileLogoutBtn"
-                        class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg hidden"><i
+                        class="hidden w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium"><i
                             class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</button>
                 </div>
             </div>
         </div>
 
-        <main class="user-main bg-gradient-to-b from-white to-slate-50">
-            <div class="relative h-[600px] bg-slate-900 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2000&auto=format&fit=crop"
-                    class="absolute inset-0 w-full h-full object-cover opacity-60">
-                <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/70 to-transparent"></div>
-                <div class="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
-                    <div class="max-w-2xl">
+        <main class="user-main">
+            <div class="hero-section min-h-[85vh] flex items-center">
+                <div class="hero-overlay"></div>
+                <div class="max-w-7xl mx-auto px-4 md:px-8 relative z-10 w-full">
+                    <div class="max-w-3xl">
                         <span
-                            class="text-blue-400 font-bold text-sm uppercase tracking-widest mb-4 block animate-pulse">Chào
-                            mừng đến với</span>
-                        <h1 class="text-5xl md:text-7xl font-playfair font-bold text-white mb-6 leading-tight">Luna
-                            Hotel<br>Nơi khởi nguồn cảm hứng</h1>
-                        <p class="text-lg md:text-xl text-slate-200 mb-8 max-w-lg">Trải nghiệm không gian nghỉ dưỡng
-                            đẳng cấp 5 sao với dịch vụ hoàn hảo và view biển tuyệt đẹp.</p>
+                            class="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-bold tracking-widest uppercase mb-6 animate-pulse">
+                            Khám phá chuẩn mực mới
+                        </span>
+                        <h1
+                            class="text-5xl md:text-7xl font-playfair font-bold text-white mb-6 leading-tight drop-shadow-lg">
+                            Nơi Khởi Nguồn<br><span class="italic font-light">Cảm Hứng Bất Tận</span>
+                        </h1>
+                        <p class="text-lg md:text-xl text-slate-200 mb-10 max-w-xl font-light">
+                            Trải nghiệm không gian nghỉ dưỡng đẳng cấp 5 sao với dịch vụ hoàn hảo và tầm nhìn ôm trọn
+                            đại dương tuyệt đẹp.
+                        </p>
                         <div class="flex flex-wrap gap-4">
                             <a href="pages/rooms.html"
-                                class="bg-white text-slate-900 px-8 py-4 rounded-xl font-bold hover:bg-slate-100 transition-all transform hover:scale-105">Khám
-                                phá ngay</a>
+                                class="bg-blue-600 text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-blue-600/40 hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300">
+                                Đặt phòng ngay
+                            </a>
                             <a href="pages/booking-lookup.html"
-                                class="border-2 border-white text-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition-all transform hover:scale-105"><i
-                                    class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu đặt phòng</a>
+                                class="bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-full font-bold hover:bg-white/20 hover:-translate-y-1 transition-all duration-300">
+                                <i class="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu mã đặt
+                            </a>
                         </div>
                     </div>
                 </div>
+
                 <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                    <div class="w-6 h-10 border-2 border-white rounded-full flex justify-center">
-                        <div class="w-1 h-3 bg-white rounded-full mt-2 animate-pulse"></div>
+                    <div class="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+                        <div class="w-1 h-3 bg-white rounded-full mt-2 opacity-80"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white py-12">
-                <div class="max-w-7xl mx-auto px-4 md:px-8">
+            <div
+                class="bg-white py-12 border-b border-slate-100 relative z-20 -mt-10 mx-4 md:mx-8 lg:mx-12 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+                <div class="max-w-7xl mx-auto px-4">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
                         <div class="text-center">
-                            <div class="text-4xl font-bold text-blue-600 mb-2">500+</div>
-                            <div class="text-slate-600">Phòng cao cấp</div>
+                            <div class="text-4xl font-bold text-blue-600 mb-2 font-playfair">500+</div>
+                            <div class="text-slate-500 font-medium text-sm uppercase tracking-wider">Phòng cao cấp</div>
                         </div>
                         <div class="text-center">
-                            <div class="text-4xl font-bold text-blue-600 mb-2">50k+</div>
-                            <div class="text-slate-600">Khách hàng</div>
+                            <div class="text-4xl font-bold text-blue-600 mb-2 font-playfair">50k+</div>
+                            <div class="text-slate-500 font-medium text-sm uppercase tracking-wider">Khách hàng</div>
                         </div>
                         <div class="text-center">
-                            <div class="text-4xl font-bold text-blue-600 mb-2">4.9/5</div>
-                            <div class="text-slate-600">Đánh giá</div>
+                            <div class="text-4xl font-bold text-blue-600 mb-2 font-playfair">4.9/5</div>
+                            <div class="text-slate-500 font-medium text-sm uppercase tracking-wider">Đánh giá</div>
                         </div>
                         <div class="text-center">
-                            <div class="text-4xl font-bold text-blue-600 mb-2">24/7</div>
-                            <div class="text-slate-600">Hỗ trợ</div>
+                            <div class="text-4xl font-bold text-blue-600 mb-2 font-playfair">24/7</div>
+                            <div class="text-slate-500 font-medium text-sm uppercase tracking-wider">Hỗ trợ</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="py-16 bg-slate-50">
+            <div class="py-24 bg-[#f8fafc]">
                 <div class="max-w-7xl mx-auto px-4 md:px-8">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-playfair font-bold text-slate-900 mb-4">Phòng nổi bật</h2>
-                        <p class="text-lg text-slate-600">Những phòng được yêu thích nhất tại Luna Hotel</p>
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-12">
+                        <div>
+                            <span class="text-blue-600 font-bold text-sm uppercase tracking-widest mb-2 block">Lựa chọn
+                                hàng đầu</span>
+                            <h2 class="text-4xl md:text-5xl font-playfair font-bold text-slate-900">Phòng Nổi Bật</h2>
+                        </div>
+                        <a href="pages/rooms.html"
+                            class="hidden md:inline-flex items-center font-bold text-blue-600 hover:text-blue-700 transition-colors group">
+                            Xem tất cả <i
+                                class="fa-solid fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                        </a>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="featured-rooms">
-                        <div class="col-span-3 text-center py-12">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10" id="featured-rooms">
+                        <div
+                            class="col-span-3 text-center py-20 bg-white rounded-3xl shadow-sm border border-slate-100">
                             <div class="loader mx-auto mb-4"></div>
-                            <p class="text-slate-500">Đang tải dữ liệu phòng...</p>
+                            <p class="text-slate-500 font-medium">Đang tải bộ sưu tập phòng...</p>
                         </div>
                     </div>
-                    <div class="text-center mt-8"><a href="pages/rooms.html" class="btn-primary">Xem tất cả phòng</a>
+
+                    <div class="text-center mt-10 md:hidden">
+                        <a href="pages/rooms.html"
+                            class="inline-flex items-center px-8 py-4 bg-slate-900 text-white rounded-full font-bold shadow-lg shadow-slate-900/20">
+                            Xem tất cả phòng
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div class="py-16">
+            <div class="py-24 bg-white border-t border-slate-100">
                 <div class="max-w-7xl mx-auto px-4 md:px-8">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-playfair font-bold text-slate-900 mb-4">Dịch vụ cao cấp</h2>
-                        <p class="text-lg text-slate-600">Tận hưởng những dịch vụ đẳng cấp 5 sao</p>
+                    <div class="text-center mb-16">
+                        <span class="text-blue-600 font-bold text-sm uppercase tracking-widest mb-2 block">Trải
+                            nghiệm</span>
+                        <h2 class="text-4xl md:text-5xl font-playfair font-bold text-slate-900 mb-4">Dịch Vụ Đẳng Cấp
+                        </h2>
+                        <p class="text-lg text-slate-500 max-w-2xl mx-auto">Nâng niu từng khoảnh khắc với hệ thống tiện
+                            ích 5 sao được thiết kế riêng biệt cho chuyến đi của bạn.</p>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6" id="featured-services">
-                        <div class="col-span-4 text-center py-12">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8" id="featured-services">
+                        <div class="col-span-4 text-center py-20">
                             <div class="loader mx-auto mb-4"></div>
-                            <p class="text-slate-500">Đang tải dữ liệu dịch vụ...</p>
+                            <p class="text-slate-500 font-medium">Đang tải dữ liệu dịch vụ...</p>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
 
-        <footer class="bg-slate-900 text-slate-400 py-12">
+        <footer class="bg-white border-t border-slate-200 py-16">
             <div class="max-w-7xl mx-auto px-4 md:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div class="text-center md:text-left">
-                        <div class="flex items-center justify-center md:justify-start mb-4">
-                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3"><i
-                                    class="fa-solid fa-hotel text-white"></i></div>
-                            <h3 class="text-xl font-playfair font-bold text-white">Luna Hotel</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+                    <div class="col-span-1 md:col-span-1">
+                        <div class="flex items-center mb-6">
+                            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center mr-3">
+                                <i class="fa-solid fa-hotel text-white text-lg"></i>
+                            </div>
+                            <h3 class="text-2xl font-playfair font-bold text-slate-900">LUNA</h3>
                         </div>
-                        <p class="text-sm leading-relaxed">Trải nghiệm đẳng cấp thế giới, nơi mỗi khoảnh khắc đều đáng
-                            nhớ.</p>
+                        <p class="text-slate-500 text-[15px] leading-relaxed mb-6">Trải nghiệm đẳng cấp thế giới, nơi
+                            mỗi khoảnh khắc đều được trân trọng và tỏa sáng.</p>
+                        <div class="flex space-x-3">
+                            <a href="#"
+                                class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-all"><i
+                                    class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#"
+                                class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-all"><i
+                                    class="fa-brands fa-instagram"></i></a>
+                            <a href="#"
+                                class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-all"><i
+                                    class="fa-brands fa-twitter"></i></a>
+                        </div>
                     </div>
-                    <div class="text-center md:text-left">
-                        <h4 class="text-white font-semibold mb-4">Liên hệ</h4>
-                        <ul class="space-y-2 text-sm">
-                            <li><i class="fa-solid fa-location-dot w-6 text-blue-400 mr-2"></i> 123 Nguyễn Huệ, Q.1,
-                                TP.HCM</li>
-                            <li><i class="fa-solid fa-phone w-6 text-blue-400 mr-2"></i> +84 28 1234 5678</li>
-                            <li><i class="fa-solid fa-envelope w-6 text-blue-400 mr-2"></i> info@lunahotel.com</li>
+                    <div>
+                        <h4 class="text-slate-900 font-bold text-[15px] uppercase tracking-wider mb-6">Liên hệ</h4>
+                        <ul class="space-y-4 text-[15px] text-slate-600">
+                            <li class="flex items-start"><i
+                                    class="fa-solid fa-location-dot mt-1 text-blue-600 mr-3 w-4"></i> 123 Nguyễn Huệ,
+                                Q.1,<br>TP. Hồ Chí Minh</li>
+                            <li class="flex items-center"><i class="fa-solid fa-phone text-blue-600 mr-3 w-4"></i> +84
+                                28 1234 5678</li>
+                            <li class="flex items-center"><i class="fa-solid fa-envelope text-blue-600 mr-3 w-4"></i>
+                                hello@lunahotel.com</li>
                         </ul>
                     </div>
-                    <div class="text-center md:text-left">
-                        <h4 class="text-white font-semibold mb-4">Dịch vụ</h4>
-                        <ul class="space-y-2 text-sm">
-                            <li>Nhà hàng 5 sao</li>
-                            <li>Hồ bơi vô cực</li>
-                            <li>Spa & Gym</li>
-                            <li>Tour du lịch</li>
+                    <div>
+                        <h4 class="text-slate-900 font-bold text-[15px] uppercase tracking-wider mb-6">Khám phá</h4>
+                        <ul class="space-y-3 text-[15px] text-slate-600">
+                            <li><a href="#" class="hover:text-blue-600 transition-colors">Về chúng tôi</a></li>
+                            <li><a href="#" class="hover:text-blue-600 transition-colors">Nhà hàng & Bar</a></li>
+                            <li><a href="#" class="hover:text-blue-600 transition-colors">Spa & Thư giãn</a></li>
+                            <li><a href="#" class="hover:text-blue-600 transition-colors">Đánh giá khách hàng</a></li>
                         </ul>
                     </div>
-                    <div class="text-center md:text-left">
-                        <h4 class="text-white font-semibold mb-4">Kết nối</h4>
-                        <div class="flex justify-center md:justify-start space-x-4"><a href="#"
-                                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"><i
-                                    class="fa-brands fa-facebook-f"></i></a><a href="#"
-                                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"><i
-                                    class="fa-brands fa-instagram"></i></a><a href="#"
-                                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"><i
-                                    class="fa-brands fa-twitter"></i></a></div>
+                    <div>
+                        <h4 class="text-slate-900 font-bold text-[15px] uppercase tracking-wider mb-6">Bản tin</h4>
+                        <p class="text-slate-600 text-[15px] mb-4">Đăng ký để nhận ưu đãi đặc quyền lên tới 30%.</p>
+                        <div class="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
+                            <input type="email" placeholder="Email của bạn"
+                                class="bg-transparent text-slate-900 px-4 py-2 w-full text-[15px] focus:outline-none">
+                            <button
+                                class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap">Gửi</button>
+                        </div>
                     </div>
                 </div>
-                <div class="border-t border-slate-800 mt-8 pt-8 text-center text-sm">
-                    <p>&copy; 2026 Luna Hotel & Resort. All rights reserved.</p>
+                <div class="border-t border-slate-200 mt-16 pt-8 text-center text-sm text-slate-500 font-medium">
+                    <p>&copy; 2026 LUNA HOTEL. ALL RIGHTS RESERVED.</p>
                 </div>
             </div>
         </footer>
@@ -453,26 +430,31 @@
         let currentUser = null;
         let localRooms = [];
         let localServices = [];
-        let isAuthChecked = false;
 
         // Format currency
         function formatCurrency(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
-        // Show toast
+        // Show toast - Mới
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const icons = { success: 'fa-circle-check text-green-400', error: 'fa-circle-exclamation text-red-400', warning: 'fa-triangle-exclamation text-yellow-400', info: 'fa-circle-info text-blue-400' };
-            const bgColors = { success: 'bg-green-50 border-green-200 text-green-800', error: 'bg-red-50 border-red-200 text-red-800', warning: 'bg-yellow-50 border-yellow-200 text-yellow-800', info: 'bg-blue-50 border-blue-200 text-blue-800' };
-            toast.className = `flex items-center p-4 rounded-xl shadow-lg border ${bgColors[type]} slide-in max-w-md`;
-            toast.innerHTML = `<i class="fa-solid ${icons[type]} mr-3 text-xl"></i><span class="font-medium">${message}</span>`;
+            const icons = { success: 'fa-check text-green-500', error: 'fa-xmark text-red-500', warning: 'fa-exclamation text-amber-500', info: 'fa-info text-blue-500' };
+            const bgColors = { success: 'bg-white border-green-100', error: 'bg-white border-red-100', warning: 'bg-white border-amber-100', info: 'bg-white border-blue-100' };
+
+            toast.className = `flex items-center p-4 shadow-xl border rounded-2xl ${bgColors[type]} slide-in max-w-md bg-white/90 backdrop-blur-md z-[10000]`;
+            toast.innerHTML = `<div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center mr-3"><i class="fa-solid ${icons[type]} text-sm"></i></div><span class="font-semibold text-slate-800 text-[15px]">${message}</span>`;
+
             container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3000);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
-        // Cập nhật UI ngay lập tức
         window.updateUserUI = function () {
             const userNameDisplay = document.getElementById('user-name-display');
             const userAvatar = document.getElementById('user-avatar');
@@ -509,24 +491,31 @@
             }
         }
 
-        // Kiểm tra localStorage ngay khi load trang
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
-            updateUserUI(); // Cập nhật UI ngay lập tức
+            updateUserUI();
         }
 
-        // Handle logout
         window.handleLogout = async function () {
             if (confirm('Bạn có chắc muốn đăng xuất?')) {
                 try {
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) {
+                        loadingDiv.style.opacity = '1';
+                        loadingDiv.style.display = 'flex';
+                    }
                     await signOut(auth);
                     localStorage.removeItem('currentUser');
                     currentUser = null;
                     updateUserUI();
-                    showToast('Đã đăng xuất', 'info');
+                    showToast('Đã đăng xuất thành công', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
                 } catch (error) {
                     showToast('Lỗi: ' + error.message, 'error');
+                    document.getElementById('loading-screen').style.display = 'none';
                 }
             }
         };
@@ -535,7 +524,7 @@
             document.getElementById('mobile-menu').classList.toggle('hidden');
         };
 
-        // Load featured rooms
+        // Render Rooms theo chuẩn thiết kế mới
         async function loadFeaturedRooms() {
             const container = document.getElementById('featured-rooms');
             if (!container) return;
@@ -546,31 +535,49 @@
                 const featured = localRooms.filter(r => r.status === 'available').slice(0, 3);
 
                 if (featured.length === 0) {
-                    container.innerHTML = '<div class="col-span-3 text-center py-12"><p class="text-slate-500">Chưa có phòng nào</p></div>';
+                    container.innerHTML = '<div class="col-span-3 text-center py-20 bg-white rounded-3xl shadow-sm border border-slate-100"><p class="text-slate-500 font-medium">Hiện chưa có phòng nổi bật</p></div>';
                     return;
                 }
 
-                container.innerHTML = featured.map(room => `
-                    <div class="bg-white rounded-3xl overflow-hidden shadow-xl hover-lift group">
-                        <div class="h-64 relative overflow-hidden">
-                            <img src="${room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                            <div class="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full font-bold">${formatCurrency(room.price)}/đêm</div>
+                container.innerHTML = featured.map((room, index) => `
+                    <div class="animate-item bg-white p-4 md:p-5 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(37,99,235,0.08)] border border-slate-100/50 flex flex-col h-full transition-all duration-300 group" style="animation-delay: ${index * 0.1}s">
+                        <div class="h-60 relative rounded-2xl overflow-hidden mb-6">
+                            <img src="${room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-slate-800 shadow-sm">${room.type || 'Cao cấp'}</div>
+                            <div class="absolute top-3 right-3 bg-blue-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center shadow-sm">
+                                <i class="fa-solid fa-star text-amber-300 mr-1 text-[10px]"></i> 5.0
+                            </div>
                         </div>
-                        <div class="p-6">
-                            <h3 class="text-2xl font-bold text-slate-900 mb-2">Phòng ${room.code}</h3>
-                            <p class="text-slate-600 mb-4">${room.name || room.description || 'Phòng cao cấp'}</p>
-                            <div class="flex items-center space-x-4 text-slate-500 mb-4"><span><i class="fa-regular fa-square mr-1"></i>${room.area || 30}m²</span><span><i class="fa-regular fa-user mr-1"></i>${room.capacity || 2} người</span></div>
-                            <a href="pages/rooms.html?book=${room.id}" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition-all block text-center">Đặt ngay</a>
+                        
+                        <div class="flex flex-col flex-grow px-2">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-2xl font-bold text-slate-900 leading-tight">Phòng ${room.code}</h3>
+                                <div class="text-right">
+                                    <span class="text-xl font-bold text-blue-600 block">${formatCurrency(room.price)}</span>
+                                    <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">/ Đêm</span>
+                                </div>
+                            </div>
+                            
+                            <p class="text-slate-500 text-[15px] mb-6 line-clamp-2">${room.name || room.description || 'Trải nghiệm không gian sang trọng.'}</p>
+                            
+                            <div class="grid grid-cols-2 gap-3 text-[14px] text-slate-600 font-medium mb-8 bg-slate-50/50 p-4 rounded-2xl mt-auto border border-slate-100">
+                                <div class="flex items-center"><i class="fa-solid fa-expand text-blue-400 w-5"></i>${room.area || 30}m²</div>
+                                <div class="flex items-center"><i class="fa-regular fa-user text-blue-400 w-5"></i>${room.capacity || 2} khách</div>
+                            </div>
+                            
+                            <a href="pages/rooms.html?book=${room.id}" class="w-full text-center bg-slate-100 text-slate-800 py-3.5 rounded-xl font-bold text-[15px] hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-600/20 transition-all duration-300">
+                                Đặt phòng này
+                            </a>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
                 console.error('Error loading rooms:', error);
-                container.innerHTML = '<div class="col-span-3 text-center py-12"><p class="text-slate-500">Lỗi tải dữ liệu phòng</p></div>';
+                container.innerHTML = '<div class="col-span-3 text-center py-12"><p class="text-red-500">Lỗi tải dữ liệu phòng</p></div>';
             }
         }
 
-        // Load featured services
+        // Render Services theo thiết kế mới (giống trang Danh sách phòng)
         async function loadFeaturedServices() {
             const container = document.getElementById('featured-services');
             if (!container) return;
@@ -581,28 +588,40 @@
                 const featured = localServices.slice(0, 4);
 
                 if (featured.length === 0) {
-                    container.innerHTML = '<div class="col-span-4 text-center py-12"><p class="text-slate-500">Chưa có dịch vụ nào</p></div>';
+                    container.innerHTML = '<div class="col-span-4 text-center py-20 bg-slate-50 rounded-3xl border border-slate-100"><p class="text-slate-500 font-medium">Hiện chưa có dịch vụ nào</p></div>';
                     return;
                 }
 
-                container.innerHTML = featured.map(service => `
-                    <div class="bg-white p-6 rounded-2xl shadow-lg text-center hover-lift">
-                        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-4"><i class="fa-solid fa-${service.icon || 'utensils'} text-2xl"></i></div>
-                        <h3 class="text-lg font-bold text-slate-900 mb-2">${service.name}</h3>
-                        <p class="text-sm text-slate-600 mb-3">${service.description || ''}</p>
-                        <p class="text-xl font-bold text-blue-600">${formatCurrency(service.price)}</p>
-                        <p class="text-xs text-slate-400">${service.unit === 'person' ? '/người' : service.unit === 'room' ? '/phòng' : '/giờ'}</p>
+                container.innerHTML = featured.map((service, index) => {
+                    let unitStr = service.unit === 'person' ? '/ Người' : service.unit === 'room' ? '/ Phòng' : '/ Giờ';
+
+                    return `
+                    <div class="animate-item bg-white p-5 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(37,99,235,0.08)] border border-slate-100/50 flex flex-col h-full transition-all duration-300 group" style="animation-delay: ${index * 0.1}s">
+                        <div class="w-16 h-16 bg-blue-50 group-hover:bg-blue-600 rounded-2xl flex items-center justify-center text-blue-600 group-hover:text-white transition-colors duration-300 mb-5">
+                            <i class="fa-solid fa-${service.icon || 'star'} text-2xl"></i>
+                        </div>
+                        
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">${service.name}</h3>
+                        <p class="text-slate-500 text-[14px] line-clamp-2 mb-6 flex-grow">${service.description || 'Trải nghiệm tiện ích tuyệt vời.'}</p>
+                        
+                        <div class="pt-4 border-t border-slate-100 mt-auto flex items-end justify-between">
+                            <div>
+                                <span class="text-lg font-bold text-blue-600 block">${formatCurrency(service.price)}</span>
+                                <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">${unitStr}</span>
+                            </div>
+                            <a href="pages/services.html" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-900 hover:text-white transition-all">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
                     </div>
-                `).join('');
+                `}).join('');
             } catch (error) {
                 console.error('Error loading services:', error);
-                container.innerHTML = '<div class="col-span-4 text-center py-12"><p class="text-slate-500">Lỗi tải dữ liệu dịch vụ</p></div>';
+                container.innerHTML = '<div class="col-span-4 text-center py-12"><p class="text-red-500">Lỗi tải dữ liệu dịch vụ</p></div>';
             }
         }
 
-        // Auth state listener
         onAuthStateChanged(auth, async (user) => {
-            // Ẩn loading screen và hiện main-content
             setTimeout(() => {
                 document.getElementById('loading-screen').style.opacity = '0';
                 setTimeout(() => {
@@ -612,7 +631,6 @@
             }, 800);
 
             if (user) {
-                // Đã đăng nhập
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 const userData = userDoc.exists() ? userDoc.data() : {};
                 currentUser = {
@@ -622,24 +640,15 @@
                     role: userData.role || (user.email === ADMIN_EMAIL ? 'admin' : 'user')
                 };
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-                // Cập nhật UI ngay lập tức
                 updateUserUI();
-
-                // Load dữ liệu sau
-                await loadFeaturedRooms();
-                await loadFeaturedServices();
-
             } else {
-                // Chưa đăng nhập
                 currentUser = null;
                 localStorage.removeItem('currentUser');
                 updateUserUI();
-                await loadFeaturedRooms();
-                await loadFeaturedServices();
             }
 
-            isAuthChecked = true;
+            await loadFeaturedRooms();
+            await loadFeaturedServices();
         });
     </script>
 </body>
