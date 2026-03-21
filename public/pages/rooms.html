@@ -50,7 +50,6 @@
             }
         }
 
-        /* Hiệu ứng xuất hiện mượt mà từng item */
         @keyframes popInItem {
             0% {
                 opacity: 0;
@@ -68,7 +67,6 @@
             animation: popInItem 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        /* Container transition để fade ra/vào */
         #rooms-container {
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
@@ -230,6 +228,22 @@
             background: white;
             border-color: #e2e8f0;
         }
+
+        /* Search Bar */
+        .search-container {
+            max-width: 500px;
+            margin: 0 auto 24px auto;
+        }
+
+        .search-input {
+            padding-left: 44px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
     </style>
 </head>
 
@@ -334,9 +348,24 @@
 
         <main class="user-main bg-gradient-to-b from-white to-slate-50">
             <div class="max-w-7xl mx-auto px-4 md:px-8 py-12">
-                <div class="text-center mb-12">
+                <div class="text-center mb-8">
                     <h2 class="text-4xl font-playfair font-bold text-slate-900 mb-4">Danh sách phòng</h2>
                     <p class="text-lg text-slate-600">Lựa chọn phòng phù hợp với nhu cầu của bạn</p>
+                </div>
+
+                <div class="search-container">
+                    <div class="relative">
+                        <i
+                            class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput"
+                            placeholder="Tìm kiếm phòng theo tên, mã phòng, loại phòng..."
+                            class="form-input search-input w-full pl-11 pr-4 py-3 rounded-xl border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                            onkeyup="handleSearch()">
+                        <button onclick="clearSearch()" id="clearSearchBtn"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden">
+                            <i class="fa-solid fa-circle-xmark text-xl"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex flex-wrap justify-center gap-3 mb-8" id="room-filters">
@@ -563,16 +592,11 @@
         let filteredRooms = [];
         let currentFilter = 'All';
         let currentPage = 1;
+        let searchQuery = '';
         const roomsPerPage = 6;
 
         function formatCurrency(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-        }
-
-        function formatDate(dateString) {
-            if (!dateString) return '';
-            const d = new Date(dateString);
-            return d.toLocaleDateString('vi-VN');
         }
 
         function showToast(message, type = 'success') {
@@ -661,20 +685,70 @@
             updateUserUI();
         }
 
-        // ---------- XỬ LÝ LỌC PHÒNG MƯỢT MÀ ----------
-        window.filterRooms = function (type) {
-            if (currentFilter === type) return; // Không làm gì nếu đang ở tab hiện tại
+        // ---------- XỬ LÝ LỌC & TÌM KIẾM MƯỢT MÀ ----------
+        window.handleSearch = function () {
+            const searchInput = document.getElementById('searchInput');
+            searchQuery = searchInput.value.trim().toLowerCase();
 
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (searchQuery.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            applyFiltersAndSearch();
+        };
+
+        window.clearSearch = function () {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.value = '';
+            searchQuery = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            applyFiltersAndSearch();
+        };
+
+        function applyFiltersAndSearch() {
+            let result = [...allRooms];
+
+            // 1. Lọc theo loại phòng (Filter)
+            if (currentFilter !== 'All') {
+                result = result.filter(room => room.type === currentFilter);
+            }
+
+            // 2. Tìm kiếm theo từ khóa (Search)
+            if (searchQuery) {
+                result = result.filter(room =>
+                    room.code?.toLowerCase().includes(searchQuery) ||
+                    room.name?.toLowerCase().includes(searchQuery) ||
+                    room.type?.toLowerCase().includes(searchQuery) ||
+                    room.description?.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            filteredRooms = result;
+            currentPage = 1;
+
+            // Hiệu ứng mờ dần
             const container = document.getElementById('rooms-container');
-
-            // 1. Áp dụng style mờ dần (fade out)
             container.style.opacity = '0';
             container.style.transform = 'translateY(10px)';
 
-            currentFilter = type;
-            currentPage = 1;
+            // Đợi mờ xong thì render & hiện lại
+            setTimeout(() => {
+                renderRooms();
+                renderPagination();
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 200);
+        }
 
-            // Cập nhật trạng thái các nút bấm (cho to lên, có shadow)
+        window.filterRooms = function (type) {
+            if (currentFilter === type) return;
+
+            currentFilter = type;
+
+            // Update button styles
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 const filterValue = btn.getAttribute('data-filter');
                 if (filterValue === type) {
@@ -684,21 +758,7 @@
                 }
             });
 
-            // 2. Chờ thời gian mờ hoàn tất rồi tiến hành render data
-            setTimeout(() => {
-                if (type === 'All') {
-                    filteredRooms = [...allRooms];
-                } else {
-                    filteredRooms = allRooms.filter(room => room.type === type);
-                }
-
-                renderRooms();
-                renderPagination();
-
-                // 3. Hiện lại danh sách phòng (fade in container)
-                container.style.opacity = '1';
-                container.style.transform = 'translateY(0)';
-            }, 200); // Khớp với transition trong CSS
+            applyFiltersAndSearch();
         };
 
         function renderRooms() {
@@ -711,7 +771,6 @@
                 return;
             }
 
-            // Gắn class animate-item kèm delay cho từng phòng
             container.innerHTML = paginatedRooms.map((room, index) => `
                 <div class="animate-item bg-white rounded-3xl overflow-hidden shadow-xl hover-lift group" style="animation-delay: ${index * 0.08}s">
                     <div class="h-64 relative overflow-hidden">
@@ -736,7 +795,6 @@
             `).join('');
         }
 
-        // Render pagination buttons
         function renderPagination() {
             const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
             const paginationContainer = document.getElementById('pagination-container');
@@ -788,30 +846,23 @@
                 currentPage = page;
                 renderRooms();
                 renderPagination();
-
                 container.style.opacity = '1';
                 container.style.transform = 'translateY(0)';
-
-                // Cuộn mượt mà lên vị trí filter thay vì container để user nhìn rõ danh sách mới
                 document.getElementById('room-filters').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 200);
         };
 
-        // Load rooms from Firebase
         async function loadRooms() {
             try {
                 const roomsSnap = await getDocs(collection(db, 'rooms'));
                 allRooms = roomsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                filteredRooms = [...allRooms];
-                renderRooms();
-                renderPagination();
+                applyFiltersAndSearch();
             } catch (error) {
                 console.error('Error loading rooms:', error);
                 showToast('Lỗi tải dữ liệu phòng', 'error');
             }
         }
 
-        // Load services for booking modal
         let localServices = [];
         async function loadServices() {
             try {
@@ -822,7 +873,6 @@
             }
         }
 
-        // Booking Modal Functions
         let currentRoom = null;
         let currentTotalPrice = 0;
 
@@ -979,7 +1029,6 @@
             }
         };
 
-        // Auth state listener
         onAuthStateChanged(auth, async (user) => {
             setTimeout(() => {
                 document.getElementById('loading-screen').style.opacity = '0';
