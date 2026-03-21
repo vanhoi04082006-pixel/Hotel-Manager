@@ -50,6 +50,29 @@
             }
         }
 
+        /* Hiệu ứng xuất hiện mượt mà từng item */
+        @keyframes popInItem {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .animate-item {
+            opacity: 0;
+            animation: popInItem 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Container transition để fade ra/vào */
+        #rooms-container {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
         .fade-in {
             animation: fadeIn 0.5s ease-out forwards;
         }
@@ -108,9 +131,9 @@
             display: inline-block;
         }
 
-        .badge-success {
-            background: #dcfce7;
-            color: #166534;
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
         }
 
         .form-input {
@@ -158,6 +181,54 @@
 
         #main-content.loaded {
             opacity: 1;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            min-width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        .page-btn:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .page-btn.active {
+            background: #1e293b;
+            border-color: #1e293b;
+            color: white;
+        }
+
+        .page-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-btn.disabled:hover {
+            background: white;
+            border-color: #e2e8f0;
         }
     </style>
 </head>
@@ -270,7 +341,7 @@
 
                 <div class="flex flex-wrap justify-center gap-3 mb-8" id="room-filters">
                     <button onclick="filterRooms('All')"
-                        class="filter-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-slate-900 text-white"
+                        class="filter-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-slate-900 text-white shadow-lg shadow-slate-900/30 transform scale-105"
                         data-filter="All">Tất cả</button>
                     <button onclick="filterRooms('Superior')"
                         class="filter-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900"
@@ -299,9 +370,7 @@
                     </div>
                 </div>
 
-                <div class="text-center mt-8" id="load-more-container">
-                    <button onclick="loadMoreRooms()" class="btn-secondary hidden">Xem thêm phòng</button>
-                </div>
+                <div id="pagination-container" class="pagination"></div>
             </div>
         </main>
 
@@ -493,10 +562,9 @@
         let allRooms = [];
         let filteredRooms = [];
         let currentFilter = 'All';
-        let currentPage = 0;
+        let currentPage = 1;
         const roomsPerPage = 6;
 
-        // Format functions
         function formatCurrency(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
@@ -518,12 +586,10 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        // Đưa hàm closeModal ra window để gọi từ HTML
         window.closeModal = function (id) {
             document.getElementById(id).classList.add('hidden');
         }
 
-        // User Management
         function updateUserUI() {
             const nameSpan = document.getElementById('user-name-display');
             const avatar = document.getElementById('user-avatar');
@@ -560,7 +626,6 @@
             }
         }
 
-        // Đưa handleLogout ra window
         window.handleLogout = async function () {
             if (confirm('Bạn có chắc muốn đăng xuất?')) {
                 try {
@@ -569,13 +634,11 @@
                         loadingDiv.style.opacity = '1';
                         loadingDiv.style.display = 'flex';
                     }
-
                     await signOut(auth);
                     localStorage.removeItem('currentUser');
                     currentUser = null;
                     updateUserUI();
                     showToast('Đã đăng xuất', 'success');
-
                     setTimeout(() => {
                         window.location.href = '../index.html';
                     }, 500);
@@ -592,93 +655,146 @@
             document.getElementById('mobile-menu').classList.toggle('hidden');
         };
 
-        // Kiểm tra localStorage ngay khi script chạy
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
             updateUserUI();
         }
 
-        // Filter Rooms
+        // ---------- XỬ LÝ LỌC PHÒNG MƯỢT MÀ ----------
         window.filterRooms = function (type) {
-            currentFilter = type;
-            currentPage = 0;
+            if (currentFilter === type) return; // Không làm gì nếu đang ở tab hiện tại
 
-            // Update button styles
+            const container = document.getElementById('rooms-container');
+
+            // 1. Áp dụng style mờ dần (fade out)
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(10px)';
+
+            currentFilter = type;
+            currentPage = 1;
+
+            // Cập nhật trạng thái các nút bấm (cho to lên, có shadow)
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 const filterValue = btn.getAttribute('data-filter');
                 if (filterValue === type) {
-                    btn.className = 'filter-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-slate-900 text-white';
+                    btn.className = 'filter-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-slate-900 text-white shadow-lg shadow-slate-900/30 transform scale-105';
                 } else {
-                    btn.className = 'filter-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900';
+                    btn.className = 'filter-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:border-slate-900 hover:text-slate-900';
                 }
             });
 
-            // Filter rooms
-            if (type === 'All') {
-                filteredRooms = [...allRooms];
-            } else {
-                filteredRooms = allRooms.filter(room => room.type === type);
-            }
+            // 2. Chờ thời gian mờ hoàn tất rồi tiến hành render data
+            setTimeout(() => {
+                if (type === 'All') {
+                    filteredRooms = [...allRooms];
+                } else {
+                    filteredRooms = allRooms.filter(room => room.type === type);
+                }
 
-            renderRooms();
+                renderRooms();
+                renderPagination();
+
+                // 3. Hiện lại danh sách phòng (fade in container)
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 200); // Khớp với transition trong CSS
         };
 
-        // Render rooms
         function renderRooms() {
             const container = document.getElementById('rooms-container');
-            const start = currentPage * roomsPerPage;
+            const start = (currentPage - 1) * roomsPerPage;
             const paginatedRooms = filteredRooms.slice(start, start + roomsPerPage);
-            const hasMore = filteredRooms.length > start + roomsPerPage;
-
-            if (currentPage === 0) {
-                container.innerHTML = '';
-            }
 
             if (filteredRooms.length === 0) {
                 container.innerHTML = '<div class="col-span-3 text-center py-12"><p class="text-slate-500">Không tìm thấy phòng phù hợp</p></div>';
-                document.getElementById('load-more-container').innerHTML = '<button onclick="loadMoreRooms()" class="btn-secondary hidden">Xem thêm phòng</button>';
                 return;
             }
 
-            paginatedRooms.forEach(room => {
-                const roomHtml = `
-                    <div class="bg-white rounded-3xl overflow-hidden shadow-xl hover-lift group">
-                        <div class="h-64 relative overflow-hidden">
-                            <img src="${room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                            <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold">${room.type}</div>
-                            <div class="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full font-bold">${formatCurrency(room.price)}/đêm</div>
-                        </div>
-                        <div class="p-6">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-2xl font-bold text-slate-900">Phòng ${room.code}</h3>
-                                <div class="flex text-yellow-400"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-                            </div>
-                            <p class="text-slate-600 mb-4">${room.name}</p>
-                            <div class="flex items-center space-x-4 text-slate-500 mb-4">
-                                <span><i class="fa-regular fa-square mr-1"></i>${room.area}m²</span>
-                                <span><i class="fa-regular fa-user mr-1"></i>${room.capacity} người</span>
-                                <span><i class="fa-regular fa-bed mr-1"></i>${room.bedType || '1 giường King'}</span>
-                            </div>
-                            <button onclick="openBookingModal('${room.id}')" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition-all">Đặt ngay</button>
-                        </div>
+            // Gắn class animate-item kèm delay cho từng phòng
+            container.innerHTML = paginatedRooms.map((room, index) => `
+                <div class="animate-item bg-white rounded-3xl overflow-hidden shadow-xl hover-lift group" style="animation-delay: ${index * 0.08}s">
+                    <div class="h-64 relative overflow-hidden">
+                        <img src="${room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold">${room.type}</div>
+                        <div class="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full font-bold">${formatCurrency(room.price)}/đêm</div>
                     </div>
-                `;
-                container.insertAdjacentHTML('beforeend', roomHtml);
-            });
-
-            // Update load more button
-            const loadMoreContainer = document.getElementById('load-more-container');
-            if (hasMore) {
-                loadMoreContainer.innerHTML = '<button onclick="loadMoreRooms()" class="btn-secondary">Xem thêm phòng</button>';
-            } else {
-                loadMoreContainer.innerHTML = '<button onclick="loadMoreRooms()" class="btn-secondary hidden">Xem thêm phòng</button>';
-            }
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-2xl font-bold text-slate-900">Phòng ${room.code}</h3>
+                            <div class="flex text-yellow-400"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        </div>
+                        <p class="text-slate-600 mb-4">${room.name}</p>
+                        <div class="flex items-center space-x-4 text-slate-500 mb-4">
+                            <span><i class="fa-regular fa-square mr-1"></i>${room.area}m²</span>
+                            <span><i class="fa-regular fa-user mr-1"></i>${room.capacity} người</span>
+                            <span><i class="fa-regular fa-bed mr-1"></i>${room.bedType || '1 giường King'}</span>
+                        </div>
+                        <button onclick="openBookingModal('${room.id}')" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition-all">Đặt ngay</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        window.loadMoreRooms = function () {
-            currentPage++;
-            renderRooms();
+        // Render pagination buttons
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
+            const paginationContainer = document.getElementById('pagination-container');
+
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let paginationHtml = `
+                <button onclick="goToPage(${currentPage - 1})" class="page-btn ${currentPage === 1 ? 'disabled' : ''}" ${currentPage === 1 ? 'disabled' : ''}>
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            `;
+
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <button onclick="goToPage(${i})" class="page-btn ${i === currentPage ? 'active' : ''}">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            paginationHtml += `
+                <button onclick="goToPage(${currentPage + 1})" class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" ${currentPage === totalPages ? 'disabled' : ''}>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            `;
+
+            paginationContainer.innerHTML = paginationHtml;
+        }
+
+        window.goToPage = function (page) {
+            const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
+            if (page < 1 || page > totalPages || page === currentPage) return;
+
+            const container = document.getElementById('rooms-container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(10px)';
+
+            setTimeout(() => {
+                currentPage = page;
+                renderRooms();
+                renderPagination();
+
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+
+                // Cuộn mượt mà lên vị trí filter thay vì container để user nhìn rõ danh sách mới
+                document.getElementById('room-filters').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 200);
         };
 
         // Load rooms from Firebase
@@ -688,6 +804,7 @@
                 allRooms = roomsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 filteredRooms = [...allRooms];
                 renderRooms();
+                renderPagination();
             } catch (error) {
                 console.error('Error loading rooms:', error);
                 showToast('Lỗi tải dữ liệu phòng', 'error');
@@ -723,7 +840,6 @@
             document.getElementById('book-room-price').textContent = formatCurrency(room.price);
             document.getElementById('book-room-capacity').textContent = `${room.capacity} người`;
 
-            // Auto-fill if logged in
             if (currentUser) {
                 document.getElementById('guestName').value = currentUser.name || '';
                 document.getElementById('guestEmail').value = currentUser.email || '';
@@ -734,7 +850,6 @@
             document.getElementById('checkInDate').min = today;
             document.getElementById('checkOutDate').min = today;
 
-            // Load services list
             const servicesList = document.getElementById('booking-services-list');
             if (localServices.length === 0) {
                 servicesList.innerHTML = '<p class="text-slate-500 italic col-span-2">Chưa có dịch vụ nào</p>';
@@ -895,7 +1010,6 @@
             await loadRooms();
             await loadServices();
 
-            // Check for booking from URL
             const urlParams = new URLSearchParams(window.location.search);
             const bookId = urlParams.get('book');
             if (bookId) {
