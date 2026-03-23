@@ -32,6 +32,38 @@
             min-height: 100vh;
         }
 
+        /* ================= HIỆU ỨNG QUẢN LÝ PHÒNG ================= */
+        @keyframes slideUpFade {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .room-card-stagger {
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        /* Nút Quick Action ẩn hiện mượt mà */
+        .quick-actions-overlay {
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.4) 100%);
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            transform: translateY(100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .room-card-stagger:hover .quick-actions-overlay {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         /* ================= HIỆU ỨNG CHO QUẢN LÝ ĐẶT PHÒNG ================= */
         .glass-card-booking {
             background: rgba(255, 255, 255, 0.95);
@@ -1924,6 +1956,40 @@
         };
 
         // ==================== UTILITY FUNCTIONS ====================
+
+        // Thêm state cho bộ lọc phòng
+        store.roomFilterStatus = 'all';
+        store.roomSearchQuery = '';
+
+        // Hàm thay đổi bộ lọc trạng thái
+        window.setRoomFilter = function (status) {
+            store.roomFilterStatus = status;
+            window.navigateAdmin('rooms', true); // true để không đổi tab active
+        };
+
+        // Hàm tìm kiếm phòng
+        window.handleRoomSearch = function (event) {
+            store.roomSearchQuery = event.target.value.toLowerCase();
+            window.navigateAdmin('rooms', true);
+        };
+
+        // Hàm đổi trạng thái nhanh
+        window.quickUpdateRoomStatus = async function (roomId, newStatus, currentStatus) {
+            if (newStatus === currentStatus) return;
+
+            try {
+                window.showToast('Đang cập nhật...', 'info');
+                await updateDoc(doc(db, 'rooms', roomId), {
+                    status: newStatus,
+                    updatedAt: Timestamp.now()
+                });
+                window.showToast('Đã thay đổi trạng thái phòng!', 'success');
+                // Không cần gọi render lại vì onSnapshot đã lắng nghe sự thay đổi và tự render
+            } catch (error) {
+                window.showToast('Lỗi: ' + error.message, 'error');
+            }
+        };
+
         window.formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
         window.formatDate = (timestamp) => {
@@ -3023,52 +3089,147 @@
         }
 
         function renderRooms(container) {
+            // 1. Logic Lọc & Tìm kiếm
+            const query = store.roomSearchQuery || '';
+            const statusFilter = store.roomFilterStatus || 'all';
+
+            const filteredRooms = store.localRooms.filter(room => {
+                const matchSearch = (room.code || '').toLowerCase().includes(query) ||
+                    (room.name || '').toLowerCase().includes(query) ||
+                    (room.type || '').toLowerCase().includes(query);
+                const matchStatus = statusFilter === 'all' || room.status === statusFilter;
+                return matchSearch && matchStatus;
+            });
+
+            // 2. Render UI
             container.innerHTML = `
-                <div class="fade-in">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-slate-800">Quản lý phòng (${store.localRooms.length})</h3>
-                        <button onclick="window.openRoomModal()" class="btn-primary shadow-lg shadow-blue-500/30"><i class="fa-solid fa-plus mr-2"></i>Thêm phòng mới</button>
+        <div class="fade-in pb-12 max-w-[1600px] mx-auto">
+            
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl p-5 border border-slate-200 shadow-sm mb-8 sticky top-0 z-40 flex flex-col xl:flex-row gap-5 items-start xl:items-center justify-between">
+                <div>
+                    <h3 class="text-2xl font-playfair font-bold text-slate-800 flex items-center">
+                        Quản lý Phòng nghỉ
+                        <span class="ml-3 bg-blue-100 text-blue-600 text-sm font-sans px-3 py-1 rounded-full font-bold shadow-sm">
+                            ${filteredRooms.length} / ${store.localRooms.length}
+                        </span>
+                    </h3>
+                    <p class="text-sm text-slate-500 mt-1">Điều khiển trạng thái và thông tin các phòng trong hệ thống</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
+                    <div class="relative w-full sm:w-64 flex-shrink-0">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3 text-slate-400"></i>
+                        <input type="text" placeholder="Tìm tên, mã, loại..." value="${query}" oninput="window.handleRoomSearch(event)" 
+                            class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all">
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        ${store.localRooms.map(room => `
-                            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden hover-lift group flex flex-col h-full">
-                                <div class="h-48 relative overflow-hidden">
-                                    <img src="${room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1611892440504-42a792e24d32'">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-                                    <div class="absolute top-3 left-3">
-                                        <span class="px-2.5 py-1 rounded-md text-xs font-bold shadow-sm ${room.status === 'available' ? 'bg-emerald-500 text-white' : room.status === 'occupied' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-white'}">
-                                            ${room.status === 'available' ? 'Còn trống' : room.status === 'occupied' ? 'Đang ở' : 'Bảo trì'}
-                                        </span>
-                                    </div>
-                                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md text-xs font-bold text-slate-800 shadow-sm">${room.type}</div>
-                                    <div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
-                                        <h3 class="text-xl font-bold text-white tracking-wide">P.${room.code}</h3>
-                                        <p class="text-lg font-bold text-white font-mono">${window.formatCurrency(room.price)}<span class="text-xs font-normal text-slate-300">/đêm</span></p>
-                                    </div>
+
+                    <div class="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
+                        <button onclick="window.setRoomFilter('all')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${statusFilter === 'all' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}">Tất cả</button>
+                        <button onclick="window.setRoomFilter('available')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${statusFilter === 'available' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-emerald-600'}"><i class="fa-solid fa-check-circle mr-1"></i>Trống</button>
+                        <button onclick="window.setRoomFilter('occupied')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${statusFilter === 'occupied' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-blue-600'}"><i class="fa-solid fa-bed mr-1"></i>Đang ở</button>
+                        <button onclick="window.setRoomFilter('maintenance')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${statusFilter === 'maintenance' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-500 hover:text-amber-600'}"><i class="fa-solid fa-wrench mr-1"></i>Bảo trì</button>
+                    </div>
+
+                    <button onclick="window.openRoomModal()" class="btn-primary rounded-xl px-5 py-2.5 shadow-lg shadow-blue-500/30 flex-shrink-0 whitespace-nowrap">
+                        <i class="fa-solid fa-plus mr-2"></i>Thêm phòng
+                    </button>
+                </div>
+            </div>
+
+            ${filteredRooms.length > 0 ? `
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                ${filteredRooms.map((room, index) => {
+
+                // Cấu hình UI theo trạng thái
+                let st = { bg: 'bg-emerald-500', text: 'text-emerald-600', bgLight: 'bg-emerald-50', label: 'CÒN TRỐNG', ping: 'bg-emerald-400' };
+                if (room.status === 'occupied') st = { bg: 'bg-blue-500', text: 'text-blue-600', bgLight: 'bg-blue-50', label: 'ĐANG Ở', ping: 'bg-blue-400' };
+                if (room.status === 'maintenance') st = { bg: 'bg-amber-500', text: 'text-amber-600', bgLight: 'bg-amber-50', label: 'BẢO TRÌ', ping: 'bg-amber-400' };
+
+                return `
+                    <div class="room-card-stagger bg-white rounded-3xl border border-slate-200 relative group overflow-hidden" style="animation-delay: ${index * 0.05}s">
+                        
+                        <div class="h-56 relative overflow-hidden bg-slate-100">
+                            <img src="${room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1611892440504-42a792e24d32'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent"></div>
+                            
+                            <div class="absolute top-4 left-4 flex items-center bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+                                <span class="relative flex h-2.5 w-2.5 mr-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${st.ping} opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 ${st.bg}"></span>
+                                </span>
+                                <span class="text-[10px] font-extrabold ${st.text} tracking-wider">${st.label}</span>
+                            </div>
+
+                            <div class="absolute top-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20">
+                                <span class="text-xs font-bold text-white tracking-wide">${room.type}</span>
+                            </div>
+
+                            <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                                <div>
+                                    <p class="text-white/70 text-xs font-medium mb-1 uppercase tracking-widest">Phòng</p>
+                                    <h3 class="text-3xl font-playfair font-bold text-white leading-none shadow-sm">${room.code}</h3>
                                 </div>
-                                <div class="p-5 flex-1 flex flex-col">
-                                    <p class="text-slate-600 text-sm mb-3 line-clamp-2 flex-1">${room.name}</p>
-                                    
-                                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-500 mb-4 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                        <div class="flex items-center"><i class="fa-solid fa-users w-4 text-center text-slate-400 mr-1"></i> ${room.capacity} người</div>
-                                        <div class="flex items-center"><i class="fa-solid fa-maximize w-4 text-center text-slate-400 mr-1"></i> ${room.area}m²</div>
-                                        <div class="flex items-center"><i class="fa-solid fa-bed w-4 text-center text-slate-400 mr-1"></i> ${room.bedType || 'King'}</div>
-                                        <div class="flex items-center"><i class="fa-solid fa-building w-4 text-center text-slate-400 mr-1"></i> Tầng ${room.floor || 1}</div>
-                                    </div>
-                                    
-                                    <div class="flex justify-between items-center pt-3 border-t border-slate-100">
-                                        <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded-md">${room.bookingsCount || 0} lượt đặt</span>
-                                        <div class="flex space-x-1">
-                                            <button onclick="window.openRoomModal('${room.id}')" class="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Sửa"><i class="fa-solid fa-pen-to-square w-4 h-4 flex items-center justify-center"></i></button>
-                                            <button onclick="window.deleteRoom('${room.id}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Xóa"><i class="fa-solid fa-trash w-4 h-4 flex items-center justify-center"></i></button>
-                                        </div>
-                                    </div>
+                                <div class="text-right">
+                                    <p class="text-2xl font-bold text-white font-mono leading-none">${window.formatCurrency(room.price).replace('₫', '')}<span class="text-sm font-normal text-white/70 ml-1">đ/đêm</span></p>
                                 </div>
                             </div>
-                        `).join('')}
+
+                            <div class="quick-actions-overlay absolute inset-0 flex flex-col items-center justify-center gap-3">
+                                <p class="text-white text-xs font-bold tracking-widest mb-2">ĐỔI TRẠNG THÁI NHANH</p>
+                                <div class="flex gap-2">
+                                    <button onclick="window.quickUpdateRoomStatus('${room.id}', 'available', '${room.status}')" class="w-10 h-10 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110" title="Đổi sang: Trống">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                    <button onclick="window.quickUpdateRoomStatus('${room.id}', 'occupied', '${room.status}')" class="w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110" title="Đổi sang: Đang ở">
+                                        <i class="fa-solid fa-bed"></i>
+                                    </button>
+                                    <button onclick="window.quickUpdateRoomStatus('${room.id}', 'maintenance', '${room.status}')" class="w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-400 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110" title="Đổi sang: Bảo trì">
+                                        <i class="fa-solid fa-wrench"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-5">
+                            <p class="text-slate-800 font-semibold text-sm mb-4 line-clamp-2 h-10">${room.name}</p>
+                            
+                            <div class="flex flex-wrap gap-2 text-xs text-slate-500 mb-5">
+                                <span class="bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-lg flex items-center"><i class="fa-solid fa-user-group w-4 text-blue-400"></i> ${room.capacity} KH</span>
+                                <span class="bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-lg flex items-center"><i class="fa-solid fa-maximize w-4 text-emerald-400"></i> ${room.area}m²</span>
+                                <span class="bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-lg flex items-center"><i class="fa-solid fa-bed w-4 text-purple-400"></i> ${room.bedType || 'King'}</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center pt-4 border-t border-slate-100 border-dashed">
+                                <div class="flex items-center text-slate-400 text-xs font-medium">
+                                    <i class="fa-solid fa-chart-line mr-1.5"></i> Đã đặt: <span class="text-slate-700 font-bold ml-1">${room.bookingsCount || 0}</span>
+                                </div>
+                                <div class="flex space-x-1">
+                                    <button onclick="window.openRoomModal('${room.id}')" class="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-50 hover:border-blue-200 border border-transparent rounded-lg transition-all" title="Chỉnh sửa chi tiết">
+                                        <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                    </button>
+                                    <button onclick="window.deleteRoom('${room.id}')" class="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 hover:border-red-200 border border-transparent rounded-lg transition-all" title="Xóa phòng">
+                                        <i class="fa-solid fa-trash text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                `}).join('')}
+            </div>
+            ` : `
+            <div class="bg-white rounded-3xl border border-dashed border-slate-300 p-20 text-center shadow-sm">
+                <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+                    <i class="fa-solid fa-door-open text-4xl"></i>
                 </div>
-            `;
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Không tìm thấy phòng nào!</h3>
+                <p class="text-slate-500 text-sm mb-6 max-w-md mx-auto">Chưa có phòng nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại của bạn.</p>
+                <button onclick="window.setRoomFilter('all'); document.querySelector('input[placeholder^=\\'Tìm tên\\']').value=''; window.handleRoomSearch({target:{value:''}});" class="btn-secondary rounded-xl">
+                    Xóa bộ lọc & Tải lại
+                </button>
+            </div>
+            `}
+        </div>
+    `;
         }
 
         function renderServices(container) {
