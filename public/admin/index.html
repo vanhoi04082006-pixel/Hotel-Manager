@@ -32,6 +32,182 @@
             min-height: 100vh;
         }
 
+        /* ================= HIỆU ỨNG NEON, GLOW & ANIMATION MỚI ================= */
+        .ultra-glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 40px -10px rgba(31, 38, 135, 0.1);
+        }
+
+        /* Viền Gradient chuyển động */
+        .animated-gradient-border {
+            position: relative;
+            border-radius: 24px;
+            background: white;
+            background-clip: padding-box;
+            border: 2px solid transparent;
+        }
+
+        .animated-gradient-border::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: -1;
+            margin: -2px;
+            border-radius: inherit;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+            background-size: 300% 300%;
+            animation: gradient-border-spin 4s linear infinite;
+        }
+
+        @keyframes gradient-border-spin {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Hiệu ứng Phát sáng (Glow) khi Hover */
+        .glow-hover {
+            transition: all 0.3s ease;
+        }
+
+        .glow-hover:hover {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.8);
+            transform: translateY(-3px);
+        }
+
+        /* Custom Scrollbar cho các khu vực nhỏ */
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* List Checkbox Task */
+        .task-item {
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover {
+            background: #f8fafc;
+            transform: translateX(5px);
+        }
+
+        .task-checkbox:checked+div {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        .task-checkbox:checked~.task-status {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        /* ================= HIỆU ỨNG 3D & GLASS ĐỈNH CAO ================= */
+        .glass-premium {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+        }
+
+        .card-3d-float {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 20px 20px 60px #e2e8f0, -20px -20px 60px #ffffff;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .card-3d-float:hover {
+            transform: translateY(-10px) scale(1.02) rotateX(2deg) rotateY(-2deg);
+            box-shadow: 25px 25px 75px #cbd5e1, -25px -25px 75px #ffffff;
+        }
+
+        .room-cube {
+            box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.7), inset -3px -3px 7px rgba(0, 0, 0, 0.1), 3px 3px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .room-cube:hover {
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.9), inset -3px -3px 7px rgba(0, 0, 0, 0.05), 5px 10px 15px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .room-cube.occupied {
+            background: linear-gradient(145deg, #3b82f6, #2563eb);
+            box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.3), inset -3px -3px 7px rgba(0, 0, 0, 0.2), 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+            color: white;
+        }
+
+        .room-cube.available {
+            background: linear-gradient(145deg, #ffffff, #f1f5f9);
+        }
+
+        .room-cube.maintenance {
+            background: linear-gradient(145deg, #fef3c7, #fde68a);
+            box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.5), inset -3px -3px 7px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(245, 158, 11, 0.2);
+            color: #b45309;
+        }
+
+        .chart-container-3d {
+            position: relative;
+            border-radius: 24px;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            box-shadow: inset 5px 5px 10px #e2e8f0, inset -5px -5px 10px #ffffff;
+            padding: 20px;
+        }
+
+        .feed-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .feed-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        @keyframes float-gentle {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .animate-float {
+            animation: float-gentle 4s ease-in-out infinite;
+        }
+
         @media print {
 
             /* 1. Ép tất cả các thẻ bao ngoài phải có chiều cao tự động và hiển thị hết nội dung */
@@ -1951,68 +2127,138 @@
         };
 
         window.initDashboardChartsEnhanced = function (roomRev, serviceRev) {
-            // 1. Chart Doanh thu hỗn hợp
-            const busCtx = document.getElementById('businessChart')?.getContext('2d');
-            if (busCtx) {
-                new Chart(busCtx, {
-                    type: 'line',
+            // Xoá các instance cũ nếu có để tránh lỗi hover nháy biểu đồ
+            if (window.mainChartInst) window.mainChartInst.destroy();
+            if (window.radarChartInst) window.radarChartInst.destroy();
+
+            // 1. BIỂU ĐỒ BAR + LINE KẾT HỢP (Main Chart)
+            const mainCtx = document.getElementById('mainRevenueChart')?.getContext('2d');
+            if (mainCtx) {
+                // Tạo Gradients
+                const gradientBlue = mainCtx.createLinearGradient(0, 0, 0, 400);
+                gradientBlue.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+                gradientBlue.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+
+                const gradientPurple = mainCtx.createLinearGradient(0, 0, 0, 400);
+                gradientPurple.addColorStop(0, 'rgba(139, 92, 246, 0.9)');
+                gradientPurple.addColorStop(1, 'rgba(139, 92, 246, 0.2)');
+
+                window.mainChartInst = new Chart(mainCtx, {
+                    type: 'bar',
                     data: {
                         labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'],
                         datasets: [
                             {
-                                label: 'Phòng',
-                                data: [15, 22, 18, 25, 38, 45, 40].map(v => v * 100000),
-                                borderColor: '#2563eb',
-                                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                                fill: true,
-                                tension: 0.4,
+                                type: 'line',
+                                label: 'Lợi nhuận gộp',
+                                data: [20, 30, 25, 40, 55, 65, 60].map(v => v * 80000),
+                                borderColor: '#10b981',
+                                backgroundColor: '#10b981',
                                 borderWidth: 3,
-                                pointRadius: 0
+                                tension: 0.4,
+                                pointBackgroundColor: '#fff',
+                                pointBorderColor: '#10b981',
+                                pointBorderWidth: 2,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
                             },
                             {
-                                label: 'Dịch vụ',
+                                type: 'bar',
+                                label: 'Tiền Phòng',
+                                data: [15, 22, 18, 25, 38, 45, 40].map(v => v * 100000),
+                                backgroundColor: gradientBlue,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                barPercentage: 0.6
+                            },
+                            {
+                                type: 'bar',
+                                label: 'Dịch vụ thêm',
                                 data: [5, 8, 7, 12, 15, 20, 18].map(v => v * 100000),
-                                borderColor: '#7c3aed',
-                                backgroundColor: 'transparent',
-                                fill: false,
-                                tension: 0.4,
-                                borderWidth: 2,
-                                borderDash: [5, 5],
-                                pointRadius: 0
+                                backgroundColor: gradientPurple,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                barPercentage: 0.6
                             }
                         ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true, font: { size: 11, weight: 'bold' } } } },
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: { family: "'Inter', sans-serif", weight: '600' } } },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleFont: { size: 14, family: "'Inter', sans-serif" },
+                                bodyFont: { size: 13, family: "'Inter', sans-serif" },
+                                padding: 12,
+                                cornerRadius: 12,
+                                callbacks: { label: function (context) { return context.dataset.label + ': ' + window.formatCurrency(context.raw); } }
+                            }
+                        },
                         scales: {
-                            y: { grid: { borderDash: [5, 5] }, ticks: { callback: v => v / 1000000 + 'M' } },
-                            x: { grid: { display: false } }
+                            y: {
+                                stacked: true,
+                                grid: { color: 'rgba(226, 232, 240, 0.6)', borderDash: [5, 5] },
+                                ticks: { font: { family: "'Inter', sans-serif" }, callback: v => (v / 1000000) + 'M' },
+                                border: { display: false }
+                            },
+                            x: {
+                                stacked: true,
+                                grid: { display: false },
+                                ticks: { font: { family: "'Inter', sans-serif", weight: '500' } },
+                                border: { display: false }
+                            }
                         }
                     }
                 });
             }
 
-            // 2. Chart Tròn cơ cấu
-            const pieCtx = document.getElementById('revenuePieChart')?.getContext('2d');
-            if (pieCtx) {
-                new Chart(pieCtx, {
-                    type: 'doughnut',
+            // 2. BIỂU ĐỒ RADAR (Đánh giá mức độ sử dụng dịch vụ)
+            const radarCtx = document.getElementById('serviceRadarChart')?.getContext('2d');
+            if (radarCtx) {
+                window.radarChartInst = new Chart(radarCtx, {
+                    type: 'radar',
                     data: {
-                        labels: ['Tiền phòng', 'Tiền dịch vụ'],
+                        labels: ['Nhà hàng', 'Spa & Massage', 'Đưa đón SB', 'Giặt ủi', 'Mini Bar', 'Phòng Gym'],
                         datasets: [{
-                            data: [roomRev || 70, serviceRev || 30],
-                            backgroundColor: ['#2563eb', '#7c3aed'],
-                            borderWidth: 0,
-                            hoverOffset: 15
+                            label: 'Tháng này',
+                            data: [85, 65, 40, 70, 90, 35],
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: '#3b82f6',
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#3b82f6',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#3b82f6',
+                            borderWidth: 2,
+                        }, {
+                            label: 'Tháng trước',
+                            data: [75, 50, 45, 60, 80, 30],
+                            backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                            borderColor: '#a855f7',
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#a855f7',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#a855f7',
+                            borderWidth: 2,
+                            borderDash: [5, 5]
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '75%',
-                        plugins: { legend: { display: false } }
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(226, 232, 240, 0.8)' },
+                                grid: { color: 'rgba(226, 232, 240, 0.8)' },
+                                pointLabels: { font: { size: 11, family: "'Inter', sans-serif", weight: '600' }, color: '#475569' },
+                                ticks: { display: false, min: 0, max: 100 }
+                            }
+                        },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 11 } } }
+                        }
                     }
                 });
             }
@@ -2058,189 +2304,278 @@
         // ==================== COMPONENT RENDERS ====================
 
         function renderDashboard(container) {
-            // 1. SỬA LỖI MÚI GIỜ: Lấy ngày hôm nay chuẩn theo giờ Việt Nam (Local Time)
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const todayStr = `${year}-${month}-${day}`; // Format chuẩn: YYYY-MM-DD
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-            // 2. LẤY DANH SÁCH PHÒNG THỰC SỰ ĐANG CÓ KHÁCH HÔM NAY
-            // Điều kiện: Đơn không bị hủy VÀ ngày hôm nay nằm trong khoảng Check-in & Check-out
-            const activeBookingsToday = store.localBookings.filter(b =>
-                b.status !== 'cancelled' &&
-                b.checkIn <= todayStr &&
-                todayStr < b.checkOut
-            );
+            // --- XỬ LÝ DỮ LIỆU ---
+            const activeBookingsToday = store.localBookings.filter(b => b.status !== 'cancelled' && b.checkIn <= todayStr && todayStr < b.checkOut);
             const occupiedRoomIds = activeBookingsToday.map(b => b.roomId);
+            const arrivalsToday = store.localBookings.filter(b => b.checkIn === todayStr).length;
 
-            // 3. TÍNH TOÁN HIỆN TRẠNG PHÒNG ĐỘNG THỜI GIAN THỰC
             const totalRooms = store.localRooms.length;
             const maintenanceRooms = store.localRooms.filter(r => r.status === 'maintenance').length;
 
             let occupiedRooms = 0;
             store.localRooms.forEach(r => {
-                // Phòng "Đang ở" = Nằm trong danh sách Đơn đặt phòng hôm nay HOẶC bị Admin khoá cứng thủ công thành 'occupied'
                 if (r.status !== 'maintenance' && (r.status === 'occupied' || occupiedRoomIds.includes(r.id))) {
                     occupiedRooms++;
                 }
             });
             const availableRooms = totalRooms - occupiedRooms - maintenanceRooms;
 
-            // 4. DOANH THU & KPI
             const confirmedBookings = store.localBookings.filter(b => b.status === 'completed' || b.status === 'confirmed');
             const totalRevenue = confirmedBookings.reduce((s, b) => s + (b.finalPaidAmount || b.totalPrice || 0), 0);
-
             const occupancyRate = totalRooms > 0 ? ((occupiedRooms / totalRooms) * 100).toFixed(1) : 0;
-            const adr = occupiedRooms > 0 ? (totalRevenue / confirmedBookings.length) : 0;
-            const revpar = totalRooms > 0 ? (totalRevenue / totalRooms) : 0;
 
-            // 5. HOẠT ĐỘNG HÔM NAY (Tính cả đơn pending để Lễ tân biết mà chuẩn bị đón khách)
-            const arrivalsToday = store.localBookings.filter(b => b.checkIn === todayStr && b.status !== 'cancelled').length;
-            const departuresToday = store.localBookings.filter(b => b.checkOut === todayStr && b.status !== 'cancelled').length;
+            const recentLogs = [...store.localLogs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 7);
+            const recentReviews = [...store.localReviews].sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
 
+            // --- GIAO DIỆN HTML ---
             container.innerHTML = `
-            <div class="hidden print:block mb-8 border-b-2 border-slate-900 pb-4">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <h1 class="text-2xl font-bold text-slate-900">LUNA HOTEL & RESORT</h1>
-                        <p class="text-sm text-slate-500">Hệ thống quản trị thông minh Luna Admin</p>
-                    </div>
-                    <div class="text-right text-xs text-slate-500">
-                        <p>Người xuất: ${store.currentUser?.email || 'Admin'}</p>
-                        <p>Ngày lập: ${new Date().toLocaleString('vi-VN')}</p>
+    <div class="fade-in space-y-6 pb-12">
+        <div class="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-8 shadow-2xl">
+            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542314831-c6a4d27ce66b?q=80&w=1200')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/40"></div>
+            
+            <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <h2 class="text-3xl font-playfair font-bold mb-2">Chào mừng trở lại, ${store.currentUserData?.name || 'Quản lý Luna'}! ✨</h2>
+                    <p class="text-blue-200">Hệ thống đang hoạt động tối ưu. Hôm nay có <strong class="text-white">${arrivalsToday}</strong> khách dự kiến check-in.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.navigateAdmin('bookings')" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md font-bold transition-all shadow-lg flex items-center">
+                        <i class="fa-solid fa-calendar-plus mr-2 text-blue-300"></i> Đặt phòng mới
+                    </button>
+                    <button class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 font-bold transition-all shadow-lg glow-hover flex items-center">
+                        <i class="fa-solid fa-bolt mr-2 text-yellow-300"></i> Xử lý nhanh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="ultra-glass rounded-3xl p-6 glow-hover animated-gradient-border">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600"><i class="fa-solid fa-wallet text-xl"></i></div>
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-md">+15.2%</span>
+                </div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Tổng doanh thu</p>
+                <p class="text-2xl font-bold text-slate-800 mt-1 font-mono">${window.formatCurrency(totalRevenue)}</p>
+            </div>
+
+            <div class="ultra-glass rounded-3xl p-6 glow-hover relative overflow-hidden border border-slate-200">
+                <div class="absolute right-[-20px] top-[-20px] opacity-10 text-purple-600"><i class="fa-solid fa-bed text-8xl"></i></div>
+                <div class="flex justify-between items-start mb-2">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600"><i class="fa-solid fa-chart-simple text-xl"></i></div>
+                </div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Công suất phòng</p>
+                <div class="flex items-end mt-1">
+                    <p class="text-2xl font-bold text-slate-800 font-mono">${occupancyRate}%</p>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden ml-3 mb-2">
+                        <div class="bg-purple-500 h-full rounded-full" style="width: ${occupancyRate}%"></div>
                     </div>
                 </div>
             </div>
-            <div class="fade-in space-y-6 pb-10">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+            <div class="ultra-glass rounded-3xl p-6 glow-hover border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600"><i class="fa-solid fa-bell-concierge text-xl"></i></div>
+                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">HÔM NAY</span>
+                </div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Hoạt động lễ tân</p>
+                <div class="flex gap-4 mt-1">
+                    <div><span class="text-2xl font-bold text-slate-800">${arrivalsToday}</span> <span class="text-xs text-slate-500">In</span></div>
+                    <div class="w-px bg-slate-200"></div>
+                    <div><span class="text-2xl font-bold text-slate-800">${store.localBookings.filter(b => b.checkOut === todayStr).length}</span> <span class="text-xs text-slate-500">Out</span></div>
+                </div>
+            </div>
+
+            <div class="ultra-glass rounded-3xl p-6 glow-hover border border-slate-200 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white"><i class="fa-solid fa-broom text-xl"></i></div>
+                    <span class="text-[10px] font-bold text-red-300 bg-red-900/50 px-2 py-1 rounded-md border border-red-500/30">CẦN XỬ LÝ</span>
+                </div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Dọn dẹp & Bảo trì</p>
+                <p class="text-2xl font-bold text-white mt-1 font-mono">${maintenanceRooms} <span class="text-sm font-normal text-slate-300">phòng</span></p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 ultra-glass rounded-3xl p-6 relative shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="text-3xl font-playfair font-bold text-slate-900 leading-tight">Luna <span class="text-gradient">Command Center</span></h2>
-                        <div class="flex items-center text-slate-500 text-sm mt-1">
-                            <span class="flex items-center"><i class="fa-solid fa-circle text-[8px] text-green-500 mr-2 animate-pulse"></i> Hệ thống đang trực tuyến</span>
-                            <span class="mx-3 text-slate-300">|</span>
-                            <span>${new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">Hiệu suất tài chính</h3>
+                        <p class="text-xs text-slate-500 mt-1">Phân tích tiền phòng & dịch vụ</p>
                     </div>
-                    <div class="flex space-x-3">
-                        <button onclick="window.navigateAdmin('bookings')" class="btn-secondary text-sm border-dashed"><i class="fa-solid fa-plus mr-2"></i>Đặt tại quầy</button>
-                        <button onclick="window.printDashboard()" class="btn-primary text-sm shadow-lg shadow-blue-500/20"><i class="fa-solid fa-print mr-2"></i>In báo cáo nhanh</button>
-                    </div>
+                    <button class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"><i class="fa-solid fa-download mr-1"></i> Báo cáo</button>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="glass-card rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-blue-400 transition-colors">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600"><i class="fa-solid fa-sack-dollar text-xl"></i></div>
-                            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">REVPAR: ${window.formatCurrency(revpar)}</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tổng doanh thu</p>
-                        <p class="text-2xl font-bold text-slate-800 mt-1 font-mono">${window.formatCurrency(totalRevenue)}</p>
-                    </div>
-
-                    <div class="glass-card rounded-3xl p-6 border border-slate-200 shadow-sm">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600"><i class="fa-solid fa-bed text-xl"></i></div>
-                            <div class="text-right">
-                                <p class="text-[10px] font-bold text-purple-600 uppercase">Công suất</p>
-                                <p class="text-lg font-bold text-slate-800">${occupancyRate}%</p>
-                            </div>
-                        </div>
-                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex">
-                            <div class="bg-purple-500 h-full" style="width: ${occupancyRate}%"></div>
-                        </div>
-                        <p class="text-[11px] text-slate-500 mt-3"><span class="font-bold text-slate-700">${occupiedRooms}</span> phòng đang có khách lưu trú</p>
-                    </div>
-
-                    <div class="glass-card rounded-3xl p-6 border border-slate-200 shadow-sm">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600"><i class="fa-solid fa-users-viewfinder text-xl"></i></div>
-                            <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full">ADR: ${window.formatCurrency(adr)}</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Khách hàng</p>
-                        <p class="text-2xl font-bold text-slate-800 mt-1 font-mono">${store.localUsers.length}</p>
-                        <p class="text-[11px] text-slate-500 mt-4"><i class="fa-solid fa-user-check text-emerald-500 mr-1"></i> ${store.localUsers.filter(u => u.role === 'vip').length} khách hàng hạng VIP</p>
-                    </div>
-
-                    <div class="glass-card rounded-3xl p-6 border border-slate-200 shadow-sm bg-blue-600 text-white">
-                        <p class="text-xs font-bold text-blue-100 uppercase tracking-widest">Hoạt động hôm nay</p>
-                        <div class="mt-4 grid grid-cols-2 gap-4 border-b border-white/10 pb-4">
-                            <div>
-                                <p class="text-2xl font-bold">${arrivalsToday}</p>
-                                <p class="text-[10px] text-blue-100 uppercase font-medium">Check-in</p>
-                            </div>
-                            <div>
-                                <p class="text-2xl font-bold">${departuresToday}</p>
-                                <p class="text-[10px] text-blue-100 uppercase font-medium">Check-out</p>
-                            </div>
-                        </div>
-                        <p class="text-[11px] text-blue-100 mt-4 flex items-center">
-                            <i class="fa-solid fa-broom mr-2"></i> ${maintenanceRooms} phòng đang cần dọn dẹp
-                        </p>
-                    </div>
+                <div class="h-80 w-full relative z-10">
+                    <canvas id="mainRevenueChart"></canvas>
                 </div>
+            </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 glass-card rounded-3xl p-6 border border-slate-200 shadow-sm">
-                        <div class="flex justify-between items-center mb-6">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-800">Biểu đồ tăng trưởng</h3>
-                                <p class="text-xs text-slate-500">Phân tích doanh thu & Lượt đặt phòng</p>
-                            </div>
-                            <select class="bg-slate-50 border-none text-xs font-bold rounded-lg px-3 py-1 outline-none">
-                                <option>7 ngày gần nhất</option>
-                                <option>30 ngày gần nhất</option>
-                            </select>
-                        </div>
-                        <div class="h-80 w-full">
-                            <canvas id="businessChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="lg:col-span-1 glass-card rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col">
-                        <h3 class="text-sm font-bold text-slate-800 mb-6 uppercase tracking-widest flex items-center">
-                            <i class="fa-solid fa-map-location-dot mr-2 text-blue-500"></i> Hiện trạng phòng
-                        </h3>
-                        <div class="grid grid-cols-5 gap-2 overflow-y-auto max-h-[320px] pr-2">
-                            ${store.localRooms.map(r => {
-                // Xác định trạng thái hiển thị động của từng ô vuông
+            <div class="lg:col-span-1 ultra-glass rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-cubes text-blue-500 mr-2"></i>Sơ đồ vật lý 3D</h3>
+                </div>
+                <div class="grid grid-cols-5 gap-2.5 overflow-y-auto max-h-[320px] custom-scroll pr-2 pb-2">
+                    ${store.localRooms.map(r => {
                 const isActuallyOccupied = r.status !== 'maintenance' && (r.status === 'occupied' || occupiedRoomIds.includes(r.id));
                 const displayStatus = r.status === 'maintenance' ? 'maintenance' : (isActuallyOccupied ? 'occupied' : 'available');
 
                 return `
-                                <div class="aspect-square rounded-lg flex items-center justify-center text-[10px] font-bold border transition-all cursor-pointer relative group
-                                    ${displayStatus === 'available' ? 'bg-white border-slate-200 text-slate-400 hover:border-emerald-500 hover:text-emerald-500' :
-                        displayStatus === 'occupied' ? 'bg-blue-600 border-blue-600 text-white' :
-                            'bg-amber-100 border-amber-200 text-amber-700'}">
-                                    ${r.code}
-                                    <div class="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
-                                        ${r.name}<br>Giá: ${window.formatCurrency(r.price)}
+                        <div onclick="window.navigateAdmin('rooms')" class="aspect-square rounded-xl flex items-center justify-center text-xs font-bold font-mono cursor-pointer room-cube ${displayStatus} relative group border border-slate-200/50 hover:border-white">
+                            ${r.code}
+                            <div class="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2.5 py-1.5 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-50">
+                                ${r.name}<br><span class="text-blue-300">${window.formatCurrency(r.price)}</span>
+                            </div>
+                        </div>`;
+            }).join('')}
+                </div>
+                <div class="mt-auto pt-4 border-t border-slate-100 flex justify-between px-2">
+                    <div class="text-center"><div class="w-3 h-3 rounded bg-blue-600 mx-auto mb-1 shadow-inner"></div><span class="text-[10px] text-slate-500 font-bold">ĐANG Ở</span></div>
+                    <div class="text-center"><div class="w-3 h-3 rounded bg-white border border-slate-300 mx-auto mb-1 shadow-inner"></div><span class="text-[10px] text-slate-500 font-bold">TRỐNG</span></div>
+                    <div class="text-center"><div class="w-3 h-3 rounded bg-amber-300 mx-auto mb-1 shadow-inner"></div><span class="text-[10px] text-slate-500 font-bold">BẢO TRÌ</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="ultra-glass rounded-3xl p-6 shadow-sm border border-slate-200">
+                <h3 class="text-base font-bold text-slate-800 mb-4"><i class="fa-solid fa-bolt text-yellow-500 mr-2"></i>Thao tác nhanh</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="window.navigateAdmin('bookings')" class="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all group">
+                        <i class="fa-solid fa-key text-2xl text-slate-400 group-hover:text-blue-500 mb-2 transition-colors"></i>
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-blue-600">Check-in</span>
+                    </button>
+                    <button onclick="window.navigateAdmin('invoices')" class="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition-all group">
+                        <i class="fa-solid fa-file-invoice-dollar text-2xl text-slate-400 group-hover:text-purple-500 mb-2 transition-colors"></i>
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-purple-600">Xuất hóa đơn</span>
+                    </button>
+                    <button onclick="window.navigateAdmin('customers')" class="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 transition-all group">
+                        <i class="fa-solid fa-id-card text-2xl text-slate-400 group-hover:text-emerald-500 mb-2 transition-colors"></i>
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-emerald-600">Scan CCCD</span>
+                    </button>
+                    <button onclick="window.navigateAdmin('promotions')" class="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-pink-50 hover:border-pink-200 hover:text-pink-600 transition-all group">
+                        <i class="fa-solid fa-ticket text-2xl text-slate-400 group-hover:text-pink-500 mb-2 transition-colors"></i>
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-pink-600">Tạo mã KM</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="ultra-glass rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-clipboard-list text-indigo-500 mr-2"></i>Công việc bộ phận</h3>
+                    <span class="bg-indigo-100 text-indigo-600 text-[10px] px-2 py-0.5 rounded font-bold">3 VIỆC</span>
+                </div>
+                <div class="flex-1 space-y-3 custom-scroll overflow-y-auto max-h-[220px]">
+                    <label class="flex items-start p-3 border border-slate-100 rounded-xl cursor-pointer task-item bg-white">
+                        <input type="checkbox" class="task-checkbox mt-1 border-slate-300 rounded text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4">
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-bold text-slate-700">Dọn phòng P201 (Check-out)</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>Ưu tiên cao • Buồng phòng</p>
+                        </div>
+                        <span class="task-status text-[10px] px-2 py-1 rounded bg-amber-100 text-amber-700 font-bold ml-2">CHỜ</span>
+                    </label>
+                    <label class="flex items-start p-3 border border-slate-100 rounded-xl cursor-pointer task-item bg-white">
+                        <input type="checkbox" class="task-checkbox mt-1 border-slate-300 rounded text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4">
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-bold text-slate-700">Kiểm tra điều hòa P105</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>Trước 14:00 • Bảo trì</p>
+                        </div>
+                        <span class="task-status text-[10px] px-2 py-1 rounded bg-amber-100 text-amber-700 font-bold ml-2">CHỜ</span>
+                    </label>
+                    <label class="flex items-start p-3 border border-slate-100 rounded-xl cursor-pointer task-item bg-white">
+                        <input type="checkbox" class="task-checkbox mt-1 border-slate-300 rounded text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4">
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-bold text-slate-700">Setup trái cây phòng VIP</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>Khách đến lúc 15:00 • F&B</p>
+                        </div>
+                        <span class="task-status text-[10px] px-2 py-1 rounded bg-amber-100 text-amber-700 font-bold ml-2">CHỜ</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="ultra-glass rounded-3xl p-6 shadow-sm border border-slate-200">
+                <h3 class="text-base font-bold text-slate-800 mb-1">Mức độ quan tâm dịch vụ</h3>
+                <p class="text-xs text-slate-500 mb-2">Thống kê từ hành vi khách hàng</p>
+                <div class="h-48 relative">
+                    <canvas id="serviceRadarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="ultra-glass rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
+                <div class="flex justify-between items-center mb-5">
+                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-star text-amber-400 mr-2"></i>Đánh giá mới nhất</h3>
+                    <button onclick="window.navigateAdmin('reviews')" class="text-xs text-blue-600 font-bold hover:underline">Xem tất cả</button>
+                </div>
+                <div class="space-y-4 custom-scroll overflow-y-auto max-h-[300px]">
+                    ${recentReviews.length > 0 ? recentReviews.map(r => `
+                        <div class="p-4 bg-white rounded-2xl border border-slate-100 hover:shadow-md transition-all">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-full bg-slate-200 flex justify-center items-center font-bold text-slate-600 text-xs">${(r.userName || 'K').charAt(0)}</div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-800">${r.anonymous ? 'Ẩn danh' : r.userName}</p>
+                                        <div class="flex text-amber-400 text-[10px] mt-0.5">
+                                            ${Array(5).fill(0).map((_, i) => `<i class="fa-solid fa-star ${i < (r.rating || 5) ? '' : 'text-slate-200'}"></i>`).join('')}
+                                        </div>
                                     </div>
                                 </div>
-                                `;
-            }).join('')}
+                                <span class="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100">Phòng ${r.roomCode}</span>
+                            </div>
+                            <p class="text-sm text-slate-600 line-clamp-2 italic">"${r.content}"</p>
                         </div>
-                        <div class="mt-auto pt-6 grid grid-cols-2 gap-3">
-                             <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
-                                <p class="text-xl font-bold text-emerald-600">${availableRooms}</p>
-                                <p class="text-[9px] font-bold text-emerald-500 uppercase">Sẵn sàng</p>
-                             </div>
-                             <div class="p-3 bg-blue-50 rounded-2xl border border-blue-100 text-center">
-                                <p class="text-xl font-bold text-blue-600">${occupiedRooms}</p>
-                                <p class="text-[9px] font-bold text-blue-500 uppercase">Đang ở</p>
-                             </div>
-                        </div>
+                    `).join('') : '<div class="text-center py-10 text-slate-400"><i class="fa-regular fa-comment-dots text-3xl mb-2"></i><p class="text-sm">Chưa có đánh giá nào</p></div>'}
+                </div>
+            </div>
+
+            <div class="ultra-glass rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
+                <div class="flex justify-between items-center mb-5">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-base font-bold text-slate-800">Hoạt động hệ thống</h3>
+                        <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
                     </div>
+                    <button onclick="window.navigateAdmin('logs')" class="text-xs text-slate-500 hover:text-slate-800"><i class="fa-solid fa-expand"></i> Mở rộng</button>
                 </div>
                 
-                </div>
-            `;
+                <div class="flex-1 overflow-y-auto max-h-[300px] custom-scroll pl-2">
+                    <div class="relative border-l border-slate-200 ml-3 space-y-6 pb-2">
+                        ${recentLogs.length > 0 ? recentLogs.map((log, i) => {
+                const time = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
+                const iconObj = { success: 'fa-check text-emerald-500 bg-emerald-100 border-emerald-200', warning: 'fa-exclamation text-amber-500 bg-amber-100 border-amber-200', error: 'fa-xmark text-red-500 bg-red-100 border-red-200', info: 'fa-info text-blue-500 bg-blue-100 border-blue-200' };
+                const logStyle = iconObj[log.type || 'info'];
 
+                return `
+                                <div class="relative pl-6 group">
+                                    <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full ${logStyle} border flex items-center justify-center shadow-sm transition-transform group-hover:scale-110">
+                                        <i class="fa-solid ${logStyle.split(' ')[0]} text-xs"></i>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm group-hover:shadow-md transition-all">
+                                        <p class="text-sm font-medium text-slate-800">${log.message}</p>
+                                        <div class="flex justify-between mt-1">
+                                            <p class="text-[10px] text-slate-400"><i class="fa-regular fa-user mr-1"></i>${log.user}</p>
+                                            <p class="text-[10px] text-slate-400">${time.toLocaleTimeString('vi-VN')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+            }).join('') : '<p class="text-sm text-slate-400 ml-4">Đang chờ tín hiệu hệ thống...</p>'}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+
+            // Gọi lại hàm vẽ chart với độ trễ nhỏ để DOM load xong
             setTimeout(() => {
-                const roomRev = totalRevenue * 0.7;
-                const serviceRev = totalRevenue * 0.3;
+                const roomRev = totalRevenue * 0.65;
+                const serviceRev = totalRevenue * 0.35;
                 window.initDashboardChartsEnhanced(roomRev, serviceRev);
-            }, 200);
+            }, 100);
         }
 
         function renderBookings(container) {
