@@ -32,6 +32,65 @@
             min-height: 100vh;
         }
 
+        /* ================= HIỆU ỨNG CHO QUẢN LÝ ĐẶT PHÒNG ================= */
+        .glass-card-booking {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-card-booking:hover {
+            transform: translateY(-4px) scale(1.005);
+            box-shadow: 0 20px 40px -15px rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.4);
+            z-index: 10;
+        }
+
+        .status-pulse-pending {
+            position: relative;
+        }
+
+        .status-pulse-pending::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            bottom: -2px;
+            left: -2px;
+            border-radius: inherit;
+            border: 2px solid rgba(245, 158, 11, 0.6);
+            animation: pulse-border 2s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.15);
+                opacity: 0;
+            }
+        }
+
+        .animate-stagger {
+            opacity: 0;
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Tùy chỉnh thanh cuộn cho bộ lọc */
+        .filter-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .filter-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
         /* ================= HIỆU ỨNG NEON, GLOW & ANIMATION MỚI ================= */
         .ultra-glass {
             background: rgba(255, 255, 255, 0.7);
@@ -1251,7 +1310,8 @@
             unsubLogs: null,
             currentAdminRoute: 'dashboard',
             adminBookingsPage: 0,
-            adminBookingsLimit: 10
+            adminBookingsLimit: 10,
+            currentBookingFilter: 'all'
         };
 
         window.store = store; // Attach for global access
@@ -2578,94 +2638,386 @@
             }, 100);
         }
 
+        window.setBookingFilter = function (status) {
+            store.currentBookingFilter = status;
+            renderCurrentView(); // Hàm này của bạn sẽ gọi lại renderBookings
+        };
+
+        // Hàm đổi trang
+        window.changeBookingsPage = function (page) {
+            store.adminBookingsPage = page;
+            renderCurrentView();
+        };
+
+        // Hàm đổi số lượng hiển thị trên 1 trang
+        window.changeBookingsLimit = function (limit) {
+            store.adminBookingsLimit = parseInt(limit);
+            store.adminBookingsPage = 0; // Reset về trang đầu tiên
+            renderCurrentView();
+        };
+
+        // Xử lý ẩn/hiện chi tiết thẻ Booking mượt mà không cần load lại trang
+        window.toggleBookingDetails = function (bookingId) {
+            const contentDiv = document.getElementById(`details-${bookingId}`);
+            const icon = document.getElementById(`icon-${bookingId}`);
+            const card = document.getElementById(`card-${bookingId}`);
+
+            if (contentDiv.classList.contains('grid-rows-[0fr]')) {
+                // Mở ra
+                contentDiv.classList.remove('grid-rows-[0fr]');
+                contentDiv.classList.add('grid-rows-[1fr]');
+                icon.style.transform = 'rotate(180deg)';
+                card.classList.add('ring-2', 'ring-blue-400/50', 'shadow-xl', 'scale-[1.01]');
+                card.style.zIndex = '10';
+            } else {
+                // Đóng lại
+                contentDiv.classList.remove('grid-rows-[1fr]');
+                contentDiv.classList.add('grid-rows-[0fr]');
+                icon.style.transform = 'rotate(0deg)';
+                card.classList.remove('ring-2', 'ring-blue-400/50', 'shadow-xl', 'scale-[1.01]');
+                card.style.zIndex = '1';
+            }
+        };
+
+        // Tìm kiếm nội bộ booking
+        window.handleBookingSearch = function (event) {
+            store.bookingSearchQuery = event.target.value.toLowerCase();
+            store.adminBookingsPage = 0;
+            renderCurrentView(); // Gọi lại hàm render
+        };
+
         function renderBookings(container) {
+            // 1. Sắp xếp & Lọc
             const sortedBookings = [...store.localBookings].sort((a, b) => {
                 const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
                 const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
                 return timeB - timeA;
             });
+
+            const filter = store.currentBookingFilter || 'all';
+            const searchQuery = store.bookingSearchQuery || '';
+
+            let filteredBookings = sortedBookings.filter(b => {
+                const matchFilter = filter === 'all' || b.status === filter;
+                const matchSearch = !searchQuery ||
+                    (b.userName || '').toLowerCase().includes(searchQuery) ||
+                    (b.roomCode || '').toLowerCase().includes(searchQuery) ||
+                    (b.id || '').toLowerCase().includes(searchQuery);
+                return matchFilter && matchSearch;
+            });
+
+            // 2. Thống kê
+            const stats = {
+                total: sortedBookings.length,
+                pending: sortedBookings.filter(b => b.status === 'pending').length,
+                confirmed: sortedBookings.filter(b => b.status === 'confirmed').length,
+                completed: sortedBookings.filter(b => b.status === 'completed').length,
+                cancelled: sortedBookings.filter(b => b.status === 'cancelled').length,
+            };
+
+            // Phân trang
             const start = store.adminBookingsPage * store.adminBookingsLimit;
-            const paginated = sortedBookings.slice(start, start + store.adminBookingsLimit);
+            const paginated = filteredBookings.slice(start, start + store.adminBookingsLimit);
+
+            // CSS Animations Nâng cao
+            const ultimateStyles = `<style>
+                @keyframes slideUpFade { from { opacity: 0; transform: translateY(30px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+                .booking-card-ult { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+                .booking-card-ult:hover { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); transform: translateY(-3px); }
+                
+                /* Accordion Animation mượt mà bằng CSS Grid */
+                .accordion-content { transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+                .accordion-inner { overflow: hidden; }
+                
+                /* Timeline UI */
+                .timeline-line::before { content: ''; position: absolute; left: 11px; top: 24px; bottom: -24px; width: 2px; background: #e2e8f0; z-index: 0; }
+                .timeline-step:last-child .timeline-line::before { display: none; }
+                
+                /* Tab Styling */
+                .tab-ult { position: relative; overflow: hidden; }
+                .tab-ult.active { background: #1e293b; color: white; border-color: #1e293b; box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.3); }
+                .tab-ult.active::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:3px; background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+            </style>`;
 
             container.innerHTML = `
-                <div class="fade-in">
-                    <div class="table-container">
-                        <div class="table-header flex justify-between items-center gap-4">
-                            <h3 class="font-bold text-slate-900 text-lg">Danh sách đặt phòng (${sortedBookings.length})</h3>
+                ${ultimateStyles}
+                <div class="fade-in max-w-7xl mx-auto pb-12">
+                    
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                        <div>
+                            <h2 class="text-3xl font-playfair font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 flex items-center gap-3">
+                                Quản lý Đặt phòng
+                                <span class="bg-blue-50 text-blue-600 text-xs py-1.5 px-3 rounded-xl font-sans font-bold flex items-center border border-blue-100 shadow-sm">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-ping mr-2"></span>Cập nhật trực tiếp
+                                </span>
+                            </h2>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left font-semibold">Mã Đặt</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Khách hàng</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Phòng</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Nhận - Trả phòng</th>
-                                        <th class="px-6 py-4 text-right font-semibold">Tổng tiền</th>
-                                        <th class="px-6 py-4 text-center font-semibold">Thanh toán</th>
-                                        <th class="px-6 py-4 text-center font-semibold">Trạng thái</th>
-                                        <th class="px-6 py-4 text-right font-semibold">Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    ${paginated.map(b => `
-                                        <tr class="hover:bg-slate-50/50 transition-colors">
-                                            <td class="px-6 py-4 font-mono text-xs text-slate-500">#${b.id.slice(-8)}</td>
-                                            <td class="px-6 py-4">
-                                                <div class="font-bold text-slate-800 text-sm">${b.userName || b.userEmail?.split('@')[0] || 'Khách'}</div>
-                                                <div class="text-xs text-slate-500 mt-0.5">${b.userPhone || b.userEmail || ''}</div>
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <span class="bg-slate-100 text-slate-700 px-2 py-1 rounded font-medium text-sm border border-slate-200">${b.roomCode}</span>
-                                            </td>
-                                            <td class="px-6 py-4 text-xs text-slate-600">
-                                                <div class="font-medium">${window.formatDate(b.checkIn)}</div>
-                                                <div class="text-slate-400 mt-0.5">đến ${window.formatDate(b.checkOut)}</div>
-                                            </td>
-<td class="px-6 py-4 text-right">   
-    ${b.discountApplied ? `
-        <div class="text-xs text-slate-400 line-through mb-0.5">${window.formatCurrency(b.totalPrice)}</div>
-        <div class="font-mono font-bold text-emerald-600">${window.formatCurrency(b.finalPaidAmount || (b.totalPrice - b.discountApplied))}</div>
-    ` : `
-        <div class="font-mono font-bold text-slate-800">${window.formatCurrency(b.totalPrice)}</div>
-    `}
-</td>                                            <td class="px-6 py-4 text-center">
-                                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${b.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                                                    ${b.paymentStatus === 'paid' ? 'Đã TT' : 'Chưa TT'}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 text-center">
-                                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${b.status === 'pending' ? 'bg-amber-100 text-amber-700' : b.status === 'confirmed' ? 'bg-blue-100 text-blue-700' : b.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">
-                                                    ${b.status === 'pending' ? 'Chờ duyệt' : b.status === 'confirmed' ? 'Đã xác nhận' : b.status === 'completed' ? 'Hoàn tất' : 'Đã hủy'}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 text-right">
-                                                <div class="flex justify-end space-x-1">
-                                                    ${b.status === 'pending' ? `
-                                                        <button onclick="window.updateBookingStatus('${b.id}', 'confirmed', '${b.roomId}')" class="p-1.5 text-emerald-600 hover:bg-emerald-100 rounded transition-colors" title="Xác nhận đơn"><i class="fa-solid fa-check w-4 h-4 flex items-center justify-center"></i></button>
-                                                        <button onclick="window.updateBookingStatus('${b.id}', 'cancelled', '${b.roomId}')" class="p-1.5 text-red-600 hover:bg-red-100 rounded transition-colors" title="Từ chối đơn"><i class="fa-solid fa-xmark w-4 h-4 flex items-center justify-center"></i></button>
-                                                    ` : b.status === 'confirmed' ? `
-                                                        <button onclick="window.updateBookingStatus('${b.id}', 'completed', '${b.roomId}')" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors" title="Check-out & Hoàn tất"><i class="fa-solid fa-check-double w-4 h-4 flex items-center justify-center"></i></button>
-                                                    ` : ''}
-                                                    
-                                                    ${b.paymentStatus !== 'paid' && b.status === 'confirmed' ? `
-                                                        <button onclick="window.handlePayment('${b.id}')" class="p-1.5 text-emerald-600 hover:bg-emerald-100 rounded transition-colors" title="Thanh toán"><i class="fa-solid fa-money-bill-wave w-4 h-4 flex items-center justify-center"></i></button>
-                                                    `: ''}
-                                                    
-                                                    ${b.status === 'completed' && b.paymentStatus === 'paid' ? `
-                                                        <button onclick="window.generateInvoice('${b.id}')" class="p-1.5 text-purple-600 hover:bg-purple-100 rounded transition-colors" title="Xuất hóa đơn"><i class="fa-solid fa-file-invoice w-4 h-4 flex items-center justify-center"></i></button>
-                                                    `: ''}
-                                                    
-                                                    <button onclick="window.deleteBooking('${b.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Xóa bản ghi"><i class="fa-solid fa-trash w-4 h-4 flex items-center justify-center"></i></button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                    ${paginated.length === 0 ? '<tr><td colspan="8" class="text-center py-10 text-slate-400">Không có đơn đặt phòng nào</td></tr>' : ''}
-                                </tbody>
-                            </table>
+                        <div class="flex gap-3">
+                            <button onclick="window.exportReportToExcel(store.localBookings, 'bookings', {from:'Tất cả', to:'Hiện tại'})" class="btn-secondary rounded-xl px-5 py-2.5 flex items-center gap-2 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200">
+                                <i class="fa-solid fa-file-excel"></i> Xuất Excel
+                            </button>
+                            <button onclick="window.navigateAdmin('rooms')" class="btn-primary rounded-xl px-5 py-2.5 shadow-lg shadow-blue-500/30 flex items-center gap-2 transform transition hover:scale-105">
+                                <i class="fa-solid fa-plus"></i> Tạo Booking
+                            </button>
                         </div>
                     </div>
+
+                    <div class="bg-white/80 backdrop-blur-xl p-2 rounded-2xl border border-slate-200/60 shadow-sm mb-8 flex flex-col xl:flex-row justify-between gap-4 sticky top-0 z-40">
+                        <div class="flex overflow-x-auto gap-2 custom-scroll hide-scrollbar">
+                            <button onclick="window.setBookingFilter('all')" class="tab-ult px-5 py-2.5 rounded-xl font-bold text-sm transition-all border border-slate-200 text-slate-600 hover:bg-slate-50 whitespace-nowrap ${filter === 'all' ? 'active' : ''}">
+                                Tất cả <span class="ml-2 bg-white/20 px-2 py-0.5 rounded-md text-[10px]">${stats.total}</span>
+                            </button>
+                            <button onclick="window.setBookingFilter('pending')" class="tab-ult px-5 py-2.5 rounded-xl font-bold text-sm transition-all border border-slate-200 text-amber-600 hover:bg-amber-50 whitespace-nowrap ${filter === 'pending' ? 'active' : ''}">
+                                <i class="fa-regular fa-clock mr-1"></i> Chờ duyệt <span class="ml-2 bg-amber-100 px-2 py-0.5 rounded-md text-[10px]">${stats.pending}</span>
+                            </button>
+                            <button onclick="window.setBookingFilter('confirmed')" class="tab-ult px-5 py-2.5 rounded-xl font-bold text-sm transition-all border border-slate-200 text-blue-600 hover:bg-blue-50 whitespace-nowrap ${filter === 'confirmed' ? 'active' : ''}">
+                                <i class="fa-solid fa-check mr-1"></i> Đã xác nhận <span class="ml-2 bg-blue-100 px-2 py-0.5 rounded-md text-[10px]">${stats.confirmed}</span>
+                            </button>
+                            <button onclick="window.setBookingFilter('completed')" class="tab-ult px-5 py-2.5 rounded-xl font-bold text-sm transition-all border border-slate-200 text-emerald-600 hover:bg-emerald-50 whitespace-nowrap ${filter === 'completed' ? 'active' : ''}">
+                                <i class="fa-solid fa-check-double mr-1"></i> Hoàn tất <span class="ml-2 bg-emerald-100 px-2 py-0.5 rounded-md text-[10px]">${stats.completed}</span>
+                            </button>
+                        </div>
+                        <div class="relative w-full xl:w-72">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400"></i>
+                            <input type="text" placeholder="Tìm tên, mã phòng, ID..." value="${searchQuery}" oninput="window.handleBookingSearch(event)" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none font-medium text-sm">
+                        </div>
+                    </div>
+
+                    <div class="space-y-5">
+                        ${paginated.length > 0 ? paginated.map((b, index) => {
+                // Màu sắc UI
+                const isPaid = b.paymentStatus === 'paid';
+                let st = { color: 'slate', icon: 'fa-circle', text: 'Không rõ' };
+                if (b.status === 'pending') st = { color: 'amber', icon: 'fa-hourglass-half', text: 'Chờ duyệt' };
+                if (b.status === 'confirmed') st = { color: 'blue', icon: 'fa-check', text: 'Đã xác nhận' };
+                if (b.status === 'completed') st = { color: 'emerald', icon: 'fa-check-double', text: 'Hoàn tất' };
+                if (b.status === 'cancelled') st = { color: 'rose', icon: 'fa-xmark', text: 'Đã hủy' };
+
+                const createDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+
+                return `
+                            <div id="card-${b.id}" class="booking-card-ult bg-white rounded-2xl border border-slate-200 relative isolate" style="animation-delay: ${index * 0.05}s">
+                                
+                                <div class="absolute left-0 top-0 bottom-0 w-2 bg-${st.color}-500 rounded-l-2xl z-10"></div>
+
+                                <div class="p-5 pl-7 flex flex-col lg:flex-row lg:items-center gap-6 relative z-20 bg-white rounded-2xl cursor-pointer" onclick="window.toggleBookingDetails('${b.id}')">
+                                    
+                                    <div class="flex items-center gap-4 lg:w-4/12">
+                                        <div class="relative">
+                                            <img src="https://ui-avatars.com/api/?name=${b.userName || b.userEmail || 'U'}&background=random&color=fff&rounded=true&bold=true" class="w-12 h-12 rounded-full shadow-sm ring-2 ring-white">
+                                            ${isPaid ? `<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center text-white" title="Đã thanh toán"><i class="fa-solid fa-check text-[8px]"></i></div>` : ''}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="mb-1.5">
+                                                <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-700 font-mono text-[11px] px-2.5 py-0.5 rounded-md font-bold border border-slate-200 shadow-sm" title="Mã đặt phòng">
+                                                    <i class="fa-solid fa-hashtag text-[9px] text-slate-400"></i>${(b.id || 'ERROR').slice(-8).toUpperCase()}
+                                                </span>
+                                            </div>
+                                            <h4 class="font-bold text-slate-800 truncate text-sm" title="${b.userName || 'Khách hàng'}">${b.userName || 'Khách hàng'}</h4>
+                                        </div>
+                                    </div>
+
+                                    <div class="lg:w-4/12 flex items-center justify-between bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+                                        <div class="text-center px-4 border-r border-slate-200">
+                                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Phòng</p>
+                                            <p class="font-bold text-blue-600 text-lg font-mono leading-none">${b.roomCode}</p>
+                                        </div>
+                                        <div class="flex-1 px-4 flex items-center justify-between">
+                                            <div class="text-left">
+                                                <p class="text-[10px] text-slate-400 font-bold uppercase">Check-in</p>
+                                                <p class="font-bold text-slate-800 text-sm">${window.formatDate(b.checkIn).slice(0, 5)}</p>
+                                            </div>
+                                            <div class="flex flex-col items-center px-2">
+                                                <i class="fa-solid fa-arrow-right-long text-slate-300"></i>
+                                                <span class="text-[10px] font-bold text-indigo-500 mt-0.5 bg-indigo-50 px-1.5 rounded">${b.nights} đêm</span>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-[10px] text-slate-400 font-bold uppercase">Check-out</p>
+                                                <p class="font-bold text-slate-800 text-sm">${window.formatDate(b.checkOut).slice(0, 5)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="lg:w-3/12 flex items-center justify-between lg:justify-end gap-6">
+                                        <div class="text-right">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-${st.color}-50 text-${st.color}-700 border border-${st.color}-200 shadow-sm">
+                                                <i class="fa-solid ${st.icon}"></i> ${st.text}
+                                            </span>
+                                            <p class="font-bold font-mono text-lg mt-1.5 leading-none ${isPaid ? 'text-emerald-600' : 'text-slate-800'}">
+                                                ${window.formatCurrency(b.finalPaidAmount || b.totalPrice)}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="lg:w-1/12 flex justify-end">
+                                        <div class="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
+                                            <i id="icon-${b.id}" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="details-${b.id}" class="accordion-content grid grid-rows-[0fr] bg-slate-50/50 border-t border-slate-100 rounded-b-2xl">
+                                    <div class="accordion-inner">
+                                        <div class="p-6 pl-7 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                            
+                                            <div class="col-span-1">
+                                                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-route mr-2"></i>Tiến trình</h5>
+                                                <div class="relative pl-3 space-y-5">
+                                                    <div class="timeline-step relative">
+                                                        <div class="timeline-line absolute w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm left-0 top-1"></div>
+                                                        <div class="pl-6">
+                                                            <p class="text-sm font-bold text-slate-800">Khách đặt phòng</p>
+                                                            <p class="text-[10px] text-slate-500 mt-0.5">${createDate.toLocaleString('vi-VN')}</p>
+                                                        </div>
+                                                    </div>
+                                                    ${b.status !== 'pending' && b.status !== 'cancelled' ? `
+                                                    <div class="timeline-step relative">
+                                                        <div class="timeline-line absolute w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm left-0 top-1"></div>
+                                                        <div class="pl-6">
+                                                            <p class="text-sm font-bold text-slate-800">Đã xác nhận</p>
+                                                            <p class="text-[10px] text-slate-500 mt-0.5">Bởi Hệ thống</p>
+                                                        </div>
+                                                    </div>` : ''}
+                                                    ${b.paymentStatus === 'paid' ? `
+                                                    <div class="timeline-step relative">
+                                                        <div class="timeline-line absolute w-3 h-3 rounded-full bg-purple-500 border-2 border-white shadow-sm left-0 top-1"></div>
+                                                        <div class="pl-6">
+                                                            <p class="text-sm font-bold text-slate-800">Đã thanh toán</p>
+                                                            <p class="text-[10px] text-slate-500 mt-0.5">Thành công</p>
+                                                        </div>
+                                                    </div>` : ''}
+                                                    ${b.status === 'completed' ? `
+                                                    <div class="timeline-step relative">
+                                                        <div class="timeline-line absolute w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm left-0 top-1"></div>
+                                                        <div class="pl-6">
+                                                            <p class="text-sm font-bold text-slate-800">Hoàn tất Check-out</p>
+                                                        </div>
+                                                    </div>` : ''}
+                                                    ${b.status === 'cancelled' ? `
+                                                    <div class="timeline-step relative">
+                                                        <div class="absolute w-3 h-3 rounded-full bg-rose-500 border-2 border-white shadow-sm left-0 top-1"></div>
+                                                        <div class="pl-6">
+                                                            <p class="text-sm font-bold text-rose-600">Đã hủy</p>
+                                                            <p class="text-[10px] text-slate-500 mt-0.5">${b.cancelReason || 'Khách yêu cầu'}</p>
+                                                        </div>
+                                                    </div>` : ''}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-span-1">
+                                                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Chi phí</h5>
+                                                <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-3">
+                                                    <div class="flex justify-between items-center text-sm">
+                                                        <span class="text-slate-600">Tiền phòng (${b.nights} đêm)</span>
+                                                        <span class="font-medium">${window.formatCurrency(b.roomTotal || (b.roomPrice * b.nights))}</span>
+                                                    </div>
+                                                    ${(b.services && b.services.length > 0) ? `
+                                                    <div class="flex justify-between items-start text-sm">
+                                                        <span class="text-slate-600">Dịch vụ thêm</span>
+                                                        <div class="text-right">
+                                                            <span class="font-medium">${window.formatCurrency(b.serviceTotal || 0)}</span>
+                                                            <p class="text-[10px] text-slate-400 mt-1">${b.services.map(s => s.name).join(', ')}</p>
+                                                        </div>
+                                                    </div>` : ''}
+                                                    ${b.discountApplied ? `
+                                                    <div class="flex justify-between items-center text-sm text-rose-500">
+                                                        <span>Giảm giá/KM</span>
+                                                        <span class="font-medium">-${window.formatCurrency(b.discountApplied)}</span>
+                                                    </div>` : ''}
+                                                    <div class="border-t border-slate-100 border-dashed pt-3 mt-3 flex justify-between items-center">
+                                                        <span class="font-bold text-slate-800">TỔNG CỘNG</span>
+                                                        <span class="font-bold text-xl font-mono text-blue-600">${window.formatCurrency(b.finalPaidAmount || b.totalPrice)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-span-1 flex flex-col">
+                                                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-address-book mr-2"></i>Liên hệ & Ghi chú</h5>
+                                                <div class="space-y-2 mb-6">
+                                                    <p class="text-sm text-slate-700 flex items-center gap-2"><i class="fa-solid fa-phone w-4 text-slate-400"></i> ${b.userPhone || 'Trống'}</p>
+                                                    <p class="text-sm text-slate-700 flex items-center gap-2"><i class="fa-solid fa-envelope w-4 text-slate-400"></i> ${b.userEmail || 'Trống'}</p>
+                                                    ${b.specialRequests ? `<div class="mt-2 p-3 bg-amber-50 rounded-lg border border-amber-100 text-xs text-amber-800"><span class="font-bold">Yêu cầu:</span> ${b.specialRequests}</div>` : ''}
+                                                </div>
+
+                                                <div class="mt-auto grid grid-cols-2 gap-2">
+                                                    ${b.status === 'pending' ? `
+                                                        <button onclick="window.updateBookingStatus('${b.id}', 'confirmed', '${b.roomId}')" class="btn-primary py-2 text-sm w-full bg-blue-600 hover:bg-blue-700">Xác nhận</button>
+                                                        <button onclick="window.updateBookingStatus('${b.id}', 'cancelled', '${b.roomId}')" class="btn-secondary py-2 text-sm w-full text-rose-600 hover:bg-rose-50 border-rose-200">Từ chối</button>
+                                                    ` : ''}
+                                                    ${b.status === 'confirmed' ? `
+                                                        <button onclick="window.updateBookingStatus('${b.id}', 'completed', '${b.roomId}')" class="btn-primary py-2 text-sm w-full bg-emerald-600 hover:bg-emerald-700">Check-out</button>
+                                                        ${!isPaid ? `<button onclick="window.handlePayment('${b.id}')" class="btn-secondary py-2 text-sm w-full border-amber-200 text-amber-700 hover:bg-amber-50">Thu tiền</button>` : ''}
+                                                    ` : ''}
+                                                    ${b.status === 'completed' && isPaid ? `
+                                                        <button onclick="window.generateInvoice('${b.id}')" class="btn-primary py-2 text-sm w-full col-span-2 bg-purple-600 hover:bg-purple-700"><i class="fa-solid fa-print mr-2"></i>In hóa đơn</button>
+                                                    ` : ''}
+                                                    <button onclick="window.deleteBooking('${b.id}')" class="col-span-2 py-2 text-sm font-medium text-slate-400 hover:text-rose-600 transition-colors mt-2 underline">Xóa bản ghi này</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+            }).join('') : `
+                            <div class="bg-white/50 backdrop-blur-sm rounded-3xl border border-dashed border-slate-300 p-20 text-center shadow-inner">
+                                <div class="relative w-24 h-24 mx-auto mb-6">
+                                    <div class="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-50"></div>
+                                    <div class="relative w-full h-full bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-100">
+                                        <i class="fa-solid fa-box-open text-4xl text-blue-400"></i>
+                                    </div>
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-800 mb-2">Chưa có dữ liệu phù hợp</h3>
+                                <p class="text-slate-500 max-w-md mx-auto mb-8">Không tìm thấy đơn đặt phòng nào trong trạng thái <span class="font-bold text-slate-700">"${filter}"</span> hoặc khớp với từ khóa tìm kiếm của bạn.</p>
+                                <button onclick="window.setBookingFilter('all'); store.bookingSearchQuery=''; renderCurrentView();" class="btn-secondary rounded-xl">Xóa bộ lọc & Tải lại</button>
+                            </div>
+                        `}
+                    </div>
+                    
+                    ${filteredBookings.length > 0 ? (() => {
+                    const totalPages = Math.ceil(filteredBookings.length / store.adminBookingsLimit);
+                    const currentPage = store.adminBookingsPage;
+                    let pageButtons = '';
+                    const maxVisible = 5;
+                    let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
+                    let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
+                    if (endPage - startPage + 1 < maxVisible) startPage = Math.max(0, endPage - maxVisible + 1);
+
+                    if (startPage > 0) pageButtons += `<span class="w-8 h-8 flex items-center justify-center text-slate-400">...</span>`;
+                    for (let i = startPage; i <= endPage; i++) {
+                        const isActive = i === currentPage;
+                        pageButtons += `
+                                <button onclick="window.changeBookingsPage(${i})" 
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all duration-300 
+                                    ${isActive ? 'bg-slate-800 text-white shadow-md scale-110' : 'text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm'}">
+                                    ${i + 1}
+                                </button>
+                            `;
+                    }
+                    if (endPage < totalPages - 1) pageButtons += `<span class="w-8 h-8 flex items-center justify-center text-slate-400">...</span>`;
+
+                    return `
+                        <div class="flex flex-col sm:flex-row justify-between items-center mt-8 p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm gap-4">
+                            <div class="flex items-center gap-3">
+                                <p class="text-sm text-slate-500 font-medium">Hiển thị</p>
+                                <select onchange="window.changeBookingsLimit(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5 px-3 outline-none font-bold cursor-pointer hover:bg-white">
+                                    <option value="5" ${store.adminBookingsLimit === 5 ? 'selected' : ''}>5</option>
+                                    <option value="10" ${store.adminBookingsLimit === 10 ? 'selected' : ''}>10</option>
+                                    <option value="20" ${store.adminBookingsLimit === 20 ? 'selected' : ''}>20</option>
+                                    <option value="50" ${store.adminBookingsLimit === 50 ? 'selected' : ''}>50</option>
+                                </select>
+                                <p class="text-sm text-slate-500">/ ${filteredBookings.length} đơn</p>
+                            </div>
+                            ${totalPages > 1 ? `
+                            <div class="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                                <button onclick="window.changeBookingsPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                                ${pageButtons}
+                                <button onclick="window.changeBookingsPage(${currentPage + 1})" ${currentPage === totalPages - 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                            </div>
+                            ` : ''}
+                        </div>
+                        `;
+                })() : ''}
                 </div>
             `;
         }
