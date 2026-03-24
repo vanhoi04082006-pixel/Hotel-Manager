@@ -2701,7 +2701,12 @@
                     <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-cubes text-blue-500 mr-2"></i>Sơ đồ vật lý 3D</h3>
                 </div>
                 <div class="grid grid-cols-5 gap-2.5 overflow-y-auto max-h-[320px] custom-scroll pr-2 pb-2">
-                    ${store.localRooms.map(r => {
+    ${[...store.localRooms].sort((a, b) => {
+                // Tách lấy phần số từ mã phòng (VD: 'P101' -> 101) để sắp xếp tăng dần
+                const numA = parseInt((a.code || '').replace(/\D/g, '')) || 0;
+                const numB = parseInt((b.code || '').replace(/\D/g, '')) || 0;
+                return numA - numB;
+            }).map(r => {
                 const isActuallyOccupied = r.status !== 'maintenance' && (r.status === 'occupied' || occupiedRoomIds.includes(r.id));
                 const displayStatus = r.status === 'maintenance' ? 'maintenance' : (isActuallyOccupied ? 'occupied' : 'available');
 
@@ -3269,6 +3274,11 @@
                     (room.type || '').toLowerCase().includes(query);
                 const matchStatus = statusFilter === 'all' || room.status === statusFilter;
                 return matchSearch && matchStatus;
+            }).sort((a, b) => {
+                // Tách lấy phần số từ mã phòng (VD: 'P101' -> 101) để sắp xếp tăng dần
+                const numA = parseInt((a.code || '').replace(/\D/g, '')) || 0;
+                const numB = parseInt((b.code || '').replace(/\D/g, '')) || 0;
+                return numA - numB;
             });
 
             // 2. LOGIC NHÓM PHÒNG THEO TẦNG
@@ -3443,22 +3453,22 @@
             const catFilter = store.serviceFilterCategory || 'all';
 
             const filteredServices = store.localServices.filter(s => {
-                const matchSearch = (s.name || '').toLowerCase().includes(query) || 
-                                    (s.description || '').toLowerCase().includes(query);
-                
+                const matchSearch = (s.name || '').toLowerCase().includes(query) ||
+                    (s.description || '').toLowerCase().includes(query);
+
                 let sCat = 'other';
                 if (['utensils', 'cocktail', 'cake'].includes(s.icon)) sCat = 'dining';
                 if (['spa', 'swimmer', 'dumbbell'].includes(s.icon)) sCat = 'wellness';
                 if (['car', 'motorcycle'].includes(s.icon)) sCat = 'transport';
-                
+
                 const matchCat = catFilter === 'all' || sCat === catFilter;
                 return matchSearch && matchCat;
             });
 
             // 2. Thống kê
             const activeCount = store.localServices.filter(s => s.available !== false).length;
-            const avgPrice = store.localServices.length > 0 
-                ? store.localServices.reduce((acc, s) => acc + (s.price || 0), 0) / store.localServices.length 
+            const avgPrice = store.localServices.length > 0
+                ? store.localServices.reduce((acc, s) => acc + (s.price || 0), 0) / store.localServices.length
                 : 0;
 
             const getDefaultImage = (icon) => {
@@ -3594,10 +3604,10 @@
                     ${filteredServices.length > 0 ? `
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
                         ${filteredServices.map((s, index) => {
-                            const catName = getCategoryName(s.icon);
-                            const displayImage = s.image || getDefaultImage(s.icon);
-                            
-                            return `
+                const catName = getCategoryName(s.icon);
+                const displayImage = s.image || getDefaultImage(s.icon);
+
+                return `
                             <div class="premium-card bg-white rounded-[2rem] border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative flex flex-col h-full group" style="animation-delay: ${(index % 12) * 0.08}s">
                                 
                                 <div class="relative h-60 w-full overflow-hidden rounded-t-[2rem] premium-img-wrap bg-slate-100">
@@ -3636,7 +3646,7 @@
                                 </div>
                             </div>
                             `;
-                        }).join('')}
+            }).join('')}
                     </div>
                     ` : `
                     <div class="bg-white rounded-[2.5rem] border border-dashed border-slate-300 p-24 text-center shadow-sm mt-4 relative overflow-hidden">
