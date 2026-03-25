@@ -2044,7 +2044,7 @@
             window.localSearchTimer = setTimeout(() => { renderCurrentView(); }, 300);
         };
 
-        window.copyPromoCode = function(code) {
+        window.copyPromoCode = function (code) {
             navigator.clipboard.writeText(code);
             showToast(`Đã sao chép mã: ${code}`, 'info');
         };
@@ -3818,9 +3818,9 @@
             const now = new Date();
 
             const filteredPromos = store.localPromotions.filter(p => {
-                const matchSearch = (p.name || '').toLowerCase().includes(query) || 
-                                    (p.code || '').toLowerCase().includes(query);
-                
+                const matchSearch = (p.name || '').toLowerCase().includes(query) ||
+                    (p.code || '').toLowerCase().includes(query);
+
                 const isExpired = new Date(p.endDate) < now;
                 let status = p.active ? 'active' : 'paused';
                 if (isExpired) status = 'expired';
@@ -3956,11 +3956,11 @@
                     ${filteredPromos.length > 0 ? `
                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                         ${filteredPromos.map((p, index) => {
-                            const isExpired = new Date(p.endDate) < now;
-                            const statusColor = !p.active ? 'amber' : isExpired ? 'rose' : 'emerald';
-                            const discountVal = p.type === 'percent' ? p.value + '%' : window.formatCurrency(p.value).replace('₫', 'đ');
+                const isExpired = new Date(p.endDate) < now;
+                const statusColor = !p.active ? 'amber' : isExpired ? 'rose' : 'emerald';
+                const discountVal = p.type === 'percent' ? p.value + '%' : window.formatCurrency(p.value).replace('₫', 'đ');
 
-                            return `
+                return `
                             <div class="promo-card-premium ticket-shape border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] flex flex-row h-52 group" style="animation-delay: ${index * 0.1}s">
                                 <div class="ticket-divider"></div>
                                 
@@ -4019,7 +4019,7 @@
                                 </div>
                             </div>
                             `;
-                        }).join('')}
+            }).join('')}
                     </div>
                     ` : `
                     <div class="bg-white rounded-[3rem] border-2 border-dashed border-slate-200 p-32 text-center shadow-inner">
