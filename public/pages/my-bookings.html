@@ -191,6 +191,7 @@
         <div id="app-footer"></div>
     </div>
 
+    <!-- Modal thanh toán trực tiếp -->
     <div id="paymentModal" class="fixed inset-0 modal-backdrop z-[100] hidden flex items-center justify-center p-4">
         <div
             class="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100">
@@ -198,9 +199,8 @@
                 <div class="flex justify-between items-start mb-6">
                     <div>
                         <span
-                            class="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold mb-2">
-                            <i class="fa-solid fa-shield-halved mr-1"></i> Thanh toán an toàn
-                        </span>
+                            class="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold mb-2"><i
+                                class="fa-solid fa-shield-halved mr-1"></i> Thanh toán an toàn</span>
                         <h3 class="text-3xl font-playfair font-bold text-slate-900">Chi tiết thanh toán</h3>
                         <p id="payment-booking-code" class="text-slate-500 font-medium mt-1">Mã: #BK-001</p>
                     </div>
@@ -211,6 +211,7 @@
                 </div>
 
                 <div id="payment-content" class="space-y-6">
+                    <!-- Nội dung sẽ được load bằng JS -->
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
@@ -232,8 +233,7 @@
         loadFooter();
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // Chỉ giữ lại những thứ cần thiết để kiểm tra đăng nhập và user
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, getDoc, updateDoc, doc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -344,13 +344,12 @@
             }
         };
 
-        // Hàm Tải Khuyến Mãi từ API thay vì Firestore để phục vụ thanh toán
         async function applyPromoCode(code, originalAmount) {
             if (!code) return { success: false, discount: 0, message: 'Vui lòng nhập mã giảm giá' };
 
             try {
-                const response = await fetch('http://localhost:3000/api/promotions');
-                const promotions = await response.json();
+                const promotionsSnap = await getDocs(collection(db, 'promotions'));
+                const promotions = promotionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const promo = promotions.find(p => p.code === code.toUpperCase() && p.active === true);
 
                 if (!promo) {
@@ -470,6 +469,7 @@
                         </label>
                     </div>
 
+                    <!-- Bank Details Section -->
                     <div id="payment-bank-details" class="mt-5 p-5 bg-blue-50/80 rounded-2xl border border-blue-100 hidden slide-in-up">
                         <div class="flex items-center mb-4 text-blue-800"><i class="fa-solid fa-circle-info mr-2"></i><h4 class="font-bold">Thông tin chuyển khoản</h4></div>
                         <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-3 text-[15px] text-slate-700">
@@ -483,6 +483,7 @@
                         </button>
                     </div>
 
+                    <!-- Credit Card Form -->
                     <div id="payment-credit-form" class="mt-5 space-y-4 hidden slide-in-up">
                         <div class="bg-slate-900 p-6 rounded-2xl text-white shadow-lg relative overflow-hidden h-48 flex flex-col justify-between">
                             <div class="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-400 via-transparent to-transparent"></div>
@@ -513,6 +514,7 @@
                         <div><label class="form-label">Tên chủ thẻ (Không dấu)</label><input type="text" id="payment-card-name" placeholder="NGUYEN VAN A" class="form-input uppercase"></div>
                     </div>
 
+                    <!-- Wallet QR Code -->
                     <div id="payment-wallet-details" class="mt-5 p-6 bg-slate-50 rounded-2xl border border-slate-100 hidden slide-in-up text-center">
                         <h4 class="font-bold text-slate-800 mb-2">Quét mã QR để thanh toán</h4>
                         <p class="text-sm text-slate-500 mb-6">Mở ứng dụng ngân hàng hoặc Momo, ZaloPay để quét mã</p>
@@ -530,6 +532,7 @@
             // Gán sự kiện cho radio buttons
             document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
                 radio.addEventListener('change', function (e) {
+                    // Cập nhật style cho các button
                     document.querySelectorAll('input[name="paymentMethod"]').forEach(r => {
                         r.parentElement.classList.remove('border-blue-500', 'ring-2', 'ring-blue-100');
                         r.parentElement.classList.add('border-slate-100');
@@ -537,6 +540,7 @@
                     e.target.parentElement.classList.remove('border-slate-100');
                     e.target.parentElement.classList.add('border-blue-500', 'ring-2', 'ring-blue-100');
 
+                    // Hiển thị section tương ứng
                     document.getElementById('payment-bank-details').classList.add('hidden');
                     document.getElementById('payment-credit-form').classList.add('hidden');
                     document.getElementById('payment-wallet-details').classList.add('hidden');
@@ -595,6 +599,7 @@
             const discountAmountSpan = document.getElementById('discount-amount');
             const finalTotalSpan = document.getElementById('final-total-amount');
             const modalTotalSpan = document.getElementById('modal-total-amount');
+            const subtotalSpan = document.getElementById('subtotal-amount');
 
             const code = promoInput.value.trim();
             const originalAmount = currentBookingForPayment.totalPrice;
@@ -611,10 +616,14 @@
             if (result.success) {
                 currentDiscount = result.discount;
                 currentDiscountCode = code;
+
                 const finalAmount = originalAmount - currentDiscount;
 
+                // Cập nhật giao diện: Hiển thị tiền giảm và tiền tổng
                 discountSection.classList.remove('hidden');
                 discountAmountSpan.textContent = `-${formatCurrency(currentDiscount)}`;
+
+                // CẬP NHẬT QUAN TRỌNG: Cập nhật lại tất cả các số tổng tiền trên Modal
                 finalTotalSpan.textContent = formatCurrency(finalAmount);
 
                 if (modalTotalSpan) {
@@ -631,6 +640,7 @@
                 discountSection.classList.add('hidden');
                 finalTotalSpan.textContent = formatCurrency(originalAmount);
 
+                // Cũng nên thêm check an toàn ở đây khi reset lại giá trị cũ
                 if (modalTotalSpan) {
                     modalTotalSpan.textContent = formatCurrency(originalAmount);
                 }
@@ -640,14 +650,12 @@
                 promoMessage.classList.remove('hidden');
             }
         };
-
         window.copyBankInfo = function () {
             const content = document.getElementById('payment-bank-content')?.textContent || '';
             navigator.clipboard.writeText(`Ngân hàng: Vietcombank\nSố TK: 1234 5678 9012 3456\nChủ TK: LUNA HOTEL & RESORT\nNội dung: ${content}`);
             showToast('Đã sao chép thông tin chuyển khoản', 'success');
         };
 
-        // Hàm Xử Lý Thanh Toán bằng API Node.js
         window.processDirectPayment = async function () {
             if (!currentBookingForPayment) {
                 showToast('Không tìm thấy thông tin đặt phòng', 'error');
@@ -666,21 +674,24 @@
             btn.disabled = true;
 
             try {
+                // Tính toán số tiền cuối cùng sau khi trừ mã giảm giá
                 const finalAmount = currentBookingForPayment.totalPrice - currentDiscount;
+                const bookingRef = doc(db, 'bookings', currentBookingForPayment.id);
 
+                // Đảm bảo object paymentData lưu đúng số tiền thực tế khách phải trả
                 const paymentData = {
                     bookingId: currentBookingForPayment.id,
-                    amount: finalAmount,
-                    originalAmount: currentBookingForPayment.totalPrice,
-                    discount: currentDiscount,
-                    discountCode: currentDiscountCode || null,
+                    amount: finalAmount, // Số tiền thực tế khách trả sau khi trừ mã
+                    originalAmount: currentBookingForPayment.totalPrice, // Số tiền gốc ban đầu
+                    discount: currentDiscount, // Số tiền được giảm
+                    discountCode: currentDiscountCode || null, // Mã giảm giá (nếu có)
                     method: method,
                     status: 'completed',
                     transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                    createdAt: new Date().toISOString(),
+                    completedAt: new Date().toISOString(),
                     userEmail: currentBookingForPayment.userEmail,
                     roomCode: currentBookingForPayment.roomCode,
-                    userId: currentUser ? currentUser.uid : null,
-                    isGuest: !currentUser,
                     bookingDetails: {
                         checkIn: currentBookingForPayment.checkIn,
                         checkOut: currentBookingForPayment.checkOut,
@@ -690,33 +701,43 @@
                     }
                 };
 
-                // GỌI API THANH TOÁN
-                const response = await fetch('http://localhost:3000/api/payments', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(paymentData)
+                if (currentUser) {
+                    paymentData.userId = currentUser.uid;
+                } else {
+                    paymentData.isGuest = true;
+                }
+
+                // Lưu thông tin thanh toán vào collection 'payments'
+                const paymentRef = await addDoc(collection(db, 'payments'), paymentData);
+
+                // Cập nhật lại trạng thái booking bên collection 'bookings'
+                await updateDoc(bookingRef, {
+                    paymentStatus: 'paid',
+                    paymentId: paymentRef.id,
+                    discountApplied: currentDiscount,
+                    discountCode: currentDiscountCode || null,
+                    finalPaidAmount: finalAmount,
+                    updatedAt: new Date().toISOString()
                 });
 
-                const result = await response.json();
+                showToast('Thanh toán thành công!', 'success');
+                closePaymentModal();
 
-                if (result.success) {
-                    showToast('Thanh toán thành công!', 'success');
-                    closePaymentModal();
+                // Load lại danh sách phòng (bạn cần đảm bảo hàm này đã được định nghĩa)
+                if (typeof loadMyBookings === 'function') {
                     await loadMyBookings();
-                } else {
-                    throw new Error(result.message);
                 }
 
             } catch (error) {
                 console.error('Payment error:', error);
                 showToast('Lỗi thanh toán: ' + error.message, 'error');
             } finally {
+                // Trả lại trạng thái ban đầu cho nút bấm
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         };
 
-        // Tải danh sách phòng đã đặt bằng API Node.js
         async function loadMyBookings() {
             const container = document.getElementById('bookings-container');
 
@@ -734,13 +755,9 @@
             }
 
             try {
-                // GỌI API LẤY DANH SÁCH PHÒNG ĐÃ ĐẶT
-                const response = await fetch(`http://localhost:3000/api/users/${currentUser.email}/bookings`);
-
-                if (!response.ok) throw new Error("Không thể lấy dữ liệu");
-
-                const bookingsData = await response.json();
-                const bookings = bookingsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                const q = query(collection(db, 'bookings'), where('userEmail', '==', currentUser.email));
+                const querySnapshot = await getDocs(q);
+                const bookings = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                 if (bookings.length === 0) {
                     container.innerHTML = `
@@ -823,15 +840,15 @@
 
                         <div class="p-5 md:p-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div>
-                                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Tổng chi phí</p>
-                                <p class="text-2xl font-bold text-blue-600 font-mono">
-                                    ${b.finalPaidAmount ? formatCurrency(b.finalPaidAmount) : formatCurrency(b.totalPrice)}
-                                </p>
-                                ${b.discountApplied ? `
-                                    <p class="text-[11px] text-slate-400 mt-1">Giá gốc: <del>${formatCurrency(b.totalPrice)}</del></p>
-                                    <p class="text-xs text-green-600 font-medium">Đã áp mã: -${formatCurrency(b.discountApplied)}</p>
-                                ` : ''}
-                            </div>
+    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Tổng chi phí</p>
+    <p class="text-2xl font-bold text-blue-600 font-mono">
+        ${b.finalPaidAmount ? formatCurrency(b.finalPaidAmount) : formatCurrency(b.totalPrice)}
+    </p>
+    ${b.discountApplied ? `
+        <p class="text-[11px] text-slate-400 mt-1">Giá gốc: <del>${formatCurrency(b.totalPrice)}</del></p>
+        <p class="text-xs text-green-600 font-medium">Đã áp mã: -${formatCurrency(b.discountApplied)}</p>
+    ` : ''}
+</div>
                             <div class="flex gap-3 w-full sm:w-auto">
                                 ${b.status === 'pending' || (b.status === 'confirmed' && b.paymentStatus !== 'paid') ?
                             `<button onclick="cancelBooking('${b.id}')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-all text-sm">Hủy lịch</button>` : ''}
@@ -854,26 +871,14 @@
             }
         }
 
-        // Gọi API Hủy phòng Node.js
         window.cancelBooking = async function (bookingId) {
             if (confirm('Bạn có chắc chắn muốn hủy đặt phòng này? Hành động này không thể hoàn tác.')) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/bookings/${bookingId}/cancel`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        showToast('Đã hủy đặt phòng thành công!', 'success');
-                        await loadMyBookings();
-                    } else {
-                        showToast(result.message, 'error');
-                    }
+                    await updateDoc(doc(db, 'bookings', bookingId), { status: 'cancelled', updatedAt: new Date().toISOString() });
+                    showToast('Đã hủy lịch đặt phòng', 'success');
+                    await loadMyBookings();
                 } catch (error) {
-                    console.error("Lỗi khi hủy:", error);
-                    showToast('Lỗi máy chủ khi hủy phòng', 'error');
+                    showToast('Có lỗi xảy ra: ' + error.message, 'error');
                 }
             }
         }
