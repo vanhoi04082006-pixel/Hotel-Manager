@@ -127,7 +127,6 @@
 
     <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3"></div>
 
-    <!-- Header sẽ được load vào đây -->
     <div id="app-header"></div>
 
     <main class="min-h-[calc(100vh-80px)] bg-[#f8fafc] pb-24">
@@ -144,7 +143,8 @@
                         </span>
                         <h2
                             class="text-4xl md:text-6xl font-playfair font-bold text-white mb-6 leading-tight drop-shadow-lg">
-                            Dành Riêng<br><span class="italic font-light">Cho Chuyến Đi Của Bạn</span></h2>
+                            Dành Riêng<br><span class="italic font-light">Cho Chuyến Đi Của Bạn</span>
+                        </h2>
                         <p class="text-lg md:text-xl text-slate-300 font-light">Mở khóa những đặc quyền hấp dẫn và tiết
                             kiệm hơn khi đặt phòng trực tiếp tại Luna Hotel.</p>
                     </div>
@@ -170,20 +170,16 @@
                         <h4 class="text-2xl font-bold text-slate-900 mb-2 relative z-10">Bronze Welcome</h4>
                         <p class="text-slate-500 text-[15px] mb-8 relative z-10">Dành cho thành viên mới bắt đầu hành
                             trình.</p>
-
                         <ul class="space-y-4 mb-10 relative z-10">
-                            <li class="flex items-start text-slate-700 font-medium">
-                                <i class="fa-solid fa-check text-amber-500 mr-3 mt-1 text-lg"></i>Giảm 5% cho lần đặt
-                                phòng đầu tiên
-                            </li>
-                            <li class="flex items-start text-slate-700 font-medium">
-                                <i class="fa-solid fa-check text-amber-500 mr-3 mt-1 text-lg"></i>Trà chiều miễn phí (1
-                                lần)
-                            </li>
-                            <li class="flex items-start text-slate-700 font-medium">
-                                <i class="fa-solid fa-check text-amber-500 mr-3 mt-1 text-lg"></i>Check-out muộn 13:00
-                                (Tùy tình trạng)
-                            </li>
+                            <li class="flex items-start text-slate-700 font-medium"><i
+                                    class="fa-solid fa-check text-amber-500 mr-3 mt-1 text-lg"></i>Giảm 5% cho lần đặt
+                                phòng đầu tiên</li>
+                            <li class="flex items-start text-slate-700 font-medium"><i
+                                    class="fa-solid fa-check text-amber-500 mr-3 mt-1 text-lg"></i>Trà chiều miễn phí (1
+                                lần)</li>
+                            <li class="flex items-start text-slate-700 font-medium"><i
+                                    class="fa-solid fa-check text-amber-500 mr-3 mt-1 text-lg"></i>Check-out muộn 13:00
+                                (Tùy tình trạng)</li>
                         </ul>
                         <button onclick="claimOffer('bronze')"
                             class="w-full bg-amber-50 text-amber-700 py-3.5 rounded-xl font-bold hover:bg-amber-600 hover:text-white transition-all shadow-sm relative z-10 border border-amber-200">Kích
@@ -202,20 +198,16 @@
                         <h4 class="text-2xl font-bold text-slate-900 mb-2 relative z-10">Silver Weekend</h4>
                         <p class="text-slate-500 text-[15px] mb-8 relative z-10">Thư giãn cuối tuần cực chill dành cho
                             bạn.</p>
-
                         <ul class="space-y-4 mb-10 relative z-10">
-                            <li class="flex items-start text-slate-700 font-medium">
-                                <i class="fa-solid fa-check text-slate-400 mr-3 mt-1 text-lg"></i>Giảm 10% các đêm thứ
-                                7, Chủ Nhật
-                            </li>
-                            <li class="flex items-start text-slate-700 font-medium">
-                                <i class="fa-solid fa-check text-slate-400 mr-3 mt-1 text-lg"></i>Tặng kèm Buffet sáng
-                                cho 2 người
-                            </li>
-                            <li class="flex items-start text-slate-700 font-medium">
-                                <i class="fa-solid fa-check text-slate-400 mr-3 mt-1 text-lg"></i>Hỗ trợ phí nâng cấp
-                                phòng lên tới 30%
-                            </li>
+                            <li class="flex items-start text-slate-700 font-medium"><i
+                                    class="fa-solid fa-check text-slate-400 mr-3 mt-1 text-lg"></i>Giảm 10% các đêm thứ
+                                7, Chủ Nhật</li>
+                            <li class="flex items-start text-slate-700 font-medium"><i
+                                    class="fa-solid fa-check text-slate-400 mr-3 mt-1 text-lg"></i>Tặng kèm Buffet sáng
+                                cho 2 người</li>
+                            <li class="flex items-start text-slate-700 font-medium"><i
+                                    class="fa-solid fa-check text-slate-400 mr-3 mt-1 text-lg"></i>Hỗ trợ phí nâng cấp
+                                phòng lên tới 30%</li>
                         </ul>
                         <button onclick="claimOffer('silver')"
                             class="w-full bg-slate-50 text-slate-700 py-3.5 rounded-xl font-bold hover:bg-slate-600 hover:text-white transition-all shadow-sm relative z-10 border border-slate-200">Kích
@@ -237,20 +229,16 @@
                         <h4 class="text-2xl font-bold text-slate-900 mb-2 relative z-10">Gold Luxury</h4>
                         <p class="text-slate-500 text-[15px] mb-8 relative z-10">Tận hưởng dịch vụ đẳng cấp thượng lưu.
                         </p>
-
                         <ul class="space-y-4 mb-10 relative z-10">
-                            <li class="flex items-start text-slate-700 font-medium">
-                                <i class="fa-solid fa-check text-yellow-500 mr-3 mt-1 text-lg"></i>Giảm 15% tất cả hóa
-                                đơn dịch vụ
-                            </li>
-                            <li class="flex items-start text-slate-700 font-medium">
-                                <i class="fa-solid fa-check text-yellow-500 mr-3 mt-1 text-lg"></i>Miễn phí gói Spa
-                                Relax 60 phút
-                            </li>
-                            <li class="flex items-start text-slate-700 font-medium">
-                                <i class="fa-solid fa-check text-yellow-500 mr-3 mt-1 text-lg"></i>Đón tiễn sân bay bằng
-                                xe riêng
-                            </li>
+                            <li class="flex items-start text-slate-700 font-medium"><i
+                                    class="fa-solid fa-check text-yellow-500 mr-3 mt-1 text-lg"></i>Giảm 15% tất cả hóa
+                                đơn dịch vụ</li>
+                            <li class="flex items-start text-slate-700 font-medium"><i
+                                    class="fa-solid fa-check text-yellow-500 mr-3 mt-1 text-lg"></i>Miễn phí gói Spa
+                                Relax 60 phút</li>
+                            <li class="flex items-start text-slate-700 font-medium"><i
+                                    class="fa-solid fa-check text-yellow-500 mr-3 mt-1 text-lg"></i>Đón tiễn sân bay
+                                bằng xe riêng</li>
                         </ul>
                         <button onclick="claimOffer('gold')"
                             class="w-full bg-yellow-50 text-yellow-700 py-3.5 rounded-xl font-bold hover:bg-yellow-500 hover:text-white transition-all shadow-sm relative z-10 border border-yellow-200">Kích
@@ -334,19 +322,16 @@
         </div>
     </main>
 
-    <!-- Footer sẽ được load vào đây -->
     <div id="app-footer"></div>
 
     <script type="module">
-        // Import component functions
         import { loadHeader, loadFooter } from "../components.js";
-        
-        // Load header với active page là 'offers'
+
         loadHeader('offers');
         loadFooter();
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -474,16 +459,18 @@
             }
         };
 
-        // Render danh sách Voucher
+        // Render danh sách Voucher từ API Node.js
         async function loadPromotions() {
             try {
-                const promotionsSnap = await getDocs(collection(db, 'promotions'));
-                localPromotions = promotionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(p => p.active);
+                // GỌI API THAY VÌ GỌI FIREBASE TRỰC TIẾP
+                const response = await fetch('http://localhost:3000/api/promotions');
+                localPromotions = await response.json();
+
                 const container = document.getElementById('promotions-container');
 
                 if (localPromotions.length === 0) {
                     container.innerHTML = `
-                        <div class="col-span-3 text-center py-16 bg-white rounded-3xl border border-slate-100">
+                        <div class="col-span-3 text-center py-16 bg-white rounded-3xl border border-slate-100 shadow-sm">
                             <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <i class="fa-solid fa-tags text-3xl text-slate-300"></i>
                             </div>
@@ -550,7 +537,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                showToast('Lỗi tải khuyến mãi', 'error');
+                showToast('Lỗi tải khuyến mãi từ máy chủ', 'error');
             }
         }
 
