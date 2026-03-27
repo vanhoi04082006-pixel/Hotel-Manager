@@ -12,15 +12,21 @@ router.get('/', async (req, res) => {
     }
 });
 
-// API Thêm phòng mới (Che giấu logic xử lý ở đây)
+// API Thêm phòng mới
 router.post('/', async (req, res) => {
     const room = new Room({
         name: req.body.name,
+        code: req.body.code,
         type: req.body.type,
         price: req.body.price,
-        status: req.body.status,
+        status: req.body.status || 'available',
+        image: req.body.image,
+        area: req.body.area,
+        capacity: req.body.capacity,
+        bedType: req.body.bedType,
         amenities: req.body.amenities
     });
+    
     try {
         const newRoom = await room.save();
         res.status(201).json(newRoom);

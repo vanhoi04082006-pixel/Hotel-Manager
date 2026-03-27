@@ -744,9 +744,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, setDoc, onSnapshot, getDoc, getDocs, query, where, Timestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Firebase Config
+        // Chỉ giữ lại cấu hình Firebase cho việc Xác thực (Auth)
         const firebaseConfig = {
             apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
             authDomain: "hotel-manager-2442d.firebaseapp.com",
@@ -757,56 +756,121 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
-
-        // Define admin email
         const ADMIN_EMAIL = 'lunanewyear@gmail.com';
 
+        // ==================== KẾT NỐI BACKEND NODE.JS ====================
+        const API_URL = "https://luna-hotel-api.onrender.com/api";
+
+        // Hàm gọi API dùng chung
+        async function apiFetch(endpoint, method = 'GET', body = null) {
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) options.body = JSON.stringify(body);
+            try {
+                const res = await fetch(`${API_URL}/${endpoint}`, options);
+                if (!res.ok) throw new Error(await res.text());
+                return await res.json();
+            } catch (err) {
+                console.error(`API Error (${endpoint}):`, err);
+                throw err;
+            }
+        }
+
+        // Helper lấy Object Date an toàn
+        function getSafeDate(dateData) {
+            if (!dateData) return new Date(0);
+            if (typeof dateData === 'string' || typeof dateData === 'number') return new Date(dateData);
+            if (dateData.toDate && typeof dateData.toDate === 'function') return dateData.toDate();
+            return new Date(0);
+        }
+
+        window.formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        window.formatDate = (dateData) => { const d = getSafeDate(dateData); return isNaN(d) ? '' : d.toLocaleDateString('vi-VN'); };
+        window.formatDateTime = (dateData) => { const d = getSafeDate(dateData); return isNaN(d) ? '' : d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
         // ==================== GLOBAL STATE ====================
         const store = {
-            currentUser: null,
-            currentUserData: {},
-            userRole: null,
-            localRooms: [],
-            localBookings: [],
-            localServices: [],
-            localUsers: [],
-            localStaff: [],
-            localPromotions: [],
-            localReviews: [],
-            localGallery: [],
-            localInvoices: [],
-            localLogs: [],
-            unsubRooms: null,
-            unsubBookings: null,
-            unsubServices: null,
-            unsubUsers: null,
-            unsubStaff: null,
-            unsubPromotions: null,
-            unsubReviews: null,
-            unsubGallery: null,
-            unsubInvoices: null,
-            unsubLogs: null,
-            currentAdminRoute: 'dashboard',
-            adminBookingsPage: 0,
-            adminBookingsLimit: 10,
-            currentBookingFilter: 'all'
+            currentUser: null, currentUserData: {}, userRole: null,
+            localRooms: [], localBookings: [], localServices: [], localUsers: [],
+            localStaff: [], localPromotions: [], localReviews: [], localGallery: [],
+            localInvoices: [], localLogs: [],
+            currentAdminRoute: 'dashboard', adminBookingsPage: 0, adminBookingsLimit: 10, currentBookingFilter: 'all',
+            promoFilterStatus: 'all', promoSearchQuery: '',
+            customerFilterRole: 'all', customerSearchQuery: '',
+            serviceFilterCategory: 'all', serviceSearchQuery: '',
+            roomFilterStatus: 'all', roomSearchQuery: ''
         };
+
+        window.store = store;
+
+        // ==================== DATA FETCHING ====================
+        window.loadAllData = async function (triggerRender = true) {
+            try {
+                const [rooms, bookings, services, users, staff, promos, reviews, gallery, invoices, logs] = await Promise.all([
+                    apiFetch('rooms').catch(() => []),
+                    apiFetch('bookings').catch(() => []),
+                    apiFetch('services').catch(() => []),
+                    apiFetch('users').catch(() => []),
+                    apiFetch('staff').catch(() => []),
+                    apiFetch('promotions').catch(() => []),
+                    apiFetch('reviews').catch(() => []),
+                    apiFetch('gallery').catch(() => []),
+                    apiFetch('invoices').catch(() => []),
+                    apiFetch('logs').catch(() => [])
+                ]);
+
+                store.localRooms = rooms.map(d => ({ id: d._id, ...d }));
+                store.localBookings = bookings.map(d => ({ id: d._id, ...d }));
+                store.localServices = services.map(d => ({ id: d._id, ...d }));
+                store.localUsers = users.map(d => ({ id: d._id, ...d }));
+                store.localStaff = staff.map(d => ({ id: d._id, ...d }));
+                store.localPromotions = promos.map(d => ({ id: d._id, ...d }));
+                store.localReviews = reviews.map(d => ({ id: d._id, ...d }));
+                store.localGallery = gallery.map(d => ({ id: d._id, ...d }));
+                store.localInvoices = invoices.map(d => ({ id: d._id, ...d }));
+                store.localLogs = logs.map(d => ({ id: d._id, ...d }));
+
+                updateBadge();
+                if (triggerRender) renderCurrentView();
+            } catch (e) { console.error("Lỗi tải dữ liệu tổng", e); }
+        }
+
+        // Tải lại một mảng cụ thể sau khi có thao tác CRUD (Thêm, sửa, xóa)
+        async function refreshCollection(collectionName) {
+            try {
+                const data = await apiFetch(collectionName);
+                const mappedData = data.map(d => ({ id: d._id, ...d }));
+
+                if (collectionName === 'rooms') store.localRooms = mappedData;
+                else if (collectionName === 'bookings') { store.localBookings = mappedData; updateBadge(); }
+                else if (collectionName === 'services') store.localServices = mappedData;
+                else if (collectionName === 'users') store.localUsers = mappedData;
+                else if (collectionName === 'staff') store.localStaff = mappedData;
+                else if (collectionName === 'promotions') store.localPromotions = mappedData;
+                else if (collectionName === 'reviews') store.localReviews = mappedData;
+                else if (collectionName === 'gallery') store.localGallery = mappedData;
+                else if (collectionName === 'invoices') store.localInvoices = mappedData;
+                else if (collectionName === 'logs') store.localLogs = mappedData;
+
+                renderCurrentView();
+            } catch (e) { console.error(`Lỗi làm mới ${collectionName}`, e); }
+        }
+
+        function updateBadge() {
+            const pendingCount = store.localBookings.filter(b => b.status === 'pending').length;
+            const badge = document.getElementById('pending-badge');
+            if (badge) {
+                if (pendingCount > 0) { badge.textContent = pendingCount; badge.classList.remove('hidden'); }
+                else { badge.classList.add('hidden'); }
+            }
+        }
 
         // Hàm thu gọn/mở rộng Sidebar
-        window.toggleSidebar = function () {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('sidebar-collapsed');
-        };
+        window.toggleSidebar = function () { document.getElementById('sidebar').classList.toggle('sidebar-collapsed'); };
 
-        window.store = store; // Attach for global access
-
-        // ==================== ROOM CRUD FUNCTIONS ====================
-        window.openRoomModal = async function (id = null) {
+        // ==================== ROOM CRUD ====================
+        window.openRoomModal = function (id = null) {
             const modal = document.getElementById('roomModal');
-            const form = document.getElementById('roomForm');
-            form.reset();
+            document.getElementById('roomForm').reset();
             document.getElementById('roomId').value = '';
             document.getElementById('roomModalTitle').textContent = 'Thêm phòng mới';
 
@@ -823,7 +887,6 @@
                     document.getElementById('roomImage').value = room.image || '';
                     document.getElementById('roomStatus').value = room.status || 'available';
 
-                    // Amenities
                     const amenities = room.amenities || [];
                     document.getElementById('amenityWifi').checked = amenities.includes('wifi');
                     document.getElementById('amenityTv').checked = amenities.includes('tv');
@@ -833,7 +896,6 @@
                     document.getElementById('amenitySeaView').checked = amenities.includes('seaView');
                     document.getElementById('amenityBreakfast').checked = amenities.includes('breakfast');
                     document.getElementById('amenityPool').checked = amenities.includes('pool');
-
                     document.getElementById('roomModalTitle').textContent = 'Cập nhật phòng';
                 }
             }
@@ -845,8 +907,7 @@
             const id = document.getElementById('roomId').value;
             const btn = document.getElementById('save-room-btn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<div class="loader" style="width:20px;height:20px;"></div>';
-            btn.disabled = true;
+            btn.innerHTML = '<div class="loader" style="width:20px;height:20px;"></div>'; btn.disabled = true;
 
             const amenities = [];
             if (document.getElementById('amenityWifi')?.checked) amenities.push('wifi');
@@ -859,55 +920,28 @@
             if (document.getElementById('amenityPool')?.checked) amenities.push('pool');
 
             const roomData = {
-                code: document.getElementById('roomCode').value,
-                name: document.getElementById('roomName').value,
-                type: document.getElementById('roomType').value,
-                price: parseInt(document.getElementById('roomPrice').value),
-                area: parseInt(document.getElementById('roomArea').value) || 30,
-                capacity: parseInt(document.getElementById('roomCapacity').value) || 2,
-                image: document.getElementById('roomImage').value || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32',
-                status: document.getElementById('roomStatus').value,
-                amenities: amenities,
-                updatedAt: Timestamp.now()
+                code: document.getElementById('roomCode').value, name: document.getElementById('roomName').value, type: document.getElementById('roomType').value,
+                price: parseInt(document.getElementById('roomPrice').value), area: parseInt(document.getElementById('roomArea').value) || 30, capacity: parseInt(document.getElementById('roomCapacity').value) || 2,
+                image: document.getElementById('roomImage').value || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32', status: document.getElementById('roomStatus').value, amenities: amenities,
+                updatedAt: new Date().toISOString()
             };
 
             try {
-                if (id) {
-                    await updateDoc(doc(db, 'rooms', id), roomData);
-                    window.showToast('Cập nhật phòng thành công');
-                    await logAction('info', `Cập nhật phòng ${roomData.code}`);
-                } else {
-                    await addDoc(collection(db, 'rooms'), {
-                        ...roomData,
-                        createdAt: Timestamp.now(),
-                        floor: Math.floor(Math.random() * 10) + 1,
-                        bedType: '1 giường King',
-                        description: roomData.name,
-                        bookingsCount: 0,
-                        views: 0
-                    });
-                    window.showToast('Thêm phòng thành công');
-                    await logAction('success', `Thêm phòng mới ${roomData.code}`);
+                if (id) { await apiFetch(`rooms/${id}`, 'PUT', roomData); window.showToast('Cập nhật phòng thành công'); await logAction('info', `Cập nhật phòng ${roomData.code}`); }
+                else {
+                    roomData.createdAt = new Date().toISOString(); roomData.floor = Math.floor(Math.random() * 10) + 1; roomData.bedType = '1 giường King'; roomData.bookingsCount = 0;
+                    await apiFetch('rooms', 'POST', roomData); window.showToast('Thêm phòng thành công'); await logAction('success', `Thêm phòng mới ${roomData.code}`);
                 }
-                closeModal('roomModal');
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+                await refreshCollection('rooms'); window.closeModal('roomModal');
+            } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); } finally { btn.innerHTML = originalText; btn.disabled = false; }
         };
 
         window.deleteRoom = async function (id) {
             if (confirm('Bạn có chắc muốn xóa phòng này?')) {
                 try {
-                    const room = store.localRooms.find(r => r.id === id);
-                    await deleteDoc(doc(db, 'rooms', id));
-                    window.showToast('Đã xóa phòng');
-                    await logAction('warning', `Xóa phòng ${room?.code}`);
-                } catch (error) {
-                    window.showToast('Lỗi: ' + error.message, 'error');
-                }
+                    const room = store.localRooms.find(r => r.id === id); await apiFetch(`rooms/${id}`, 'DELETE');
+                    window.showToast('Đã xóa phòng'); await logAction('warning', `Xóa phòng ${room?.code}`); await refreshCollection('rooms');
+                } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
             }
         };
 
@@ -935,45 +969,23 @@
         };
 
         window.saveService = async function (e) {
-            e.preventDefault();
-            const id = document.getElementById('serviceId').value;
+            e.preventDefault(); const id = document.getElementById('serviceId').value;
             const serviceData = {
-                name: document.getElementById('serviceName').value,
-                description: document.getElementById('serviceDesc').value,
-                price: parseInt(document.getElementById('servicePrice').value),
-                unit: document.getElementById('serviceUnit').value,
-                icon: document.getElementById('serviceIcon').value,
-                image: document.getElementById('serviceImage').value || '',
-                available: true,
-                updatedAt: Timestamp.now()
+                name: document.getElementById('serviceName').value, description: document.getElementById('serviceDesc').value, price: parseInt(document.getElementById('servicePrice').value),
+                unit: document.getElementById('serviceUnit').value, icon: document.getElementById('serviceIcon').value, image: document.getElementById('serviceImage').value || '',
+                available: true, updatedAt: new Date().toISOString()
             };
-
             try {
-                if (id) {
-                    await updateDoc(doc(db, 'services', id), serviceData);
-                    window.showToast('Cập nhật dịch vụ thành công');
-                } else {
-                    await addDoc(collection(db, 'services'), {
-                        ...serviceData,
-                        createdAt: Timestamp.now(),
-                        category: 'other'
-                    });
-                    window.showToast('Thêm dịch vụ thành công');
-                }
-                closeModal('serviceModal');
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            }
+                if (id) { await apiFetch(`services/${id}`, 'PUT', serviceData); window.showToast('Cập nhật dịch vụ thành công'); }
+                else { serviceData.createdAt = new Date().toISOString(); serviceData.category = 'other'; await apiFetch('services', 'POST', serviceData); window.showToast('Thêm dịch vụ thành công'); }
+                await refreshCollection('services'); window.closeModal('serviceModal');
+            } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
         };
 
         window.deleteService = async function (id) {
             if (confirm('Xóa dịch vụ này?')) {
-                try {
-                    await deleteDoc(doc(db, 'services', id));
-                    window.showToast('Đã xóa dịch vụ');
-                } catch (error) {
-                    window.showToast('Lỗi: ' + error.message, 'error');
-                }
+                try { await apiFetch(`services/${id}`, 'DELETE'); window.showToast('Đã xóa dịch vụ'); await refreshCollection('services'); }
+                catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
             }
         };
 
@@ -1001,45 +1013,26 @@
         };
 
         window.saveStaff = async function (e) {
-            e.preventDefault();
-            const id = document.getElementById('staffId').value;
+            e.preventDefault(); const id = document.getElementById('staffId').value;
             const staffData = {
-                name: document.getElementById('staffName').value,
-                email: document.getElementById('staffEmail').value,
-                phone: document.getElementById('staffPhone').value,
-                position: document.getElementById('staffPosition').value,
-                department: document.getElementById('staffDepartment').value,
-                startDate: document.getElementById('staffStartDate').value,
-                salary: parseInt(document.getElementById('staffSalary').value) || 0,
-                notes: document.getElementById('staffNotes').value,
-                status: 'active',
-                updatedAt: Timestamp.now()
+                name: document.getElementById('staffName').value, email: document.getElementById('staffEmail').value, phone: document.getElementById('staffPhone').value,
+                position: document.getElementById('staffPosition').value, department: document.getElementById('staffDepartment').value, startDate: document.getElementById('staffStartDate').value,
+                salary: parseInt(document.getElementById('staffSalary').value) || 0, notes: document.getElementById('staffNotes').value, status: 'active', updatedAt: new Date().toISOString()
             };
-
             try {
-                if (id) {
-                    await updateDoc(doc(db, 'staff', id), staffData);
-                    window.showToast('Cập nhật nhân viên thành công');
-                } else {
-                    await addDoc(collection(db, 'staff'), { ...staffData, createdAt: Timestamp.now() });
-                    window.showToast('Thêm nhân viên thành công');
-                }
-                closeModal('staffModal');
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            }
+                if (id) { await apiFetch(`staff/${id}`, 'PUT', staffData); window.showToast('Cập nhật nhân viên thành công'); }
+                else { staffData.createdAt = new Date().toISOString(); await apiFetch('staff', 'POST', staffData); window.showToast('Thêm nhân viên thành công'); }
+                await refreshCollection('staff'); window.closeModal('staffModal');
+            } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
         };
 
         window.deleteStaff = async function (id) {
             if (confirm('Xóa nhân viên này?')) {
-                try {
-                    await deleteDoc(doc(db, 'staff', id));
-                    window.showToast('Đã xóa nhân viên');
-                } catch (error) {
-                    window.showToast('Lỗi: ' + error.message, 'error');
-                }
+                try { await apiFetch(`staff/${id}`, 'DELETE'); window.showToast('Đã xóa nhân viên'); await refreshCollection('staff'); }
+                catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
             }
         };
+
 
         // ==================== CUSTOMER CRUD ====================
         window.openCustomerModal = function (id = null) {
@@ -1064,42 +1057,21 @@
         };
 
         window.saveCustomer = async function (e) {
-            e.preventDefault();
-            const id = document.getElementById('customerId').value;
+            e.preventDefault(); const id = document.getElementById('customerId').value;
             const customerData = {
-                name: document.getElementById('customerName').value,
-                email: document.getElementById('customerEmail').value,
-                phone: document.getElementById('customerPhone').value,
-                address: document.getElementById('customerAddress').value,
-                birthday: document.getElementById('customerBirthday').value,
-                role: document.getElementById('customerType').value,
-                notes: document.getElementById('customerNotes').value,
-                updatedAt: Timestamp.now()
+                name: document.getElementById('customerName').value, email: document.getElementById('customerEmail').value, phone: document.getElementById('customerPhone').value,
+                address: document.getElementById('customerAddress').value, birthday: document.getElementById('customerBirthday').value, role: document.getElementById('customerType').value,
+                notes: document.getElementById('customerNotes').value, updatedAt: new Date().toISOString()
             };
-
             try {
-                if (id) {
-                    await updateDoc(doc(db, 'users', id), customerData);
-                    window.showToast('Cập nhật khách hàng thành công');
-                } else {
-                    window.showToast('Tính năng đang phát triển', 'info');
-                }
-                closeModal('customerModal');
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            }
+                if (id) { await apiFetch(`users/${id}`, 'PUT', customerData); window.showToast('Cập nhật khách hàng thành công'); await refreshCollection('users'); }
+                else { window.showToast('Tính năng thêm khách hàng thủ công đang phát triển', 'info'); }
+                window.closeModal('customerModal');
+            } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
         };
 
-        window.deleteCustomer = async function (id) {
-            if (confirm('Xóa khách hàng này?')) {
-                try {
-                    await deleteDoc(doc(db, 'users', id));
-                    window.showToast('Đã xóa khách hàng');
-                } catch (error) {
-                    window.showToast('Lỗi: ' + error.message, 'error');
-                }
-            }
-        };
+        window.deleteCustomer = async function (id) { if (confirm('Lưu ý: Không hỗ trợ xóa khách hàng từ admin để đảm bảo vẹn toàn dữ liệu Firebase Auth.')) { window.showToast('Hành động bị từ chối', 'info'); } };
+
 
         // ==================== PROMOTION CRUD ====================
         window.openPromotionModal = function (id = null) {
@@ -1123,49 +1095,31 @@
                     document.getElementById('promoMinAmount').value = promo.minAmount || '';
                     document.getElementById('promoActive').checked = promo.active || false;
 
-                    if (promo.condition === 'min_amount') {
-                        document.getElementById('minAmountField').classList.remove('hidden');
-                    }
+                    if (promo.condition === 'min_amount') document.getElementById('minAmountField').classList.remove('hidden');
                 }
             }
             modal.classList.remove('hidden');
         };
 
         window.savePromotion = async function (e) {
-            e.preventDefault();
-            const id = document.getElementById('promotionId').value;
+            e.preventDefault(); const id = document.getElementById('promotionId').value;
             const promoData = {
-                code: document.getElementById('promoCode').value,
-                name: document.getElementById('promoName').value,
-                type: document.getElementById('promoType').value,
-                value: parseInt(document.getElementById('promoValue').value),
-                startDate: document.getElementById('promoStart').value,
-                endDate: document.getElementById('promoEnd').value,
-                description: document.getElementById('promoDesc').value,
-                condition: document.getElementById('promoCondition').value,
-                minAmount: parseInt(document.getElementById('promoMinAmount').value) || 0,
-                active: document.getElementById('promoActive').checked,
-                updatedAt: Timestamp.now()
+                code: document.getElementById('promoCode').value, name: document.getElementById('promoName').value, type: document.getElementById('promoType').value, value: parseInt(document.getElementById('promoValue').value),
+                startDate: document.getElementById('promoStart').value, endDate: document.getElementById('promoEnd').value, description: document.getElementById('promoDesc').value,
+                condition: document.getElementById('promoCondition').value, minAmount: parseInt(document.getElementById('promoMinAmount').value) || 0, active: document.getElementById('promoActive').checked, updatedAt: new Date().toISOString()
             };
-
             try {
-                if (id) {
-                    await updateDoc(doc(db, 'promotions', id), promoData);
-                    window.showToast('Cập nhật khuyến mãi thành công');
-                } else {
-                    await addDoc(collection(db, 'promotions'), { ...promoData, createdAt: Timestamp.now() });
-                    window.showToast('Thêm khuyến mãi thành công');
-                }
-                closeModal('promotionModal');
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            }
+                if (id) { await apiFetch(`promotions/${id}`, 'PUT', promoData); window.showToast('Cập nhật khuyến mãi thành công'); }
+                else { promoData.createdAt = new Date().toISOString(); await apiFetch('promotions', 'POST', promoData); window.showToast('Thêm khuyến mãi thành công'); }
+                await refreshCollection('promotions'); window.closeModal('promotionModal');
+            } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
         };
 
         window.togglePromotionStatus = async function (id, active) {
             try {
-                await updateDoc(doc(db, 'promotions', id), { active });
+                await apiFetch(`promotions/${id}`, 'PUT', { active, updatedAt: new Date().toISOString() });
                 window.showToast(active ? 'Đã kích hoạt' : 'Đã tạm dừng');
+                await refreshCollection('promotions');
             } catch (error) {
                 window.showToast('Lỗi: ' + error.message, 'error');
             }
@@ -1173,47 +1127,21 @@
 
         window.deletePromotion = async function (id) {
             if (confirm('Xóa khuyến mãi này?')) {
-                try {
-                    await deleteDoc(doc(db, 'promotions', id));
-                    window.showToast('Đã xóa khuyến mãi');
-                } catch (error) {
-                    window.showToast('Lỗi: ' + error.message, 'error');
-                }
+                try { await apiFetch(`promotions/${id}`, 'DELETE'); window.showToast('Đã xóa khuyến mãi'); await refreshCollection('promotions'); }
+                catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
             }
         };
 
         // ==================== REVIEW FUNCTIONS ====================
-        window.approveReview = async function (id) {
-            try {
-                await updateDoc(doc(db, 'reviews', id), { approved: true });
-                window.showToast('Đã duyệt đánh giá');
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            }
-        };
+        window.approveReview = async function (id) { try { await apiFetch(`reviews/${id}`, 'PUT', { approved: true }); window.showToast('Đã duyệt đánh giá'); await refreshCollection('reviews'); } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); } };
 
-        window.deleteReview = async function (id) {
-            if (confirm('Xóa đánh giá này?')) {
-                try {
-                    await deleteDoc(doc(db, 'reviews', id));
-                    window.showToast('Đã xóa đánh giá');
-                } catch (error) {
-                    window.showToast('Lỗi: ' + error.message, 'error');
-                }
-            }
-        };
+
+        window.deleteReview = async function (id) { if (confirm('Xóa đánh giá này?')) { try { await apiFetch(`reviews/${id}`, 'DELETE'); window.showToast('Đã xóa đánh giá'); await refreshCollection('reviews'); } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); } } };
+
 
         // ==================== GALLERY FUNCTIONS ====================
-        window.deleteGalleryImage = async function (id) {
-            if (confirm('Xóa ảnh này?')) {
-                try {
-                    await deleteDoc(doc(db, 'gallery', id));
-                    window.showToast('Đã xóa ảnh');
-                } catch (error) {
-                    window.showToast('Lỗi: ' + error.message, 'error');
-                }
-            }
-        };
+        window.deleteGalleryImage = async function (id) { if (confirm('Xóa ảnh này?')) { try { await apiFetch(`gallery/${id}`, 'DELETE'); window.showToast('Đã xóa ảnh'); await refreshCollection('gallery'); } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); } } };
+
 
         window.openGalleryImage = function (url) {
             const modal = document.getElementById('galleryImageModal');
@@ -1224,87 +1152,27 @@
         // ==================== BOOKING FUNCTIONS ====================
         window.updateBookingStatus = async function (bookingId, newStatus, roomId) {
             try {
-                await updateDoc(doc(db, 'bookings', bookingId), {
-                    status: newStatus,
-                    updatedAt: Timestamp.now()
-                });
-
-                if (newStatus === 'confirmed') {
-                    await updateDoc(doc(db, 'rooms', roomId), { status: 'occupied' });
-                    window.showToast('Đã xác nhận đặt phòng');
-                } else if (newStatus === 'completed') {
-                    await updateDoc(doc(db, 'rooms', roomId), { status: 'available' });
-                    window.showToast('Đã hoàn tất đặt phòng');
-                    generateInvoice(bookingId);
-                } else if (newStatus === 'cancelled') {
-                    await updateDoc(doc(db, 'rooms', roomId), { status: 'available' });
-                    window.showToast('Đã hủy đặt phòng');
-                }
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            }
+                await apiFetch(`bookings/${bookingId}`, 'PUT', { status: newStatus, updatedAt: new Date().toISOString() });
+                if (newStatus === 'confirmed') { await apiFetch(`rooms/${roomId}`, 'PUT', { status: 'occupied' }); window.showToast('Đã xác nhận đặt phòng'); }
+                else if (newStatus === 'completed') { await apiFetch(`rooms/${roomId}`, 'PUT', { status: 'available' }); window.showToast('Đã hoàn tất đặt phòng'); window.generateInvoice(bookingId); }
+                else if (newStatus === 'cancelled') { await apiFetch(`rooms/${roomId}`, 'PUT', { status: 'available' }); window.showToast('Đã hủy đặt phòng'); }
+                await refreshCollection('bookings'); await refreshCollection('rooms');
+            } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
         };
 
-        window.deleteBooking = async function (id) {
-            if (confirm('Xóa đặt phòng này?')) {
-                try {
-                    await deleteDoc(doc(db, 'bookings', id));
-                    window.showToast('Đã xóa đặt phòng');
-                } catch (error) {
-                    window.showToast('Lỗi: ' + error.message, 'error');
-                }
-            }
-        };
+        window.deleteBooking = async function (id) { if (confirm('Xóa đặt phòng này?')) { try { await apiFetch(`bookings/${id}`, 'DELETE'); window.showToast('Đã xóa đặt phòng'); await refreshCollection('bookings'); } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); } } };
 
         window.generateInvoice = async function (bookingId) {
-            const booking = store.localBookings.find(b => b.id === bookingId);
-            if (!booking) return;
-
-            const invoiceData = {
-                bookingId: booking.id,
-                customerName: booking.userName || booking.userEmail,
-                customerEmail: booking.userEmail,
-                customerPhone: booking.userPhone,
-                roomCode: booking.roomCode,
-                checkIn: booking.checkIn,
-                checkOut: booking.checkOut,
-                nights: booking.nights,
-                roomPrice: booking.roomPrice,
-                roomTotal: booking.roomTotal,
-                services: booking.services || [],
-                serviceTotal: booking.serviceTotal || 0,
-                serviceFee: booking.serviceFee || 0,
-                discount: booking.discountApplied || 0,
-                total: booking.finalPaidAmount || booking.totalPrice,
-                status: 'paid',
-                createdAt: Timestamp.now()
-            };
-
-            try {
-                await addDoc(collection(db, 'invoices'), invoiceData);
-                window.showToast('Đã tạo hóa đơn');
-                await logAction('success', `Tạo hóa đơn cho booking ${bookingId.slice(-8)}`);
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            }
+            const booking = store.localBookings.find(b => b.id === bookingId); if (!booking) return;
+            const invoiceData = { bookingId: booking.id, customerName: booking.userName || booking.userEmail, customerEmail: booking.userEmail, customerPhone: booking.userPhone, roomCode: booking.roomCode, checkIn: booking.checkIn, checkOut: booking.checkOut, nights: booking.nights, roomPrice: booking.roomPrice, roomTotal: booking.roomTotal, services: booking.services || [], serviceTotal: booking.serviceTotal || 0, serviceFee: booking.serviceFee || 0, discount: booking.discountApplied || 0, total: booking.finalPaidAmount || booking.totalPrice, status: 'paid', createdAt: new Date().toISOString() };
+            try { await apiFetch('invoices', 'POST', invoiceData); window.showToast('Đã tạo hóa đơn'); await logAction('success', `Tạo hóa đơn cho booking ${bookingId.slice(-8)}`); await refreshCollection('invoices'); }
+            catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
         };
 
         window.handlePayment = async function (bookingId) {
-            const booking = store.localBookings.find(b => b.id === bookingId);
-            if (!booking) {
-                window.showToast('Không tìm thấy đặt phòng', 'error');
-                return;
-            }
-
-            try {
-                await updateDoc(doc(db, 'bookings', bookingId), {
-                    paymentStatus: 'paid',
-                    updatedAt: Timestamp.now()
-                });
-                window.showToast('Cập nhật thanh toán thành công', 'success');
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            }
+            const booking = store.localBookings.find(b => b.id === bookingId); if (!booking) return;
+            try { await apiFetch('payments', 'POST', { bookingId: bookingId, amount: booking.finalPaidAmount || booking.totalPrice, method: 'cash', status: 'completed', transactionId: 'ADM-' + Date.now() }); window.showToast('Cập nhật thanh toán thành công', 'success'); await refreshCollection('bookings'); }
+            catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
         };
 
         // ==================== EXPORT FUNCTIONS ====================
@@ -1386,11 +1254,76 @@
 
         // ==================== UPDATE EXISTING FUNCTIONS ====================
         // Cập nhật hàm renderInvoices để thêm chức năng tra cứu
-        const originalRenderInvoices = renderInvoices;
+        const originalRenderInvoices = function (container) {
+            container.innerHTML = `
+                <div class="fade-in h-full flex flex-col">
+                    <div class="table-container flex-1 flex flex-col">
+                        <div class="table-header flex justify-between items-center bg-white border-b border-slate-200 p-5 shrink-0">
+                            <h3 class="font-bold text-xl text-slate-800">Lưu trữ Hóa đơn (${store.localInvoices.length})</h3>
+                            <div class="flex space-x-3">
+                                <div class="relative">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
+                                    <input type="text" placeholder="Tra cứu số HD..." class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all w-64" onkeyup="window.setSearchType('invoices'); document.getElementById('globalSearchInput').value=this.value; window.handleSearchKeyUp({target:{value:this.value}});">
+                                </div>
+                                <button onclick="window.exportReportToExcel(store.localInvoices, 'revenue', {from:'Toàn thời gian', to:'Hiện tại'})" class="bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-500 hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center">
+                                    <i class="fa-solid fa-file-excel mr-2"></i>Bảng kê
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-y-auto flex-1 bg-slate-50 p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                                ${store.localInvoices.sort((a, b) => getSafeDate(b.createdAt) - getSafeDate(a.createdAt)).map(i => {
+                const date = getSafeDate(i.createdAt);
+                return `
+                                        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                                            ${i.status === 'paid' ? '<div class="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full -mr-8 -mt-8"></div>' : '<div class="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-bl-full -mr-8 -mt-8"></div>'}
+                                            
+                                            <div class="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Invoice</p>
+                                                    <h4 class="font-mono font-bold text-lg text-slate-800">#INV-${(i.id || 'err').slice(-8).toUpperCase()}</h4>
+                                                </div>
+                                                <span class="px-2.5 py-1 rounded border text-[10px] font-bold ${i.status === 'paid' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}">
+                                                    ${i.status === 'paid' ? '<i class="fa-solid fa-check mr-1"></i>ĐÃ THU TIỀN' : '<i class="fa-solid fa-clock mr-1"></i>CHỜ THU'}
+                                                </span>
+                                            </div>
+                                            
+                                            <div class="space-y-2 mb-5 bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-slate-500"><i class="fa-regular fa-user mr-2"></i>Khách hàng</span>
+                                                    <span class="font-semibold text-slate-800 truncate max-w-[120px]" title="${i.customerName}">${i.customerName}</span>
+                                                </div>
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-slate-500"><i class="fa-regular fa-calendar mr-2"></i>Ngày xuất</span>
+                                                    <span class="font-medium text-slate-700">${window.formatDate(date)}</span>
+                                                </div>
+                                                <div class="flex justify-between items-center text-sm">
+                                                    <span class="text-slate-500"><i class="fa-solid fa-door-open mr-2"></i>Dịch vụ</span>
+                                                    <span class="font-medium text-blue-600">Phòng ${i.roomCode}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="flex items-end justify-between pt-4 border-t border-slate-100">
+                                                <div>
+                                                    <p class="text-xs text-slate-400 font-medium mb-0.5">TỔNG CỘNG</p>
+                                                    <p class="text-xl font-mono font-bold ${i.status === 'paid' ? 'text-slate-800' : 'text-amber-600'}">${window.formatCurrency(i.total || 0)}</p>
+                                                </div>
+                                                <button onclick="window.downloadInvoice('${i.id}')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-500/30 flex items-center justify-center transition-all group-hover:scale-110" title="Tải file PDF">
+                                                    <i class="fa-solid fa-download"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+            }).join('')}
+                                ${store.localInvoices.length === 0 ? '<div class="col-span-full py-20 text-center"><i class="fa-solid fa-file-invoice text-6xl text-slate-200 mb-4"></i><p class="text-slate-500 font-medium">Chưa có hóa đơn nào được hệ thống ghi nhận</p></div>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
         window.renderInvoices = function (container) {
             originalRenderInvoices(container);
-
-            // Thêm sự kiện cho ô tìm kiếm hóa đơn
             const searchInput = document.querySelector('#admin-content input[placeholder="Tra cứu số HD..."]');
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => {
@@ -1497,18 +1430,10 @@
         // Hàm đổi trạng thái nhanh
         window.quickUpdateRoomStatus = async function (roomId, newStatus, currentStatus) {
             if (newStatus === currentStatus) return;
-
             try {
-                window.showToast('Đang cập nhật...', 'info');
-                await updateDoc(doc(db, 'rooms', roomId), {
-                    status: newStatus,
-                    updatedAt: Timestamp.now()
-                });
-                window.showToast('Đã thay đổi trạng thái phòng!', 'success');
-                // Không cần gọi render lại vì onSnapshot đã lắng nghe sự thay đổi và tự render
-            } catch (error) {
-                window.showToast('Lỗi: ' + error.message, 'error');
-            }
+                window.showToast('Đang cập nhật...', 'info'); await apiFetch(`rooms/${roomId}`, 'PUT', { status: newStatus, updatedAt: new Date().toISOString() });
+                window.showToast('Đã thay đổi trạng thái phòng!', 'success'); await refreshCollection('rooms');
+            } catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); }
         };
 
         window.formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -1539,140 +1464,8 @@
         };
 
         // System Log Recorder
-        window.logAction = async (type, message) => {
-            try {
-                await addDoc(collection(db, 'logs'), {
-                    type: type, // 'success', 'warning', 'error', 'info'
-                    message: message,
-                    user: store.currentUser?.email || 'System',
-                    timestamp: Timestamp.now()
-                });
-            } catch (e) { console.error('Failed to write log', e); }
-        };
+        window.logAction = async (type, message) => { try { await apiFetch('logs', 'POST', { type: type, message: message, user: store.currentUser?.email || 'System', timestamp: new Date().toISOString() }); await refreshCollection('logs'); } catch (e) { } };
 
-        // ==================== DATA INITIALIZATION & LISTENERS ====================
-        async function initializeDatabase() {
-            try {
-                const roomsSnap = await getDocs(collection(db, 'rooms'));
-                if (roomsSnap.empty) {
-                    const batch = writeBatch(db);
-
-                    // NÂNG CẤP TOÀN BỘ: 5 Tầng, 25 Phòng (Phân cấp từ Standard đến Tổng thống)
-                    const sampleRooms = [
-                        // ================= TẦNG 1: KHU VỰC TIÊU CHUẨN =================
-                        { code: 'P101', name: 'Phòng Standard Giường Đơn', type: 'Standard', price: 600000, area: 20, capacity: 1, status: 'available', amenities: ['wifi', 'tv', 'ac'], image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800', description: 'Phòng tiêu chuẩn cho người đi công tác', bedType: '1 giường Single', floor: 1, bookingsCount: 45 },
-                        { code: 'P102', name: 'Phòng Standard Giường Đôi', type: 'Standard', price: 800000, area: 25, capacity: 2, status: 'occupied', amenities: ['wifi', 'tv', 'ac'], image: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800', description: 'Phòng đôi tiêu chuẩn, ấm cúng', bedType: '1 giường King', floor: 1, bookingsCount: 32 },
-                        { code: 'P103', name: 'Phòng Standard Hai Giường', type: 'Standard', price: 850000, area: 28, capacity: 2, status: 'available', amenities: ['wifi', 'tv', 'ac'], image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=800', description: 'Phòng 2 giường đơn tiện lợi', bedType: '2 giường Single', floor: 1, bookingsCount: 20 },
-                        { code: 'P104', name: 'Phòng Superior Hướng Phố', type: 'Superior', price: 1200000, area: 32, capacity: 2, status: 'maintenance', amenities: ['wifi', 'tv', 'ac', 'minibar'], image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=800', description: 'Phòng Superior với cửa sổ lớn nhìn ra phố', bedType: '1 giường King', floor: 1, bookingsCount: 15 },
-                        { code: 'P105', name: 'Phòng Superior Hướng Phố', type: 'Superior', price: 1200000, area: 32, capacity: 2, status: 'occupied', amenities: ['wifi', 'tv', 'ac', 'minibar'], image: 'https://images.unsplash.com/photo-1590490359683-658d34c8f92f?q=80&w=800', description: 'Phòng Superior với cửa sổ lớn nhìn ra phố', bedType: '1 giường King', floor: 1, bookingsCount: 28 },
-
-                        // ================= TẦNG 2: KHU VỰC CAO CẤP & GIA ĐÌNH =================
-                        { code: 'P201', name: 'Phòng Superior Hướng Biển', type: 'Superior', price: 1500000, area: 35, capacity: 2, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'seaView'], image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800', description: 'Tầm nhìn một góc ra biển', bedType: '1 giường King', floor: 2, bookingsCount: 19 },
-                        { code: 'P202', name: 'Phòng Superior Hướng Biển', type: 'Superior', price: 1500000, area: 35, capacity: 2, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'seaView'], image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800', description: 'Tầm nhìn một góc ra biển', bedType: '2 giường Single', floor: 2, bookingsCount: 11 },
-                        { code: 'P203', name: 'Phòng Deluxe Hướng Phố', type: 'Deluxe', price: 1800000, area: 40, capacity: 2, status: 'occupied', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub'], image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800', description: 'Nội thất sang trọng, có bồn tắm', bedType: '1 giường King', floor: 2, bookingsCount: 35 },
-                        { code: 'P204', name: 'Phòng Deluxe Góc', type: 'Deluxe', price: 2000000, area: 45, capacity: 2, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub'], image: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=80&w=800', description: 'Phòng góc thoáng đãng, nhiều ánh sáng', bedType: '1 giường King', floor: 2, bookingsCount: 24 },
-                        { code: 'P205', name: 'Phòng Family Cỡ Lớn', type: 'Family', price: 2800000, area: 55, capacity: 4, status: 'occupied', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub'], image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=800', description: 'Tuyệt vời cho kỳ nghỉ gia đình', bedType: '2 giường Queen', floor: 2, bookingsCount: 40 },
-
-                        // ================= TẦNG 3: KHU VỰC THƯƠNG GIA =================
-                        { code: 'P301', name: 'Phòng Deluxe Hướng Biển', type: 'Deluxe', price: 2200000, area: 45, capacity: 2, status: 'maintenance', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView'], image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800', description: 'Trực diện biển, có ban công', bedType: '1 giường King', floor: 3, bookingsCount: 16 },
-                        { code: 'P302', name: 'Phòng Deluxe Hướng Biển', type: 'Deluxe', price: 2200000, area: 45, capacity: 2, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView'], image: 'https://images.unsplash.com/photo-1590490359683-658d34c8f92f?q=80&w=800', description: 'Trực diện biển, có ban công', bedType: '2 giường Single', floor: 3, bookingsCount: 22 },
-                        { code: 'P303', name: 'Phòng Executive Hướng Phố', type: 'Executive', price: 3000000, area: 50, capacity: 2, status: 'occupied', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'breakfast'], image: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800', description: 'Dịch vụ đặc quyền cho doanh nhân', bedType: '1 giường King', floor: 3, bookingsCount: 31 },
-                        { code: 'P304', name: 'Phòng Executive Hướng Biển', type: 'Executive', price: 3500000, area: 55, capacity: 2, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast'], image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800', description: 'Sang trọng, đi kèm bữa sáng VIP', bedType: '1 giường King', floor: 3, bookingsCount: 18 },
-                        { code: 'P305', name: 'Suite Gia Đình Cao Cấp', type: 'Family', price: 4500000, area: 75, capacity: 5, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast'], image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=800', description: 'Căn hộ nhỏ với bếp và phòng khách', bedType: '1 King, 2 Single', floor: 3, bookingsCount: 14 },
-
-                        // ================= TẦNG 4: KHU VỰC SUITE HẠNG SANG =================
-                        { code: 'P401', name: 'Suite Hướng Thành Phố', type: 'Suite', price: 5000000, area: 80, capacity: 2, status: 'occupied', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'breakfast'], image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800', description: 'Phòng khách và phòng ngủ tách biệt', bedType: '1 giường King', floor: 4, bookingsCount: 25 },
-                        { code: 'P402', name: 'Suite Hướng Biển Nhỏ', type: 'Suite', price: 5500000, area: 85, capacity: 2, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast'], image: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=80&w=800', description: 'Tầm nhìn Panorama ra đại dương', bedType: '1 giường King', floor: 4, bookingsCount: 12 },
-                        { code: 'P403', name: 'Suite Trăng Mật', type: 'Suite', price: 6000000, area: 90, capacity: 2, status: 'occupied', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast'], image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800', description: 'Setup lãng mạn, bồn tắm hoa hồng', bedType: '1 giường King', floor: 4, bookingsCount: 38 },
-                        { code: 'P404', name: 'Grand Suite Biển', type: 'Suite', price: 6500000, area: 95, capacity: 4, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast'], image: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800', description: 'Nội thất nhập khẩu cao cấp', bedType: '2 giường Queen', floor: 4, bookingsCount: 9 },
-                        { code: 'P405', name: 'Royal Suite (Phòng Hoàng Gia)', type: 'Suite', price: 8500000, area: 110, capacity: 4, status: 'maintenance', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast'], image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800', description: 'Trải nghiệm phong cách hoàng tộc', bedType: '2 giường King', floor: 4, bookingsCount: 7 },
-
-                        // ================= TẦNG 5: KHU VỰC V.I.P & PENTHOUSE =================
-                        { code: 'P501', name: 'Penthouse Căn Góc', type: 'Suite', price: 12000000, area: 150, capacity: 6, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast', 'pool'], image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=800', description: 'Biệt thự trên cao, hồ bơi vô cực', bedType: '3 giường King', floor: 5, bookingsCount: 5 },
-                        { code: 'P502', name: 'Penthouse Trung Tâm', type: 'Suite', price: 15000000, area: 180, capacity: 6, status: 'occupied', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast', 'pool'], image: 'https://images.unsplash.com/photo-1590490359683-658d34c8f92f?q=80&w=800', description: 'Biệt thự trên cao, hồ bơi vô cực', bedType: '3 giường King', floor: 5, bookingsCount: 8 },
-                        { code: 'P503', name: 'Luna Signature Suite', type: 'Suite', price: 18000000, area: 200, capacity: 4, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast', 'pool'], image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800', description: 'Phòng mang dấu ấn thương hiệu Luna', bedType: '2 giường King', floor: 5, bookingsCount: 3 },
-                        { code: 'P504', name: 'Phòng Tổng Thống (Presidential)', type: 'Suite', price: 25000000, area: 300, capacity: 6, status: 'available', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast', 'pool'], image: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?q=80&w=800', description: 'Tuyệt tác không gian sống đỉnh cao', bedType: '3 giường King', floor: 5, bookingsCount: 1 },
-                        { code: 'P505', name: 'Phòng Tổng Thống Hướng Đại Dương', type: 'Suite', price: 30000000, area: 350, capacity: 6, status: 'occupied', amenities: ['wifi', 'tv', 'ac', 'minibar', 'bathtub', 'seaView', 'breakfast', 'pool'], image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=800', description: 'Căn hộ thượng lưu với mọi tiện ích VIP nhất', bedType: '3 giường King', floor: 5, bookingsCount: 4 }
-                    ];
-
-                    for (const room of sampleRooms) {
-                        const docRef = doc(collection(db, 'rooms'));
-                        batch.set(docRef, { ...room, createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
-                    }
-                    await batch.commit();
-                }
-            } catch (error) { console.error('Error init db:', error); }
-        }
-
-        function setupListeners() {
-            if (store.unsubRooms) store.unsubRooms();
-            store.unsubRooms = onSnapshot(collection(db, 'rooms'), (snap) => {
-                store.localRooms = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (store.currentAdminRoute === 'rooms' || store.currentAdminRoute === 'dashboard') renderCurrentView();
-            });
-
-            if (store.unsubBookings) store.unsubBookings();
-            store.unsubBookings = onSnapshot(collection(db, 'bookings'), (snap) => {
-                store.localBookings = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Update badge pending
-                const pendingCount = store.localBookings.filter(b => b.status === 'pending').length;
-                const badge = document.getElementById('pending-badge');
-                if (badge) {
-                    if (pendingCount > 0) { badge.textContent = pendingCount; badge.classList.remove('hidden'); }
-                    else { badge.classList.add('hidden'); }
-                }
-                if (store.currentAdminRoute === 'bookings' || store.currentAdminRoute === 'dashboard' || store.currentAdminRoute === 'reports') renderCurrentView();
-            });
-
-            if (store.unsubServices) store.unsubServices();
-            store.unsubServices = onSnapshot(collection(db, 'services'), (snap) => {
-                store.localServices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (store.currentAdminRoute === 'services') renderCurrentView();
-            });
-
-            if (store.unsubUsers) store.unsubUsers();
-            store.unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
-                store.localUsers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (store.currentAdminRoute === 'customers') renderCurrentView();
-            });
-
-            if (store.unsubStaff) store.unsubStaff();
-            store.unsubStaff = onSnapshot(collection(db, 'staff'), (snap) => {
-                store.localStaff = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (store.currentAdminRoute === 'staff') renderCurrentView();
-            });
-
-            if (store.unsubPromotions) store.unsubPromotions();
-            store.unsubPromotions = onSnapshot(collection(db, 'promotions'), (snap) => {
-                store.localPromotions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (store.currentAdminRoute === 'promotions') renderCurrentView();
-            });
-
-            if (store.unsubReviews) store.unsubReviews();
-            store.unsubReviews = onSnapshot(collection(db, 'reviews'), (snap) => {
-                store.localReviews = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (store.currentAdminRoute === 'reviews') renderCurrentView();
-            });
-
-            if (store.unsubGallery) store.unsubGallery();
-            store.unsubGallery = onSnapshot(collection(db, 'gallery'), (snap) => {
-                store.localGallery = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (store.currentAdminRoute === 'gallery') renderCurrentView();
-            });
-
-            if (store.unsubInvoices) store.unsubInvoices();
-            store.unsubInvoices = onSnapshot(collection(db, 'invoices'), (snap) => {
-                store.localInvoices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (store.currentAdminRoute === 'invoices') renderCurrentView();
-            });
-
-            if (store.unsubLogs) store.unsubLogs();
-            store.unsubLogs = onSnapshot(collection(db, 'logs'), (snap) => {
-                store.localLogs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (store.currentAdminRoute === 'logs') renderCurrentView();
-            });
-        }
 
         // ==================== SEARCH GLOBAL ====================
         const searchState = { query: '', type: 'all', results: [], showResults: false };
@@ -1987,34 +1780,26 @@
 
         // ==================== COMPONENT RENDERS ====================
 
+        // ==================== UI RENDERING (ĐÃ FIX LỖI DATE) ====================
         function renderDashboard(container) {
             const now = new Date();
             const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-            // --- XỬ LÝ DỮ LIỆU ---
             const activeBookingsToday = store.localBookings.filter(b => b.status !== 'cancelled' && b.checkIn <= todayStr && todayStr < b.checkOut);
             const occupiedRoomIds = activeBookingsToday.map(b => b.roomId);
             const arrivalsToday = store.localBookings.filter(b => b.checkIn === todayStr).length;
-
             const totalRooms = store.localRooms.length;
             const maintenanceRooms = store.localRooms.filter(r => r.status === 'maintenance').length;
-
             let occupiedRooms = 0;
-            store.localRooms.forEach(r => {
-                if (r.status !== 'maintenance' && (r.status === 'occupied' || occupiedRoomIds.includes(r.id))) {
-                    occupiedRooms++;
-                }
-            });
-            const availableRooms = totalRooms - occupiedRooms - maintenanceRooms;
-
+            store.localRooms.forEach(r => { if (r.status !== 'maintenance' && (r.status === 'occupied' || occupiedRoomIds.includes(r.id))) occupiedRooms++; });
             const confirmedBookings = store.localBookings.filter(b => b.status === 'completed' || b.status === 'confirmed');
             const totalRevenue = confirmedBookings.reduce((s, b) => s + (b.finalPaidAmount || b.totalPrice || 0), 0);
             const occupancyRate = totalRooms > 0 ? ((occupiedRooms / totalRooms) * 100).toFixed(1) : 0;
 
-            const recentLogs = [...store.localLogs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 7);
-            const recentReviews = [...store.localReviews].sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
+            // Xử lý Ngày tháng ở Logs và Reviews
+            const recentLogs = [...store.localLogs].sort((a, b) => getSafeDate(b.timestamp) - getSafeDate(a.timestamp)).slice(0, 7);
+            const recentReviews = [...store.localReviews].sort((a, b) => getSafeDate(b.createdAt) - getSafeDate(a.createdAt)).slice(0, 3);
 
-            // --- GIAO DIỆN HTML ---
             container.innerHTML = `
     <div class="fade-in space-y-6 pb-12">
         <div class="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-8 shadow-2xl">
@@ -2104,7 +1889,6 @@
                 </div>
                 <div class="grid grid-cols-5 gap-2.5 overflow-y-auto max-h-[320px] custom-scroll pr-2 pb-2">
     ${[...store.localRooms].sort((a, b) => {
-                // Tách lấy phần số từ mã phòng (VD: 'P101' -> 101) để sắp xếp tăng dần
                 const numA = parseInt((a.code || '').replace(/\D/g, '')) || 0;
                 const numB = parseInt((b.code || '').replace(/\D/g, '')) || 0;
                 return numA - numB;
@@ -2153,51 +1937,8 @@
             </div>
 
             <div class="ultra-glass rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-clipboard-list text-indigo-500 mr-2"></i>Công việc bộ phận</h3>
-                    <span class="bg-indigo-100 text-indigo-600 text-[10px] px-2 py-0.5 rounded font-bold">3 VIỆC</span>
-                </div>
-                <div class="flex-1 space-y-3 custom-scroll overflow-y-auto max-h-[220px]">
-                    <label class="flex items-start p-3 border border-slate-100 rounded-xl cursor-pointer task-item bg-white">
-                        <input type="checkbox" class="task-checkbox mt-1 border-slate-300 rounded text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4">
-                        <div class="ml-3 flex-1">
-                            <p class="text-sm font-bold text-slate-700">Dọn phòng P201 (Check-out)</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>Ưu tiên cao • Buồng phòng</p>
-                        </div>
-                        <span class="task-status text-[10px] px-2 py-1 rounded bg-amber-100 text-amber-700 font-bold ml-2">CHỜ</span>
-                    </label>
-                    <label class="flex items-start p-3 border border-slate-100 rounded-xl cursor-pointer task-item bg-white">
-                        <input type="checkbox" class="task-checkbox mt-1 border-slate-300 rounded text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4">
-                        <div class="ml-3 flex-1">
-                            <p class="text-sm font-bold text-slate-700">Kiểm tra điều hòa P105</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>Trước 14:00 • Bảo trì</p>
-                        </div>
-                        <span class="task-status text-[10px] px-2 py-1 rounded bg-amber-100 text-amber-700 font-bold ml-2">CHỜ</span>
-                    </label>
-                    <label class="flex items-start p-3 border border-slate-100 rounded-xl cursor-pointer task-item bg-white">
-                        <input type="checkbox" class="task-checkbox mt-1 border-slate-300 rounded text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4">
-                        <div class="ml-3 flex-1">
-                            <p class="text-sm font-bold text-slate-700">Setup trái cây phòng VIP</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>Khách đến lúc 15:00 • F&B</p>
-                        </div>
-                        <span class="task-status text-[10px] px-2 py-1 rounded bg-amber-100 text-amber-700 font-bold ml-2">CHỜ</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="ultra-glass rounded-3xl p-6 shadow-sm border border-slate-200">
-                <h3 class="text-base font-bold text-slate-800 mb-1">Mức độ quan tâm dịch vụ</h3>
-                <p class="text-xs text-slate-500 mb-2">Thống kê từ hành vi khách hàng</p>
-                <div class="h-48 relative">
-                    <canvas id="serviceRadarChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="ultra-glass rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
                 <div class="flex justify-between items-center mb-5">
-                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-star text-amber-400 mr-2"></i>Đánh giá mới nhất</h3>
+                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-star text-amber-400 mr-2"></i>Đánh giá mới</h3>
                     <button onclick="window.navigateAdmin('reviews')" class="text-xs text-blue-600 font-bold hover:underline">Xem tất cả</button>
                 </div>
                 <div class="space-y-4 custom-scroll overflow-y-auto max-h-[300px]">
@@ -2233,7 +1974,7 @@
                 <div class="flex-1 overflow-y-auto max-h-[300px] custom-scroll pl-2">
                     <div class="relative border-l border-slate-200 ml-3 space-y-6 pb-2">
                         ${recentLogs.length > 0 ? recentLogs.map((log, i) => {
-                const time = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
+                const time = getSafeDate(log.timestamp);
                 const iconObj = { success: 'fa-check text-emerald-500 bg-emerald-100 border-emerald-200', warning: 'fa-exclamation text-amber-500 bg-amber-100 border-amber-200', error: 'fa-xmark text-red-500 bg-red-100 border-red-200', info: 'fa-info text-blue-500 bg-blue-100 border-blue-200' };
                 const logStyle = iconObj[log.type || 'info'];
 
@@ -2258,8 +1999,6 @@
         </div>
     </div>
     `;
-
-            // Gọi lại hàm vẽ chart với độ trễ nhỏ để DOM load xong
             setTimeout(() => {
                 const roomRev = totalRevenue * 0.65;
                 const serviceRev = totalRevenue * 0.35;
@@ -2330,26 +2069,16 @@
         };
 
         function renderBookings(container) {
-            // 1. Sắp xếp & Lọc
-            const sortedBookings = [...store.localBookings].sort((a, b) => {
-                const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-                return timeB - timeA;
-            });
-
+            const sortedBookings = [...store.localBookings].sort((a, b) => getSafeDate(b.createdAt) - getSafeDate(a.createdAt));
             const filter = store.currentBookingFilter || 'all';
             const searchQuery = store.bookingSearchQuery || '';
 
             let filteredBookings = sortedBookings.filter(b => {
                 const matchFilter = filter === 'all' || b.status === filter;
-                const matchSearch = !searchQuery ||
-                    (b.userName || '').toLowerCase().includes(searchQuery) ||
-                    (b.roomCode || '').toLowerCase().includes(searchQuery) ||
-                    (b.id || '').toLowerCase().includes(searchQuery);
+                const matchSearch = !searchQuery || (b.userName || '').toLowerCase().includes(searchQuery) || (b.roomCode || '').toLowerCase().includes(searchQuery) || (b.id || '').toLowerCase().includes(searchQuery);
                 return matchFilter && matchSearch;
             });
 
-            // 2. Thống kê
             const stats = {
                 total: sortedBookings.length,
                 pending: sortedBookings.filter(b => b.status === 'pending').length,
@@ -2358,7 +2087,6 @@
                 cancelled: sortedBookings.filter(b => b.status === 'cancelled').length,
             };
 
-            // Phân trang
             const start = store.adminBookingsPage * store.adminBookingsLimit;
             const paginated = filteredBookings.slice(start, start + store.adminBookingsLimit);
 
@@ -2436,8 +2164,7 @@
                 if (b.status === 'completed') st = { color: 'emerald', icon: 'fa-check-double', text: 'Hoàn tất' };
                 if (b.status === 'cancelled') st = { color: 'rose', icon: 'fa-xmark', text: 'Đã hủy' };
 
-                const createDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-
+                const createDate = getSafeDate(b.createdAt);
                 return `
                             <div id="card-${b.id}" class="booking-card-ult bg-white rounded-2xl border border-slate-200 relative isolate" style="animation-delay: ${index * 0.05}s">
                                 
@@ -3421,8 +3148,8 @@
 
         function renderReviews(container) {
             const sortedReviews = [...store.localReviews].sort((a, b) => {
-                const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                const ta = getSafeDate(a.createdAt);
+                const tb = getSafeDate(b.createdAt);
                 return tb - ta;
             });
 
@@ -3516,40 +3243,19 @@
         window.openReplyModal = (reviewId) => {
             const review = store.localReviews.find(r => r.id === reviewId);
             if (!review) return;
-
             document.getElementById('replyReviewId').value = reviewId;
             document.getElementById('replyReviewerName').textContent = review.anonymous ? 'Khách ẩn danh' : review.userName;
             document.getElementById('replyReviewContent').textContent = `"${review.content}"`;
             document.getElementById('replyReviewText').value = review.reply || '';
-
             document.getElementById('replyReviewModal').classList.remove('hidden');
         };
 
         window.submitReviewReply = async () => {
-            const reviewId = document.getElementById('replyReviewId').value;
-            const replyText = document.getElementById('replyReviewText').value.trim();
-            const btn = document.getElementById('btn-submit-reply');
-
+            const reviewId = document.getElementById('replyReviewId').value; const replyText = document.getElementById('replyReviewText').value.trim(); const btn = document.getElementById('btn-submit-reply');
             if (!replyText) { window.showToast('Vui lòng nhập nội dung phản hồi', 'warning'); return; }
-
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang gửi...';
-            btn.disabled = true;
-
-            try {
-                await updateDoc(doc(db, 'reviews', reviewId), {
-                    reply: replyText,
-                    replyAt: Timestamp.now(),
-                    replyBy: store.currentUser?.email || 'Admin',
-                    approved: true
-                });
-                window.showToast('Đã gửi phản hồi thành công');
-                window.closeModal('replyReviewModal');
-            } catch (e) {
-                window.showToast('Lỗi: ' + e.message, 'error');
-            } finally {
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i>Gửi phản hồi';
-                btn.disabled = false;
-            }
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang gửi...'; btn.disabled = true;
+            try { await apiFetch(`reviews/${reviewId}`, 'PUT', { reply: replyText, replyAt: new Date().toISOString(), replyBy: store.currentUser?.email || 'Admin', approved: true }); window.showToast('Đã gửi phản hồi thành công'); await refreshCollection('reviews'); window.closeModal('replyReviewModal'); }
+            catch (e) { window.showToast('Lỗi: ' + e.message, 'error'); } finally { btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i>Gửi phản hồi'; btn.disabled = false; }
         };
 
         function renderGallery(container) {
@@ -3598,8 +3304,7 @@
                 const file = input.files[0];
                 if (file.size > 2 * 1024 * 1024) {
                     window.showToast('Kích thước ảnh không được vượt quá 2MB', 'warning');
-                    input.value = '';
-                    return;
+                    input.value = ''; return;
                 }
                 const reader = new FileReader();
                 reader.onload = function (e) {
@@ -3623,47 +3328,12 @@
         });
 
         window.saveGalleryImage = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-save-gallery');
-            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
-
-            const title = document.getElementById('galleryTitle').value;
-            const category = document.getElementById('galleryCategory').value;
+            e.preventDefault(); const btn = document.getElementById('btn-save-gallery'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...';
             const sourceType = document.querySelector('input[name="imageSourceType"]:checked').value;
-
-            let imageUrl = '';
-            if (sourceType === 'url') {
-                imageUrl = document.getElementById('galleryUrlInput').value;
-                if (!imageUrl) { window.showToast('Vui lòng nhập URL ảnh', 'warning'); btn.disabled = false; btn.innerHTML = 'Lưu ảnh'; return; }
-            } else {
-                imageUrl = document.getElementById('galleryBase64Output').value;
-                if (!imageUrl) { window.showToast('Vui lòng chọn file ảnh', 'warning'); btn.disabled = false; btn.innerHTML = 'Lưu ảnh'; return; }
-            }
-
-            try {
-                await addDoc(collection(db, 'gallery'), {
-                    title: title,
-                    category: category,
-                    image: imageUrl,
-                    createdAt: Timestamp.now(),
-                    uploadedBy: store.currentUser?.email || 'Admin'
-                });
-
-                window.showToast('Tải ảnh lên thành công', 'success');
-                window.closeModal('galleryUploadModal');
-                document.getElementById('galleryForm').reset();
-                document.getElementById('galleryPreviewContainer').classList.add('hidden');
-
-            } catch (error) {
-                console.error(error);
-                if (error.code === 'resource-exhausted') {
-                    window.showToast('Ảnh quá lớn để lưu trữ trực tiếp. Vui lòng nén ảnh lại hoặc dùng URL', 'error');
-                } else {
-                    window.showToast('Lỗi: ' + error.message, 'error');
-                }
-            } finally {
-                btn.disabled = false; btn.innerHTML = 'Lưu ảnh';
-            }
+            let imageUrl = sourceType === 'url' ? document.getElementById('galleryUrlInput').value : document.getElementById('galleryBase64Output').value;
+            if (!imageUrl) { window.showToast('Vui lòng chọn ảnh hoặc nhập URL', 'warning'); btn.disabled = false; btn.innerHTML = 'Lưu ảnh'; return; }
+            try { await apiFetch('gallery', 'POST', { title: document.getElementById('galleryTitle').value, category: document.getElementById('galleryCategory').value, image: imageUrl, createdAt: new Date().toISOString(), uploadedBy: store.currentUser?.email || 'Admin' }); window.showToast('Tải ảnh lên thành công', 'success'); await refreshCollection('gallery'); window.closeModal('galleryUploadModal'); document.getElementById('galleryForm').reset(); document.getElementById('galleryPreviewContainer').classList.add('hidden'); }
+            catch (error) { window.showToast('Lỗi: ' + error.message, 'error'); } finally { btn.disabled = false; btn.innerHTML = 'Lưu ảnh'; }
         };
 
         window.downloadInvoice = async (invoiceId) => {
@@ -3772,7 +3442,7 @@
                         <div class="overflow-y-auto flex-1 bg-slate-50 p-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                                 ${store.localInvoices.sort((a, b) => b.createdAt - a.createdAt).map(i => {
-                const date = i.createdAt?.toDate ? i.createdAt.toDate() : new Date(i.createdAt || 0);
+                const date = getSafeDate(i.createdAt);
                 return `
                                         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                             ${i.status === 'paid' ? '<div class="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full -mr-8 -mt-8"></div>' : '<div class="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-bl-full -mr-8 -mt-8"></div>'}
@@ -3827,12 +3497,13 @@
         function renderReports(container) {
             const totalRevenue = store.localBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').reduce((s, b) => s + (b.finalPaidAmount || b.totalPrice || 0), 0)
             const monthlyRevenue = store.localBookings.filter(b => {
-                const d = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                const d = getSafeDate(b.createdAt);
                 const now = new Date();
                 return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && (b.status === 'completed' || b.status === 'confirmed');
             }).reduce((s, b) => s + (b.finalPaidAmount || b.totalPrice || 0), 0);
+
             const weeklyRevenue = store.localBookings.filter(b => {
-                const d = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                const d = getSafeDate(b.createdAt);
                 const weekAgo = new Date();
                 weekAgo.setDate(weekAgo.getDate() - 7);
                 return d >= weekAgo && (b.status === 'completed' || b.status === 'confirmed');
@@ -3844,12 +3515,11 @@
             const cancelledBookings = store.localBookings.filter(b => b.status === 'cancelled').length;
             const cancellationRate = totalBookings > 0 ? ((cancelledBookings / totalBookings) * 100).toFixed(1) : 0;
 
-            // Dữ liệu 6 tháng gần nhất
             const monthlyData = Array.from({ length: 6 }, (_, i) => {
                 const month = new Date();
                 month.setMonth(month.getMonth() - i);
                 const revenue = store.localBookings.filter(b => {
-                    const d = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                    const d = getSafeDate(b.createdAt);
                     return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear() && (b.status === 'completed' || b.status === 'confirmed');
                 }).reduce((s, b) => s + (b.finalPaidAmount || b.totalPrice || 0), 0);
                 return { month: month.getMonth() + 1, revenue, year: month.getFullYear() };
@@ -3857,13 +3527,10 @@
 
             const maxRevenue = Math.max(...monthlyData.map(d => d.revenue), 1);
 
-            // Top dịch vụ
             const serviceUsage = {};
             store.localBookings.forEach(b => {
                 if (b.services) {
-                    b.services.forEach(s => {
-                        serviceUsage[s.name] = (serviceUsage[s.name] || 0) + 1;
-                    });
+                    b.services.forEach(s => { serviceUsage[s.name] = (serviceUsage[s.name] || 0) + 1; });
                 }
             });
             const topServices = Object.entries(serviceUsage).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -4380,11 +4047,7 @@
         };
 
         function renderLogs(container) {
-            const sortedLogs = [...store.localLogs].sort((a, b) => {
-                const ta = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp || 0);
-                const tb = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp || 0);
-                return tb - ta;
-            }).slice(0, 200);
+            const sortedLogs = [...store.localLogs].sort((a, b) => getSafeDate(b.timestamp) - getSafeDate(a.timestamp)).slice(0, 200);
 
             const logStats = {
                 success: sortedLogs.filter(l => l.type === 'success').length,
@@ -4429,7 +4092,7 @@
                         
                         <div class="space-y-2 max-h-[calc(100vh-350px)] overflow-y-auto pr-2">
                             ${sortedLogs.length > 0 ? sortedLogs.map(log => {
-                const timestamp = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp || 0);
+                const timestamp = getSafeDate(log.timestamp);
                 const bgColor = log.type === 'error' ? 'bg-red-50 border-red-200' :
                     log.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
                         log.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200';
@@ -4498,7 +4161,7 @@
             const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
             const revenueData = store.localBookings.filter(b => {
-                const d = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                const d = getSafeDate(b.createdAt);
                 return d >= firstDay && d <= lastDay && (b.status === 'completed' || b.status === 'confirmed');
             });
 
@@ -4527,18 +4190,22 @@
             setTimeout(() => document.getElementById('loading-screen').classList.add('hidden'), 500);
 
             if (user) {
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-                if (user.email === ADMIN_EMAIL || (userDoc.exists() && userDoc.data().role === 'admin')) {
-                    store.currentUser = user;
-                    document.getElementById('admin-name').textContent = userDoc.data()?.name || 'Admin';
-                    document.getElementById('admin-email').textContent = user.email;
+                try {
+                    // Kiểm tra Role qua Node.js API
+                    const userDoc = await apiFetch(`users/${user.uid}`).catch(() => null);
 
-                    await initializeDatabase();
-                    setupListeners();
-                    window.navigateAdmin('dashboard');
-                } else {
-                    window.location.href = '../index.html';
-                }
+                    if (user.email === ADMIN_EMAIL || (userDoc && userDoc.role === 'admin')) {
+                        store.currentUser = user;
+                        store.currentUserData = userDoc || { name: 'Admin' };
+                        document.getElementById('admin-name').textContent = store.currentUserData.name || 'Admin';
+                        document.getElementById('admin-email').textContent = user.email;
+
+                        await window.loadAllData(false);
+                        window.navigateAdmin('dashboard');
+                    } else {
+                        window.location.href = '../index.html';
+                    }
+                } catch (e) { window.location.href = '../login.html'; }
             } else {
                 window.location.href = '../login.html';
             }
@@ -4546,61 +4213,37 @@
 
         // ==================== AUTO CANCEL BOOKINGS (LAZY CHECK) ====================
         window.autoCancelExpiredBookings = async function () {
-            // Chỉ chạy nếu user hiện tại là admin
             if (!store.currentUser) return;
 
             try {
-                const bookingsRef = collection(db, 'bookings');
-                // Lấy tất cả các đơn đang ở trạng thái pending (chờ thanh toán)
-                const q = query(bookingsRef, where('status', '==', 'pending'));
-                const snapshot = await getDocs(q);
-
-                if (snapshot.empty) return;
+                const pendingBookings = store.localBookings.filter(b => b.status === 'pending');
+                if (pendingBookings.length === 0) return;
 
                 const now = new Date();
-                const batch = writeBatch(db);
                 let hasExpired = false;
 
-                snapshot.forEach((docSnap) => {
-                    const b = docSnap.data();
-                    // Xử lý an toàn định dạng thời gian của Firebase
-                    const createdAt = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
-
-                    // Tính khoảng cách thời gian từ lúc đặt đến hiện tại (theo phút)
+                for (const b of pendingBookings) {
+                    const createdAt = new Date(b.createdAt);
                     const diffInMinutes = (now - createdAt) / (1000 * 60);
 
-                    // NẾU QUÁ 1 PHÚT -> ĐƯA VÀO DANH SÁCH HỦY
+                    // QUÁ 1 PHÚT -> HỦY
                     if (diffInMinutes >= 1) {
-                        const docRef = doc(db, 'bookings', docSnap.id);
-                        batch.update(docRef, {
+                        await apiFetch(`bookings/${b.id}`, 'PUT', {
                             status: 'cancelled',
-                            cancelReason: 'Hệ thống tự động hủy: Quá hạn thanh toán 1 phút',
+                            cancelReason: 'Hệ thống tự động hủy: Quá hạn thanh toán',
                             updatedAt: new Date().toISOString()
                         });
-
-                        // Đồng thời phải giải phóng phòng đó (chuyển về available)
-                        if (b.roomId) {
-                            const roomRef = doc(db, 'rooms', b.roomId);
-                            batch.update(roomRef, { status: 'available' });
-                        }
-
+                        if (b.roomId) await apiFetch(`rooms/${b.roomId}`, 'PUT', { status: 'available' });
                         hasExpired = true;
                     }
-                });
-
-                // Thực thi việc cập nhật lên Firebase
-                if (hasExpired) {
-                    await batch.commit();
-                    console.log("Hệ thống đã tự động dọn dẹp các đơn hàng quá 1 phút.");
-
-                    // Cập nhật lại UI nếu Admin đang mở đúng tab Quản lý Đặt phòng
-                    if (store.currentAdminRoute === 'bookings' && typeof renderCurrentView === 'function') {
-                        renderCurrentView();
-                    }
                 }
-            } catch (error) {
-                console.error("Lỗi khi quét đơn quá hạn:", error);
-            }
+
+                if (hasExpired) {
+                    console.log("Hệ thống đã tự động dọn dẹp các đơn hàng quá hạn.");
+                    await refreshCollection('bookings');
+                    await refreshCollection('rooms');
+                }
+            } catch (error) { console.error("Lỗi quét đơn:", error); }
         }
 
         // Thiết lập vòng lặp: Cứ mỗi 30 giây hệ thống sẽ tự quét 1 lần
@@ -4618,7 +4261,7 @@
             let data = [];
             if (type === 'bookings' || type === 'revenue') {
                 data = store.localBookings.filter(b => {
-                    const d = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                    const d = getSafeDate(b.createdAt);
                     return d >= new Date(from) && d <= new Date(to);
                 });
             } else if (type === 'customers') data = store.localUsers.filter(u => u.role !== 'admin');
@@ -4667,17 +4310,6 @@
                     await signOut(auth);
                     localStorage.removeItem('currentUser');
 
-                    if (store.unsubRooms) store.unsubRooms();
-                    if (store.unsubBookings) store.unsubBookings();
-                    if (store.unsubServices) store.unsubServices();
-                    if (store.unsubUsers) store.unsubUsers();
-                    if (store.unsubStaff) store.unsubStaff();
-                    if (store.unsubPromotions) store.unsubPromotions();
-                    if (store.unsubReviews) store.unsubReviews();
-                    if (store.unsubGallery) store.unsubGallery();
-                    if (store.unsubInvoices) store.unsubInvoices();
-                    if (store.unsubLogs) store.unsubLogs();
-
                     store.localRooms = [];
                     store.localBookings = [];
                     store.localServices = [];
@@ -4721,14 +4353,8 @@
         });
 
         // Cập nhật datetime
-        function updateDateTime() {
-            const el = document.getElementById('current-datetime');
-            if (el) {
-                el.textContent = new Date().toLocaleString('vi-VN');
-            }
-        }
-        setInterval(updateDateTime, 1000);
-        updateDateTime();
+        function updateDateTime() { const el = document.getElementById('current-datetime'); if (el) el.textContent = new Date().toLocaleString('vi-VN'); }
+        setInterval(updateDateTime, 1000); updateDateTime();
 
     </script>
 </body>

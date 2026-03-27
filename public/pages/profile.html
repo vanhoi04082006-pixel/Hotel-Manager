@@ -123,7 +123,6 @@
             backdrop-filter: blur(8px);
         }
 
-        /* Tùy chỉnh thanh cuộn */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -159,7 +158,6 @@
     <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3"></div>
 
     <div id="main-content">
-        <!-- Header sẽ được load vào đây -->
         <div id="app-header"></div>
 
         <main class="min-h-[calc(100vh-80px)] pb-24">
@@ -188,8 +186,8 @@
                                 onchange="uploadAvatar(event)">
                         </div>
                         <div class="mb-2">
-                            <h2 class="text-3xl md:text-4xl font-playfair font-bold text-white mb-2" id="display-name">Khách
-                                hàng</h2>
+                            <h2 class="text-3xl md:text-4xl font-playfair font-bold text-white mb-2" id="display-name">
+                                Khách hàng</h2>
                             <p class="text-blue-200 font-medium flex items-center justify-center md:justify-start">
                                 <i class="fa-regular fa-calendar mr-2"></i>Thành viên từ <span id="member-since"
                                     class="ml-1">--/--/----</span>
@@ -213,40 +211,36 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1 space-y-8 animate-item" style="animation-delay: 0.1s;">
-
                         <div id="membership-card"
                             class="bg-gradient-to-br from-amber-500 to-amber-700 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
                             <div
                                 class="absolute -right-10 -top-10 text-white/10 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-700">
-                                <i class="fa-solid fa-crown text-9xl"></i></div>
-
+                                <i class="fa-solid fa-crown text-9xl"></i>
+                            </div>
                             <div class="relative z-10 flex justify-between items-start mb-10">
                                 <div>
-                                    <p class="text-xs uppercase tracking-widest opacity-80 mb-1 font-semibold">Hạng thành
-                                        viên</p>
-                                    <h3 class="text-3xl font-playfair font-bold flex items-center">
-                                        <span id="member-tier">Bronze</span>
-                                    </h3>
+                                    <p class="text-xs uppercase tracking-widest opacity-80 mb-1 font-semibold">Hạng
+                                        thành viên</p>
+                                    <h3 class="text-3xl font-playfair font-bold flex items-center"><span
+                                            id="member-tier">Bronze</span></h3>
                                 </div>
                                 <div
                                     class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/30">
                                     <i class="fa-solid fa-medal text-2xl"></i>
                                 </div>
                             </div>
-
                             <div class="relative z-10 space-y-6">
                                 <div>
-                                    <p class="text-xs uppercase tracking-widest opacity-80 mb-1 font-semibold">Điểm hiện tại
-                                    </p>
+                                    <p class="text-xs uppercase tracking-widest opacity-80 mb-1 font-semibold">Điểm hiện
+                                        tại</p>
                                     <p class="text-4xl font-mono font-bold tracking-tight" id="points-display">0</p>
                                 </div>
                                 <div>
-                                    <p class="text-xs uppercase tracking-widest opacity-80 mb-1 font-semibold">Tổng chi tiêu
-                                    </p>
+                                    <p class="text-xs uppercase tracking-widest opacity-80 mb-1 font-semibold">Tổng chi
+                                        tiêu</p>
                                     <p class="text-2xl font-mono font-bold" id="total-spent">0₫</p>
                                 </div>
                             </div>
-
                             <div class="relative z-10 mt-8 pt-6 border-t border-white/20">
                                 <div class="flex justify-between text-xs font-bold uppercase tracking-wider mb-3">
                                     <span id="current-tier" class="opacity-100">Bronze</span>
@@ -289,8 +283,8 @@
                             <h4 class="font-bold text-slate-900 mb-6 text-lg"><i
                                     class="fa-solid fa-clock-rotate-left text-blue-600 mr-2"></i>Hoạt động gần đây</h4>
                             <div id="recent-activity" class="space-y-4">
-                                <p class="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-xl">Chưa có hoạt động
-                                    nào</p>
+                                <p class="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-xl">Chưa có hoạt
+                                    động nào</p>
                             </div>
                         </div>
                     </div>
@@ -391,7 +385,6 @@
             </div>
         </main>
 
-        <!-- Footer sẽ được load vào đây -->
         <div id="app-footer"></div>
     </div>
 
@@ -417,15 +410,13 @@
     </div>
 
     <script type="module">
-        // Import component functions
         import { loadHeader, loadFooter } from "../components.js";
-        
-        // Load header với active page là 'profile'
+
         loadHeader('profile');
         loadFooter();
 
+        // Giữ lại Firebase Auth cho phần đăng nhập / đổi mật khẩu
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -438,8 +429,10 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
+
+        // --- API NODE.JS / MONGODB ---
+        const API_URL = "https://luna-hotel-api.onrender.com/api";
 
         let currentUser = null;
         let userProfile = { name: '', phone: '', birthday: '', address: '', preferences: '' };
@@ -449,7 +442,7 @@
         function formatDate(dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
 
         window.closeModal = function (id) { document.getElementById(id).classList.add('hidden'); };
-        window.toggleMobileMenu = function () { 
+        window.toggleMobileMenu = function () {
             const mobileMenu = document.getElementById('mobile-menu');
             if (mobileMenu) mobileMenu.classList.toggle('hidden');
         };
@@ -473,9 +466,9 @@
         }
 
         function updateUserUI() {
-            const nameSpan = document.getElementById('user-name-display'); 
+            const nameSpan = document.getElementById('user-name-display');
             const avatar = document.getElementById('user-avatar');
-            const loginBtn = document.getElementById('loginButton'); 
+            const loginBtn = document.getElementById('loginButton');
             const logoutBtn = document.getElementById('logoutButton');
             const mobileLogout = document.getElementById('mobileLogoutBtn');
             const navItems = ['my-bookings', 'profile', 'loyalty', 'offers'];
@@ -489,7 +482,7 @@
                 if (mobileLogout) mobileLogout.classList.remove('hidden');
 
                 navItems.forEach(item => {
-                    const desktop = document.getElementById(`nav-${item}`); 
+                    const desktop = document.getElementById(`nav-${item}`);
                     const mobile = document.getElementById(`mobile-${item}`);
                     if (desktop) desktop.classList.remove('hidden');
                     if (mobile) mobile.classList.remove('hidden');
@@ -502,7 +495,7 @@
                 if (mobileLogout) mobileLogout.classList.add('hidden');
 
                 navItems.forEach(item => {
-                    const desktop = document.getElementById(`nav-${item}`); 
+                    const desktop = document.getElementById(`nav-${item}`);
                     const mobile = document.getElementById(`mobile-${item}`);
                     if (desktop) desktop.classList.add('hidden');
                     if (mobile) mobile.classList.add('hidden');
@@ -532,44 +525,51 @@
             return { tier: 'Bronze', next: 'Silver', progress: points / 10, color: 'from-amber-600 to-amber-800', icon: 'fa-medal' };
         }
 
+        // Kéo dữ liệu người dùng từ Node.js API thay vì Firebase
         async function loadUserData() {
             if (!currentUser) { window.location.href = '../login.html'; return; }
 
             try {
-                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-                if (userDoc.exists()) {
-                    userProfile = userDoc.data();
+                // 1. Kéo Profile
+                const profileRes = await fetch(`${API_URL}/users/${currentUser.uid}`);
+                if (profileRes.ok) {
+                    userProfile = await profileRes.json();
+
                     document.getElementById('profile-name').value = userProfile.name || '';
                     document.getElementById('profile-email').value = currentUser.email;
                     document.getElementById('profile-phone').value = userProfile.phone || '';
                     document.getElementById('profile-birthday').value = userProfile.birthday || '';
                     document.getElementById('profile-address').value = userProfile.address || '';
                     document.getElementById('profile-preferences').value = userProfile.preferences || '';
+
                     document.getElementById('display-name').textContent = userProfile.name || currentUser.email.split('@')[0];
                     document.getElementById('member-since').textContent = formatDate(userProfile.createdAt || new Date());
                     document.getElementById('avatar-letter').textContent = (userProfile.name || 'K').charAt(0).toUpperCase();
                 }
 
-                // Load Avatar từ localStorage nếu có
+                // Load Avatar từ localStorage
                 const savedAvatar = localStorage.getItem('userAvatar');
                 if (savedAvatar) {
                     const avatarContainer = document.getElementById('avatar-letter').parentElement;
                     avatarContainer.innerHTML = `<img src="${savedAvatar}" class="w-full h-full object-cover rounded-[1.5rem]">`;
                 }
 
-                const q = query(collection(db, 'bookings'), where('userEmail', '==', currentUser.email));
-                const querySnapshot = await getDocs(q);
-                userBookings = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // 2. Kéo Lịch sử Booking
+                const bookingRes = await fetch(`${API_URL}/bookings/user/${currentUser.email}`);
+                if (bookingRes.ok) {
+                    const data = await bookingRes.json();
+                    // Map _id sang id cho UI
+                    userBookings = data.map(b => ({ id: b._id, ...b }));
+                }
 
+                // Cập nhật thẻ thành viên
                 const totalSpent = userBookings.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + (b.totalPrice || 0), 0);
                 const points = Math.floor(totalSpent / 100000);
                 const tierInfo = getMemberTier(points);
 
-                // Cập nhật thống kê cơ bản
                 document.getElementById('total-bookings').textContent = userBookings.length;
                 document.getElementById('loyalty-points').textContent = points;
 
-                // Cập nhật Thẻ thành viên
                 const membershipCard = document.getElementById('membership-card');
                 membershipCard.className = `bg-gradient-to-br ${tierInfo.color} rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-300`;
 
@@ -581,7 +581,6 @@
                 document.getElementById('current-tier').textContent = tierInfo.tier;
                 document.getElementById('next-tier').textContent = tierInfo.next;
 
-                // Set animation progress bar
                 setTimeout(() => {
                     document.getElementById('tier-progress').style.width = `${Math.min(tierInfo.progress, 100)}%`;
                 }, 500);
@@ -598,7 +597,7 @@
                                 <i class="fa-solid fa-bed text-blue-600 text-[15px]"></i>
                             </div>
                             <div class="flex-1">
-                                <p class="text-[15px] font-bold text-slate-900">Phòng ${b.roomCode}</p>
+                                <p class="text-[15px] font-bold text-slate-900">Phòng ${b.roomCode || 'N/A'}</p>
                                 <p class="text-[13px] text-slate-500">${formatDate(b.checkIn)} (${b.nights} đêm)</p>
                             </div>
                             <span class="text-xs font-bold px-3 py-1 rounded-full ${b.status === 'completed' ? 'bg-green-100 text-green-700' : b.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}">
@@ -607,7 +606,10 @@
                         </div>
                     `).join('');
                 }
-            } catch (error) { console.error(error); showToast('Lỗi tải dữ liệu hồ sơ', 'error'); }
+            } catch (error) {
+                console.error(error);
+                showToast('Lỗi tải dữ liệu hồ sơ', 'error');
+            }
         }
 
         window.saveProfile = async function (e) {
@@ -618,24 +620,33 @@
             btn.disabled = true;
 
             const newData = {
+                uid: currentUser.uid,
+                email: currentUser.email,
                 name: document.getElementById('profile-name').value,
                 phone: document.getElementById('profile-phone').value,
                 birthday: document.getElementById('profile-birthday').value,
                 address: document.getElementById('profile-address').value,
-                preferences: document.getElementById('profile-preferences').value,
-                updatedAt: new Date().toISOString()
+                preferences: document.getElementById('profile-preferences').value
             };
 
             try {
-                await updateDoc(doc(db, 'users', currentUser.uid), newData);
+                // Đẩy dữ liệu lên API Render Node.js
+                const res = await fetch(`${API_URL}/users/${currentUser.uid}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newData)
+                });
+
+                if (!res.ok) throw new Error('Không thể cập nhật hồ sơ trên server.');
+
                 userProfile = { ...userProfile, ...newData };
 
-                // Cập nhật lại tên trên UI
+                // Cập nhật lại UI
                 document.getElementById('display-name').textContent = newData.name || currentUser.email.split('@')[0];
                 const avatarLetter = document.getElementById('avatar-letter');
                 if (avatarLetter) avatarLetter.textContent = (newData.name || 'K').charAt(0).toUpperCase();
 
-                // Xử lý đổi mật khẩu
+                // Xử lý đổi mật khẩu qua Firebase Auth
                 const currentPassword = document.getElementById('current-password').value;
                 const newPassword = document.getElementById('new-password').value;
 
@@ -651,7 +662,7 @@
                 }
 
                 showToast('Đã cập nhật hồ sơ cá nhân!', 'success');
-                updateUserUI(); // Đồng bộ tên trên header
+                updateUserUI();
             } catch (error) {
                 showToast('Lỗi: ' + error.message, 'error');
             } finally {
@@ -667,15 +678,12 @@
                     showToast('Ảnh quá lớn. Vui lòng chọn ảnh < 2MB', 'warning');
                     return;
                 }
-
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     const imgUrl = e.target.result;
                     localStorage.setItem('userAvatar', imgUrl);
-
                     const avatarContainer = document.getElementById('avatar-letter').parentElement;
                     avatarContainer.innerHTML = `<img src="${imgUrl}" class="w-full h-full object-cover rounded-[1.5rem]">`;
-
                     showToast('Cập nhật ảnh đại diện thành công!', 'success');
                 };
                 reader.readAsDataURL(file);
@@ -707,7 +715,7 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-0.5">Mã giao dịch / Booking</p>
-                                    <p class="font-mono font-bold text-slate-800">#${b.paymentId?.slice(-8).toUpperCase() || b.id.slice(-8).toUpperCase()}</p>
+                                    <p class="font-mono font-bold text-slate-800">#${(b.paymentId || b.id).slice(-8).toUpperCase()}</p>
                                 </div>
                             </div>
                             <div class="text-right">
@@ -718,7 +726,7 @@
                         <div class="grid grid-cols-2 gap-4 text-[14px]">
                             <div>
                                 <p class="text-slate-500 mb-1">Nội dung</p>
-                                <p class="font-semibold text-slate-800">Thanh toán Phòng ${b.roomCode}</p>
+                                <p class="font-semibold text-slate-800">Thanh toán Phòng ${b.roomCode || 'N/A'}</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-slate-500 mb-1">Thời gian</p>

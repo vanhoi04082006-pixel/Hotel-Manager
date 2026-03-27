@@ -16,7 +16,25 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Khai báo các Routes
 const roomRoutes = require('./routes/roomRoutes');
+const serviceRoutes = require('./routes/serviceRoutes'); // Thêm dòng này
+const staffRoutes = require('./routes/staffRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
+const logRoutes = require('./routes/logRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const galleryRoutes = require('./routes/galleryRoutes');
+
+
+// Gắn vào app.use()
 app.use('/api/rooms', roomRoutes);
+app.use('/api/services', serviceRoutes); // Thêm dòng này
+app.use('/api/bookings', require('./routes/bookingRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/promotions', require('./routes/promotionRoutes'));
+app.use('/api/staff', staffRoutes);
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/logs', logRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/gallery', galleryRoutes);
 
 // Chạy Server
 const PORT = process.env.PORT || 5000;
