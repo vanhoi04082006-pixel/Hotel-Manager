@@ -749,12 +749,12 @@
         // Hàm gọi API dùng chung (Đã thêm Token)
         async function apiFetch(endpoint, method = 'GET', body = null) {
             const token = localStorage.getItem('luna_token');
-            const options = {
-                method,
-                headers: {
+            const options = { 
+                method, 
+                headers: { 
                     'Content-Type': 'application/json',
                     'Authorization': token ? `Bearer ${token}` : ''
-                }
+                } 
             };
             if (body) options.body = JSON.stringify(body);
             try {
@@ -4176,21 +4176,48 @@
             XLSX.writeFile(wb, `Luna_DoanhThu_${now.getFullYear()}_${now.getMonth() + 1}.xlsx`);
             window.showToast('Đã xuất doanh thu tháng này', 'success');
         };
-        // ==================== END NEW COMPONENTS ====================\
+        // ==================== END NEW COMPONENTS ====================
 
-        // Hàm cập nhật giờ
-        function updateDateTime() { const el = document.getElementById('current-datetime'); if (el) el.textContent = new Date().toLocaleString('vi-VN'); }
-        setInterval(updateDateTime, 1000); updateDateTime();
+        // Bật file khi Auth load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('luna_token');
+            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+            if (token && savedUser) {
+                try {
+                    // Kiểm tra Role xem có phải admin không
+                    if (savedUser.role === 'admin' || savedUser.email === 'lunanewyear@gmail.com') {
+                        store.currentUser = savedUser;
+                        store.currentUserData = savedUser;
+                        document.getElementById('admin-name').textContent = store.currentUserData.name || 'Admin';
+                        document.getElementById('admin-email').textContent = savedUser.email;
+
+                        // Tải toàn bộ dữ liệu từ MongoDB
+                        await window.loadAllData(false);
+                        window.navigateAdmin('dashboard');
+
+                        // Tắt màn hình loading
+                        const loadingScreen = document.getElementById('loading-screen');
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => loadingScreen.style.display = 'none', 500);
+                    } else {
+                        window.location.href = '../index.html';
+                    }
+                } catch (e) {
+                    console.error("Lỗi xác thực Admin:", e);
+                    localStorage.removeItem('luna_token');
+                    window.location.href = '../login.html';
+                }
+            } else {
+                window.location.href = '../login.html';
+            }
+        });
 
         // ==================== AUTO CANCEL BOOKINGS (LAZY CHECK) ====================
-        // Thiết lập vòng lặp: Cứ mỗi 30 giây hệ thống sẽ tự quét hủy phòng chưa thanh toán 1 lần
-        // ==================== KHỞI ĐỘNG HỆ THỐNG (KHÔNG DÙNG FIREBASE) ====================
         window.autoCancelExpiredBookings = async function () {
-            // Chỉ thực hiện quét nếu có người dùng đăng nhập (để đảm bảo có quyền truy cập API)
             if (!store.currentUser) return;
 
             try {
-                // Lọc các đơn hàng đang ở trạng thái 'pending' từ store cục bộ
                 const pendingBookings = store.localBookings.filter(b => b.status === 'pending');
                 if (pendingBookings.length === 0) return;
 
@@ -4201,44 +4228,28 @@
                     const createdAt = new Date(b.createdAt);
                     const diffInMinutes = (now - createdAt) / (1000 * 60);
 
-                    // Cấu hình: Quá 30 phút mà chưa thanh toán/xác nhận -> Tự động hủy
-                    if (diffInMinutes >= 30) {
-                        console.log(`Đang tự động hủy đơn hàng: ${b.id} (Quá hạn ${Math.floor(diffInMinutes)} phút)`);
-
-                        // 1. Cập nhật trạng thái đơn hàng sang 'cancelled' qua API backend
+                    // QUÁ 1 PHÚT -> HỦY
+                    if (diffInMinutes >= 1) {
                         await apiFetch(`bookings/${b.id}`, 'PUT', {
                             status: 'cancelled',
-                            cancelReason: 'Hệ thống tự động hủy: Quá hạn thanh toán (30 phút)',
+                            cancelReason: 'Hệ thống tự động hủy: Quá hạn thanh toán',
                             updatedAt: new Date().toISOString()
                         });
-
-                        // 2. Giải phóng phòng: Chuyển trạng thái phòng sang 'available'
-                        if (b.roomId) {
-                            await apiFetch(`rooms/${b.roomId}`, 'PUT', {
-                                status: 'available'
-                            });
-                        }
-
+                        if (b.roomId) await apiFetch(`rooms/${b.roomId}`, 'PUT', { status: 'available' });
                         hasExpired = true;
                     }
                 }
 
-                // Nếu có ít nhất một đơn hàng bị hủy, cập nhật lại dữ liệu hiển thị
                 if (hasExpired) {
-                    console.log("Hệ thống đã dọn dẹp xong các đơn hàng quá hạn.");
-                    if (typeof refreshCollection === 'function') {
-                        await refreshCollection('bookings');
-                        await refreshCollection('rooms');
-                    }
+                    console.log("Hệ thống đã tự động dọn dẹp các đơn hàng quá hạn.");
+                    await refreshCollection('bookings');
+                    await refreshCollection('rooms');
                 }
-            } catch (error) {
-                console.error("Lỗi trong quá trình quét đơn hàng tự động:", error);
-            }
-        };
+            } catch (error) { console.error("Lỗi quét đơn:", error); }
+        }
 
         // Thiết lập vòng lặp: Cứ mỗi 30 giây hệ thống sẽ tự quét 1 lần
         setInterval(window.autoCancelExpiredBookings, 30000);
-
 
         window.openReportModal = () => { document.getElementById('reportModal').classList.remove('hidden'); };
 
@@ -4291,7 +4302,6 @@
             window.closeModal('reportModal');
         };
 
-        // ==================== QUẢN LÝ ĐĂNG XUẤT ====================
         window.handleLogout = async function () {
             if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
                 try {
@@ -4315,38 +4325,16 @@
         };
 
         // ==================== BẮT SỰ KIỆN CHO CÁC NÚT ====================
-        // Khởi chạy khi trang vừa tải xong
-        document.addEventListener('DOMContentLoaded', async () => {
-            const token = localStorage.getItem('luna_token');
-            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        // Đảm bảo tất cả các nút đều có sự kiện click
+        document.addEventListener('click', function (e) {
+            // Xử lý nút "Bảng kê" trong invoices
+            if (e.target.closest('.bg-emerald-50') && e.target.closest('.bg-emerald-50')?.textContent.includes('Bảng kê')) {
+                window.exportReportToExcel(store.localInvoices, 'invoices', { from: 'Toàn thời gian', to: 'Hiện tại' });
+            }
 
-            if (token && savedUser) {
-                try {
-                    // Kiểm tra Role xem có phải admin không
-                    if (savedUser.role === 'admin' || savedUser.email === 'lunanewyear@gmail.com') {
-                        store.currentUser = savedUser;
-                        store.currentUserData = savedUser;
-                        document.getElementById('admin-name').textContent = store.currentUserData.name || 'Admin';
-                        document.getElementById('admin-email').textContent = savedUser.email;
-
-                        // Tải toàn bộ dữ liệu từ MongoDB
-                        await window.loadAllData(false);
-                        window.navigateAdmin('dashboard');
-
-                        // Tắt màn hình loading
-                        const loadingScreen = document.getElementById('loading-screen');
-                        loadingScreen.style.opacity = '0';
-                        setTimeout(() => loadingScreen.style.display = 'none', 500);
-                    } else {
-                        window.location.href = '../index.html';
-                    }
-                } catch (e) {
-                    console.error("Lỗi xác thực Admin:", e);
-                    localStorage.removeItem('luna_token');
-                    window.location.href = '../login.html';
-                }
-            } else {
-                window.location.href = '../login.html';
+            // Xử lý nút "Xuất báo cáo chi tiết" trong reports
+            if (e.target.closest('#admin-content .btn-primary') && e.target.closest('#admin-content .btn-primary')?.textContent.includes('Xuất báo cáo')) {
+                window.openReportModal();
             }
         });
 
