@@ -35,6 +35,12 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/gallery', galleryRoutes);
+app.use('/api/users', userRoutes); // 2. Thêm dòng này cực kỳ quan trọng
+app.use('/api/staff', staffRoutes);
+
+app.get('/', (req, res) => {
+    res.send('🚀 Luna Hotel API đang hoạt động mượt mà!');
+});
 
 // Chạy Server
 const PORT = process.env.PORT || 5000;
