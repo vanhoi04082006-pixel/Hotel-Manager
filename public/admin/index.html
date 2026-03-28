@@ -4186,9 +4186,6 @@
 
         // Bật file khi Auth load
         onAuthStateChanged(auth, async (user) => {
-            document.getElementById('loading-screen').classList.add('opacity-0');
-            setTimeout(() => document.getElementById('loading-screen').classList.add('hidden'), 500);
-
             if (user) {
                 try {
                     // Kiểm tra Role qua Node.js API
@@ -4196,25 +4193,39 @@
 
                     if (user.email === ADMIN_EMAIL || (userDoc && userDoc.role === 'admin')) {
                         store.currentUser = user;
-                        store.currentUserData = userDoc || { name: 'Admin' };
+                        store.currentUserData = userDoc || { name: 'Admin', role: 'admin' };
                         document.getElementById('admin-name').textContent = store.currentUserData.name || 'Admin';
                         document.getElementById('admin-email').textContent = user.email;
 
+                        // Tải toàn bộ dữ liệu từ MongoDB
                         await window.loadAllData(false);
                         window.navigateAdmin('dashboard');
+
+                        // Tắt màn hình loading
+                        const loadingScreen = document.getElementById('loading-screen');
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => loadingScreen.style.display = 'none', 500);
                     } else {
+                        // Nếu không phải admin thì đá về trang chủ
                         window.location.href = '../index.html';
                     }
-                } catch (e) { window.location.href = '../login.html'; }
+                } catch (e) {
+                    console.error("Lỗi xác thực Admin:", e);
+                    window.location.href = '../login.html';
+                }
             } else {
                 window.location.href = '../login.html';
             }
         });
 
+        // Hàm cập nhật giờ
+        function updateDateTime() { const el = document.getElementById('current-datetime'); if (el) el.textContent = new Date().toLocaleString('vi-VN'); }
+        setInterval(updateDateTime, 1000); updateDateTime();
+
         // ==================== AUTO CANCEL BOOKINGS (LAZY CHECK) ====================
+        // Thiết lập vòng lặp: Cứ mỗi 30 giây hệ thống sẽ tự quét hủy phòng chưa thanh toán 1 lần
         window.autoCancelExpiredBookings = async function () {
             if (!store.currentUser) return;
-
             try {
                 const pendingBookings = store.localBookings.filter(b => b.status === 'pending');
                 if (pendingBookings.length === 0) return;
@@ -4226,8 +4237,8 @@
                     const createdAt = new Date(b.createdAt);
                     const diffInMinutes = (now - createdAt) / (1000 * 60);
 
-                    // QUÁ 1 PHÚT -> HỦY
-                    if (diffInMinutes >= 1) {
+                    // QUÁ 30 PHÚT -> HỦY (Mình đã đổi từ 1 phút thành 30 phút cho thực tế hơn)
+                    if (diffInMinutes >= 30) {
                         await apiFetch(`bookings/${b.id}`, 'PUT', {
                             status: 'cancelled',
                             cancelReason: 'Hệ thống tự động hủy: Quá hạn thanh toán',
@@ -4244,11 +4255,10 @@
                     await refreshCollection('rooms');
                 }
             } catch (error) { console.error("Lỗi quét đơn:", error); }
-        }
+        };
 
         // Thiết lập vòng lặp: Cứ mỗi 30 giây hệ thống sẽ tự quét 1 lần
         setInterval(window.autoCancelExpiredBookings, 30000);
-
         window.openReportModal = () => { document.getElementById('reportModal').classList.remove('hidden'); };
 
         window.exportReport = () => {
