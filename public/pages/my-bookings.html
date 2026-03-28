@@ -74,10 +74,7 @@
         .page-banner::after {
             content: '';
             position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
+            inset: 0;
             background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=');
             opacity: 0.5;
         }
@@ -152,7 +149,7 @@
         </div>
     </div>
 
-    <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3"></div>
+    <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3 z-[10000]"></div>
 
     <div id="main-content">
         <div id="app-header"></div>
@@ -209,8 +206,7 @@
                     </button>
                 </div>
 
-                <div id="payment-content" class="space-y-6">
-                </div>
+                <div id="payment-content" class="space-y-6"></div>
 
                 <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
                     <button onclick="closePaymentModal()"
@@ -226,10 +222,10 @@
 
     <script type="module">
         import { loadHeader, loadFooter } from "../components.js";
-
         loadHeader('my-bookings');
         loadFooter();
 
+        // CHỈ SỬ DỤNG FIREBASE CHO PHẦN ĐĂNG NHẬP (AUTH)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -245,8 +241,24 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // --- API NODE.JS / MONGODB ---
+        // === CẤU HÌNH API ĐẾN NODE.JS BACKEND MỚI ===
         const API_URL = "https://luna-hotel-api.onrender.com/api";
+
+        async function apiFetch(endpoint, method = 'GET', body = null) {
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) options.body = JSON.stringify(body);
+            try {
+                const res = await fetch(`${API_URL}/${endpoint}`, options);
+                if (!res.ok) {
+                    if (res.status === 404) return null;
+                    throw new Error(`API Error: ${res.status}`);
+                }
+                return await res.json();
+            } catch (error) {
+                console.error(`Fetch error on ${endpoint}:`, error);
+                return null;
+            }
+        }
 
         let currentUser = null;
         let currentBookingForPayment = null;
@@ -256,7 +268,7 @@
         function formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
         function formatDate(dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
 
-        function showToast(message, type = 'success') {
+        window.showToast = function (message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const icons = { success: 'fa-check text-green-500', error: 'fa-xmark text-red-500', warning: 'fa-exclamation text-amber-500', info: 'fa-info text-blue-500' };
@@ -337,12 +349,15 @@
                     setTimeout(() => { window.location.href = '../index.html'; }, 500);
                 } catch (error) {
                     showToast('Lỗi đăng xuất: ' + error.message, 'error');
-                    document.getElementById('loading-screen').style.display = 'none';
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
                 }
             }
         };
 
-        window.openDirectPayment = async function (bookingId, booking) {
+        window.openDirectPayment = async function (bookingId, bookingStr) {
+            // Nhận JSON string từ HTML để tránh lỗi ngoặc kép
+            const booking = typeof bookingStr === 'string' ? JSON.parse(bookingStr) : bookingStr;
             const modal = document.getElementById('paymentModal');
             const content = document.getElementById('payment-content');
 
@@ -350,9 +365,7 @@
             currentDiscount = 0;
             currentDiscountCode = '';
 
-            // Map lại _id nếu lấy từ Mongo
             const safeId = booking._id || booking.id || bookingId;
-
             document.getElementById('payment-booking-code').textContent = `Mã: #${safeId.slice(-8).toUpperCase()}`;
 
             content.innerHTML = `
@@ -420,7 +433,7 @@
                             <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3 group-hover:bg-white peer-checked:bg-blue-100 peer-checked:text-blue-600 transition-colors">
                                 <i class="fa-regular fa-credit-card text-xl text-slate-600 peer-checked:text-blue-600"></i>
                             </div>
-                            <span class="text-sm font-bold text-slate-700">Thẻ Visa/Master</span>
+                            <span class="text-sm font-bold text-slate-700">Thẻ quốc tế</span>
                         </label>
                         <label class="flex flex-col items-center p-4 bg-white rounded-2xl border-2 border-slate-100 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group">
                             <input type="radio" name="paymentMethod" value="wallet" class="hidden peer">
@@ -445,33 +458,15 @@
                     </div>
 
                     <div id="payment-credit-form" class="mt-5 space-y-4 hidden slide-in-up">
-                        <div class="bg-slate-900 p-6 rounded-2xl text-white shadow-lg relative overflow-hidden h-48 flex flex-col justify-between">
-                            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-400 via-transparent to-transparent"></div>
-                            <div class="flex justify-between items-center relative z-10">
-                                <i class="fa-solid fa-microchip text-4xl text-yellow-400 opacity-80"></i>
-                                <div class="space-x-2 text-2xl">
-                                    <i class="fa-brands fa-cc-visa"></i>
-                                    <i class="fa-brands fa-cc-mastercard"></i>
-                                </div>
-                            </div>
-                            <div class="relative z-10 text-center">
-                                <p class="text-2xl font-mono tracking-[0.2em] shadow-sm" id="payment-card-number">**** **** **** ****</p>
-                            </div>
-                            <div class="flex justify-between relative z-10">
-                                <div><p class="text-[10px] opacity-70 uppercase tracking-widest mb-0.5">Hạn thẻ</p><p class="font-mono text-sm" id="payment-card-expiry">**/**</p></div>
-                                <div class="text-right"><p class="text-[10px] opacity-70 uppercase tracking-widest mb-0.5">CVC/CVV</p><p class="font-mono text-sm" id="payment-card-cvv">***</p></div>
-                            </div>
-                        </div>
-                        
                         <div class="pt-2">
                             <label class="form-label">Số thẻ</label>
-                            <input type="text" id="payment-card-number-input" maxlength="19" placeholder="0000 0000 0000 0000" class="form-input text-lg font-mono">
+                            <input type="text" maxlength="19" placeholder="0000 0000 0000 0000" class="form-input text-lg font-mono">
                         </div>
                         <div class="grid grid-cols-2 gap-5">
-                            <div><label class="form-label">Hạn thẻ (MM/YY)</label><input type="text" id="payment-card-expiry-input" maxlength="5" placeholder="MM/YY" class="form-input text-center"></div>
-                            <div><label class="form-label">CVV</label><input type="password" id="payment-card-cvv-input" maxlength="3" placeholder="***" class="form-input text-center"></div>
+                            <div><label class="form-label">Hạn thẻ (MM/YY)</label><input type="text" maxlength="5" placeholder="MM/YY" class="form-input text-center"></div>
+                            <div><label class="form-label">CVV</label><input type="password" maxlength="3" placeholder="***" class="form-input text-center"></div>
                         </div>
-                        <div><label class="form-label">Tên chủ thẻ (Không dấu)</label><input type="text" id="payment-card-name" placeholder="NGUYEN VAN A" class="form-input uppercase"></div>
+                        <div><label class="form-label">Tên chủ thẻ (Không dấu)</label><input type="text" placeholder="NGUYEN VAN A" class="form-input uppercase"></div>
                     </div>
 
                     <div id="payment-wallet-details" class="mt-5 p-6 bg-slate-50 rounded-2xl border border-slate-100 hidden slide-in-up text-center">
@@ -480,15 +475,10 @@
                         <div class="inline-block p-4 bg-white rounded-2xl shadow-lg border border-slate-100">
                             <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LUNA%20HOTEL%20${safeId}" alt="QR Code" class="w-48 h-48">
                         </div>
-                        <div class="flex justify-center gap-4 mt-6">
-                            <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" class="h-8 opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer">
-                            <img src="https://seeklogo.com/images/Z/zalopay-logo-6EA3E8E20B-seeklogo.com.png" class="h-8 opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer">
-                        </div>
                     </div>
                 </div>
             `;
 
-            // Gán sự kiện cho radio buttons
             document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
                 radio.addEventListener('change', function (e) {
                     document.querySelectorAll('input[name="paymentMethod"]').forEach(r => {
@@ -508,38 +498,6 @@
                 });
             });
 
-            // Gán sự kiện cho card input
-            setTimeout(() => {
-                const cardNumberInput = document.getElementById('payment-card-number-input');
-                const cardExpiryInput = document.getElementById('payment-card-expiry-input');
-                const cardCvvInput = document.getElementById('payment-card-cvv-input');
-
-                if (cardNumberInput) {
-                    cardNumberInput.addEventListener('input', function (e) {
-                        let value = e.target.value.replace(/\D/g, '');
-                        let formatted = '';
-                        for (let i = 0; i < value.length; i++) {
-                            if (i > 0 && i % 4 === 0) formatted += ' ';
-                            formatted += value[i];
-                        }
-                        e.target.value = formatted;
-                        document.getElementById('payment-card-number').textContent = formatted || '**** **** **** ****';
-                    });
-                }
-                if (cardExpiryInput) {
-                    cardExpiryInput.addEventListener('input', function (e) {
-                        let value = e.target.value.replace(/\D/g, '');
-                        e.target.value = value.length >= 2 ? value.slice(0, 2) + '/' + value.slice(2, 4) : value;
-                        document.getElementById('payment-card-expiry').textContent = e.target.value || '**/**';
-                    });
-                }
-                if (cardCvvInput) {
-                    cardCvvInput.addEventListener('input', function (e) {
-                        document.getElementById('payment-card-cvv').textContent = e.target.value.padEnd(3, '*');
-                    });
-                }
-            }, 100);
-
             modal.classList.remove('hidden');
         };
 
@@ -551,7 +509,7 @@
             const finalTotalSpan = document.getElementById('final-total-amount');
             const modalTotalSpan = document.getElementById('modal-total-amount');
 
-            const code = promoInput.value.trim();
+            const code = promoInput.value.trim().toUpperCase();
             const originalAmount = currentBookingForPayment.totalPrice;
 
             if (!code) {
@@ -562,6 +520,7 @@
             }
 
             try {
+                // Kiểm tra mã qua API
                 const response = await fetch(`${API_URL}/promotions/check`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -573,19 +532,15 @@
                 if (result.success) {
                     currentDiscount = result.discount;
                     currentDiscountCode = code;
-
                     const finalAmount = originalAmount - currentDiscount;
 
                     discountSection.classList.remove('hidden');
                     discountAmountSpan.textContent = `-${formatCurrency(currentDiscount)}`;
                     finalTotalSpan.textContent = formatCurrency(finalAmount);
+                    if (modalTotalSpan) modalTotalSpan.textContent = formatCurrency(finalAmount);
 
-                    if (modalTotalSpan) {
-                        modalTotalSpan.textContent = formatCurrency(finalAmount);
-                    }
-
-                    promoMessage.textContent = result.message;
-                    promoMessage.className = 'text-xs mt-2 text-green-600';
+                    promoMessage.textContent = result.message || 'Áp dụng mã thành công!';
+                    promoMessage.className = 'text-xs mt-2 text-green-600 font-bold';
                     promoMessage.classList.remove('hidden');
                 } else {
                     currentDiscount = 0;
@@ -593,12 +548,9 @@
 
                     discountSection.classList.add('hidden');
                     finalTotalSpan.textContent = formatCurrency(originalAmount);
+                    if (modalTotalSpan) modalTotalSpan.textContent = formatCurrency(originalAmount);
 
-                    if (modalTotalSpan) {
-                        modalTotalSpan.textContent = formatCurrency(originalAmount);
-                    }
-
-                    promoMessage.textContent = result.message;
+                    promoMessage.textContent = result.message || 'Mã giảm giá không hợp lệ';
                     promoMessage.className = 'text-xs mt-2 text-red-500';
                     promoMessage.classList.remove('hidden');
                 }
@@ -643,14 +595,10 @@
                     method: method,
                     userEmail: currentBookingForPayment.userEmail,
                     roomCode: currentBookingForPayment.roomCode,
-                    transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase()
+                    transactionId: 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                    userId: currentUser?.uid || null
                 };
 
-                if (currentUser) {
-                    paymentData.userId = currentUser.uid;
-                }
-
-                // Gửi request thanh toán tới API Node.js
                 const response = await fetch(`${API_URL}/payments`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -688,14 +636,14 @@
             }
 
             try {
-                // Gọi tới API Backend lấy danh sách booking của khách hàng
+                // Gọi API lấy lịch sử booking của User hiện tại qua Email
                 const response = await fetch(`${API_URL}/bookings/user/${currentUser.email}`);
                 if (!response.ok) throw new Error('Failed to fetch bookings');
 
                 const data = await response.json();
 
-                // Map lại ID từ Mongo
-                const bookings = data.map(b => ({ id: b._id, ...b }));
+                // MongoDB trả về _id, sắp xếp từ mới đến cũ
+                const bookings = data.map(b => ({ id: b._id, ...b })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                 if (bookings.length === 0) {
                     container.innerHTML = `
@@ -716,13 +664,19 @@
                     completed: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', icon: 'fa-flag-checkered' },
                     cancelled: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', icon: 'fa-xmark' }
                 };
-                const statusText = { pending: 'Chờ thanh toán', confirmed: 'Đã xác nhận', completed: 'Hoàn tất', cancelled: 'Đã hủy' };
+                const statusText = { pending: 'Chờ duyệt', confirmed: 'Đã xác nhận', completed: 'Hoàn tất', cancelled: 'Đã hủy' };
 
                 container.innerHTML = bookings.map((b, index) => {
                     const st = statusStyles[b.status] || statusStyles.pending;
                     const payBadge = b.paymentStatus === 'paid'
                         ? `<span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-green-50 text-green-600 border border-green-200"><i class="fa-solid fa-check mr-1"></i>Đã thanh toán</span>`
                         : `<span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-200">Chưa thanh toán</span>`;
+
+                    // Lấy mã đơn thật sự, nếu lấy từ DB là 24 số thì cắt lấy 8 số cuối cho đẹp
+                    const displayCode = b.id ? b.id.slice(-8).toUpperCase() : 'N/A';
+
+                    // Chuyển object booking thành chuỗi an toàn để đưa vào button onclick
+                    const bookingStringForPayment = JSON.stringify(b).replace(/"/g, '&quot;');
 
                     return `
                     <div class="animate-item bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 hover:shadow-[0_8px_30px_rgb(37,99,235,0.08)] transition-all duration-300" style="animation-delay: ${index * 0.1}s">
@@ -733,7 +687,7 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Mã đặt phòng</p>
-                                    <p class="font-mono font-bold text-slate-800">#${b.id.slice(-8).toUpperCase()}</p>
+                                    <p class="font-mono font-bold text-slate-800">#${displayCode}</p>
                                 </div>
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
@@ -754,7 +708,7 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Thời gian</p>
-                                    <p class="font-bold text-slate-800 text-[15px]">${b.nights} đêm</p>
+                                    <p class="font-bold text-slate-800 text-[15px]">${b.nights || 1} đêm</p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Khách</p>
@@ -792,7 +746,7 @@
                             `<button onclick="cancelBooking('${b.id}')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-all text-sm">Hủy lịch</button>` : ''}
                                 
                                 ${b.status !== 'cancelled' && b.paymentStatus !== 'paid' ?
-                            `<button onclick="openDirectPayment('${b.id}', ${JSON.stringify(b).replace(/"/g, '&quot;')})" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all text-sm text-center">Thanh toán ngay</button>` : ''}
+                            `<button onclick="openDirectPayment('${b.id}', '${bookingStringForPayment}')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all text-sm text-center">Thanh toán ngay</button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -812,11 +766,7 @@
         window.cancelBooking = async function (bookingId) {
             if (confirm('Bạn có chắc chắn muốn hủy đặt phòng này? Hành động này không thể hoàn tác.')) {
                 try {
-                    // Cập nhật trạng thái hủy lên Node.js Server
-                    const response = await fetch(`${API_URL}/bookings/${bookingId}/cancel`, {
-                        method: 'PUT'
-                    });
-
+                    const response = await fetch(`${API_URL}/bookings/${bookingId}/cancel`, { method: 'PUT' });
                     if (!response.ok) throw new Error('Lỗi server khi hủy phòng');
 
                     showToast('Đã hủy lịch đặt phòng', 'success');
@@ -825,12 +775,6 @@
                     showToast('Có lỗi xảy ra: ' + error.message, 'error');
                 }
             }
-        }
-
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            updateUserUI();
         }
 
         onAuthStateChanged(auth, async (user) => {
@@ -843,10 +787,12 @@
             }, 800);
 
             if (user) {
+                const userDoc = await apiFetch(`users/${user.uid}`) || {};
                 currentUser = {
                     uid: user.uid,
                     email: user.email,
-                    name: user.displayName || user.email.split('@')[0]
+                    name: userDoc.name || user.displayName || user.email.split('@')[0],
+                    role: userDoc.role || (user.email === ADMIN_EMAIL ? 'admin' : 'user')
                 };
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 updateUserUI();

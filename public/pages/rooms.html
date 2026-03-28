@@ -200,7 +200,7 @@
         </div>
     </div>
 
-    <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3"></div>
+    <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3 z-[10000]"></div>
 
     <div id="main-content">
         <div id="app-header"></div>
@@ -210,7 +210,7 @@
                 <div class="hero-overlay"></div>
                 <div class="max-w-4xl mx-auto px-4 text-center relative z-10 w-full">
                     <span
-                        class="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-bold tracking-widest uppercase mb-6">Luna
+                        class="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-bold tracking-widest uppercase mb-6 animate-pulse">Luna
                         Hotel & Resort</span>
                     <h2
                         class="text-4xl md:text-6xl font-playfair font-bold text-white mb-6 leading-tight drop-shadow-lg">
@@ -443,10 +443,8 @@
         loadHeader('rooms');
         loadFooter();
 
-        // CHÚ Ý: Bạn vẫn đang sử dụng Firebase cho Auth, Services và Bookings.
-        // Chỉ có dữ liệu phòng (Rooms) là đã được tách ra dùng API Render ở hàm loadRooms().
+        // CHỈ SỬ DỤNG FIREBASE CHO PHẦN ĐĂNG NHẬP (AUTH)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -459,12 +457,28 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
         const ADMIN_EMAIL = 'lunanewyear@gmail.com';
 
-        // --- API MỚI CHO ROOMS ---
-        const ROOMS_API_URL = "https://luna-hotel-api.onrender.com/api/rooms";
+        // === CẤU HÌNH API ĐẾN NODE.JS BACKEND MỚI ===
+        const API_URL = "https://luna-hotel-api.onrender.com/api";
+
+        // Hàm gọi API Node.js
+        async function apiFetch(endpoint, method = 'GET', body = null) {
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) options.body = JSON.stringify(body);
+            try {
+                const res = await fetch(`${API_URL}/${endpoint}`, options);
+                if (!res.ok) {
+                    if (res.status === 404) return null;
+                    throw new Error(`API Error: ${res.status}`);
+                }
+                return await res.json();
+            } catch (error) {
+                console.error(`Fetch error on ${endpoint}:`, error);
+                return null;
+            }
+        }
 
         let currentUser = null;
         let allRooms = [];
@@ -489,7 +503,7 @@
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
-        function showToast(message, type = 'success') {
+        window.showToast = function (message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const icons = { success: 'fa-check text-green-500', error: 'fa-xmark text-red-500', warning: 'fa-exclamation text-amber-500', info: 'fa-info text-blue-500' };
@@ -504,7 +518,7 @@
                 toast.style.transform = 'translateY(-20px)';
                 toast.style.transition = 'all 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, 4000);
         }
 
         window.closeModal = function (id) {
@@ -583,12 +597,15 @@
             updateUserUI();
         }
 
+        // TẢI BOOKINGS TỪ API ĐỂ CHECK NGÀY
         async function loadActiveBookings() {
             try {
-                const snapshot = await getDocs(collection(db, 'bookings'));
-                activeBookings = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(b => b.status !== 'cancelled');
+                const bookings = await apiFetch('bookings');
+                if (bookings) {
+                    activeBookings = bookings.filter(b => b.status !== 'cancelled');
+                } else {
+                    activeBookings = [];
+                }
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu booking:", error);
             }
@@ -809,34 +826,33 @@
             }, 300);
         };
 
-        // --- HÀM LOADROOMS ĐƯỢC CHUYỂN SANG DÙNG FETCH API ---
+        // LOAD DỮ LIỆU PHÒNG TỪ API
         async function loadRooms() {
             try {
-                const response = await fetch(ROOMS_API_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await apiFetch('rooms');
+                if (data) {
+                    allRooms = data.map(doc => ({ id: doc._id, ...doc }));
+                    applyFiltersAndSearch();
                 }
-                const data = await response.json();
-
-                // Server trả về _id, map lại thành id để code cũ đọc được
-                allRooms = data.map(doc => ({ id: doc._id, ...doc }));
-
-                applyFiltersAndSearch();
             } catch (error) {
-                console.error('Error loading rooms from Render API:', error);
+                console.error('Error loading rooms:', error);
                 showToast('Lỗi tải dữ liệu phòng từ máy chủ', 'error');
             }
         }
 
+        // LOAD DỊCH VỤ TỪ API
         async function loadServices() {
             try {
-                const servicesSnap = await getDocs(collection(db, 'services'));
-                localServices = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const data = await apiFetch('services');
+                if (data) {
+                    localServices = data.map(doc => ({ id: doc._id, ...doc }));
+                }
             } catch (error) {
                 console.error('Error loading services:', error);
             }
         }
 
+        // KIỂM TRA LỊCH TRỐNG QUA API
         window.loadRoomBookedDates = async function (roomId) {
             const warningBox = document.getElementById('booked-dates-warning');
             const listEl = document.getElementById('booked-dates-list');
@@ -846,24 +862,17 @@
             currentRoomBookedRanges = [];
 
             try {
-                const bookingsRef = collection(db, 'bookings');
+                const bookings = await apiFetch('bookings');
                 const todayStr = new Date().toISOString().split('T')[0];
-
-                const q = query(
-                    bookingsRef,
-                    where('roomId', '==', roomId),
-                    where('status', 'in', ['pending', 'confirmed', 'completed'])
-                );
-
-                const snapshot = await getDocs(q);
                 const bookedDates = [];
 
-                snapshot.forEach(docSnap => {
-                    const b = docSnap.data();
-                    if (b.checkOut >= todayStr) {
-                        bookedDates.push({ checkIn: b.checkIn, checkOut: b.checkOut });
-                    }
-                });
+                if (bookings) {
+                    bookings.forEach(b => {
+                        if (b.roomId === roomId && ['pending', 'confirmed', 'completed'].includes(b.status) && b.checkOut >= todayStr) {
+                            bookedDates.push({ checkIn: b.checkIn, checkOut: b.checkOut });
+                        }
+                    });
+                }
 
                 if (bookedDates.length > 0) {
                     bookedDates.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
@@ -1014,6 +1023,7 @@
             document.getElementById('btn-submit-booking').disabled = false;
         };
 
+        // ĐẨY DỮ LIỆU ĐẶT PHÒNG LÊN MONGODB QUA API
         window.submitBooking = async function (e) {
             e.preventDefault();
 
@@ -1049,20 +1059,19 @@
             btn.disabled = true;
 
             try {
-                const bookingsRef = collection(db, 'bookings');
-                const q = query(bookingsRef,
-                    where('roomId', '==', currentRoom.id),
-                    where('status', 'in', ['pending', 'confirmed', 'completed'])
-                );
-                const snapshot = await getDocs(q);
-
+                // Kiểm tra lại lần cuối xem có ai vừa đặt phòng này không
+                const bookings = await apiFetch('bookings');
                 let isOverlap = false;
-                snapshot.forEach(docSnap => {
-                    const b = docSnap.data();
-                    if (checkIn < b.checkOut && b.checkIn < checkOut) {
-                        isOverlap = true;
-                    }
-                });
+
+                if (bookings) {
+                    bookings.forEach(b => {
+                        if (b.roomId === currentRoom.id && ['pending', 'confirmed', 'completed'].includes(b.status)) {
+                            if (checkIn < b.checkOut && b.checkIn < checkOut) {
+                                isOverlap = true;
+                            }
+                        }
+                    });
+                }
 
                 if (isOverlap) {
                     showToast('Rất tiếc! Phòng này vừa có người đặt xong.', 'error');
@@ -1074,7 +1083,11 @@
 
                 btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang xử lý...';
 
+                // Tạo mã B + 8 ký tự ngẫu nhiên
+                const generateCode = "B" + Math.random().toString(36).substr(2, 8).toUpperCase();
+
                 const bookingData = {
+                    id: generateCode,
                     roomId: currentRoom.id,
                     roomCode: currentRoom.code || 'N/A',
                     userId: currentUser?.uid || 'guest_' + Date.now(),
@@ -1100,8 +1113,13 @@
                     createdAt: new Date().toISOString()
                 };
 
-                const docRef = await addDoc(collection(db, 'bookings'), bookingData);
-                showToast('Đặt phòng thành công! Mã: #' + docRef.id.slice(-8), 'success');
+                // Lưu qua Backend Node.js
+                const savedBooking = await apiFetch('bookings', 'POST', bookingData);
+
+                // Lấy ID trả về để báo cho khách
+                const displayId = (savedBooking && savedBooking._id) ? savedBooking._id.slice(-8).toUpperCase() : generateCode;
+
+                showToast('Đặt phòng thành công! Mã: #' + displayId, 'success');
                 window.closeModal('bookingModal');
 
             } catch (error) {
@@ -1125,14 +1143,13 @@
             }, 1000);
 
             if (user) {
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-                const userData = userDoc.exists() ? userDoc.data() : {};
+                const userDoc = await apiFetch(`users/${user.uid}`) || {};
                 currentUser = {
                     uid: user.uid,
                     email: user.email,
-                    name: userData.name || user.displayName || user.email.split('@')[0],
-                    phone: userData.phone || '',
-                    role: userData.role || (user.email === ADMIN_EMAIL ? 'admin' : 'user')
+                    name: userDoc.name || user.displayName || user.email.split('@')[0],
+                    phone: userDoc.phone || '',
+                    role: userDoc.role || (user.email === ADMIN_EMAIL ? 'admin' : 'user')
                 };
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 updateUserUI();
