@@ -16,28 +16,31 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Khai báo các Routes
 const roomRoutes = require('./routes/roomRoutes');
-const serviceRoutes = require('./routes/serviceRoutes'); // Thêm dòng này
+const serviceRoutes = require('./routes/serviceRoutes');
 const staffRoutes = require('./routes/staffRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
 const logRoutes = require('./routes/logRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const galleryRoutes = require('./routes/galleryRoutes');
+// 1. THÊM DÒNG NÀY ĐỂ KHAI BÁO userRoutes:
+const userRoutes = require('./routes/userRoutes'); 
 
 
 // Gắn vào app.use()
 app.use('/api/rooms', roomRoutes);
-app.use('/api/services', serviceRoutes); // Thêm dòng này
+app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/promotions', require('./routes/promotionRoutes'));
+// 2. Dòng này giờ sẽ hoạt động bình thường:
+app.use('/api/users', userRoutes); 
 app.use('/api/staff', staffRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/gallery', galleryRoutes);
-app.use('/api/users', userRoutes); // 2. Thêm dòng này cực kỳ quan trọng
-app.use('/api/staff', staffRoutes);
 
+// Route mặc định để test server
 app.get('/', (req, res) => {
     res.send('🚀 Luna Hotel API đang hoạt động mượt mà!');
 });
