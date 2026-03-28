@@ -443,23 +443,6 @@
         loadHeader('rooms');
         loadFooter();
 
-        // CHỈ SỬ DỤNG FIREBASE CHO PHẦN ĐĂNG NHẬP (AUTH)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
-            authDomain: "hotel-manager-2442d.firebaseapp.com",
-            projectId: "hotel-manager-2442d",
-            storageBucket: "hotel-manager-2442d.firebasestorage.app",
-            messagingSenderId: "379010173725",
-            appId: "1:379010173725:web:20908f11fb0589ca432ff4"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const ADMIN_EMAIL = 'lunanewyear@gmail.com';
-
         // === CẤU HÌNH API ĐẾN NODE.JS BACKEND MỚI ===
         const API_URL = "https://luna-hotel-api.onrender.com/api";
 
@@ -569,12 +552,17 @@
                         loadingDiv.style.opacity = '1';
                         loadingDiv.style.display = 'flex';
                     }
-                    await signOut(auth);
+
+                    // Xóa Token Node.js thay vì Firebase
+                    localStorage.removeItem('luna_token');
                     localStorage.removeItem('currentUser');
+
                     currentUser = null;
                     updateUserUI();
                     showToast('Đã đăng xuất thành công', 'success');
-                    setTimeout(() => { window.location.href = '../index.html'; }, 500);
+
+                    // Khởi động lại trang để làm mới giao diện
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } catch (error) {
                     console.error('Logout error:', error);
                     showToast('Lỗi đăng xuất: ' + error.message, 'error');
@@ -1133,39 +1121,44 @@
             }
         };
 
-        onAuthStateChanged(auth, async (user) => {
+        // KHỞI ĐỘNG HỆ THỐNG VỚI TOKEN NODE.JS
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 1. Tắt màn hình Loading
             setTimeout(() => {
-                document.getElementById('loading-screen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loading-screen').style.display = 'none';
-                    document.getElementById('main-content').classList.add('loaded');
-                }, 500);
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        document.getElementById('main-content').classList.add('loaded');
+                    }, 500);
+                }
             }, 1000);
 
-            if (user) {
-                const userDoc = await apiFetch(`users/${user.uid}`) || {};
-                currentUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    name: userDoc.name || user.displayName || user.email.split('@')[0],
-                    phone: userDoc.phone || '',
-                    role: userDoc.role || (user.email === ADMIN_EMAIL ? 'admin' : 'user')
-                };
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            // 2. Lấy thông tin User từ LocalStorage
+            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            const token = localStorage.getItem('luna_token');
+
+            if (savedUser && token) {
+                currentUser = savedUser;
                 updateUserUI();
             } else {
                 currentUser = null;
-                localStorage.removeItem('currentUser');
                 updateUserUI();
             }
 
+            // 3. Set bộ lọc ngày tháng
             const todayStr = new Date().toISOString().split('T')[0];
-            document.getElementById('filterCheckIn').min = todayStr;
-            document.getElementById('filterCheckOut').min = todayStr;
+            const filterCheckInEl = document.getElementById('filterCheckIn');
+            const filterCheckOutEl = document.getElementById('filterCheckOut');
+            if (filterCheckInEl) filterCheckInEl.min = todayStr;
+            if (filterCheckOutEl) filterCheckOutEl.min = todayStr;
 
+            // 4. Tải dữ liệu phòng và dịch vụ
             await loadRooms();
             await loadServices();
 
+            // 5. Mở modal phòng nếu có URL params (Ví dụ: khách từ trang chủ bấm "Đặt ngay")
             const urlParams = new URLSearchParams(window.location.search);
             const bookId = urlParams.get('book');
             if (bookId) {

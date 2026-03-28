@@ -268,39 +268,31 @@
         loadHeader('lookup');
         loadFooter();
 
-        // CHỈ SỬ DỤNG FIREBASE CHO PHẦN ĐĂNG NHẬP (AUTH)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
-            authDomain: "hotel-manager-2442d.firebaseapp.com",
-            projectId: "hotel-manager-2442d",
-            storageBucket: "hotel-manager-2442d.firebasestorage.app",
-            messagingSenderId: "379010173725",
-            appId: "1:379010173725:web:20908f11fb0589ca432ff4"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const ADMIN_EMAIL = 'lunanewyear@gmail.com';
-
         // === CẤU HÌNH API ĐẾN NODE.JS BACKEND MỚI ===
         const API_URL = "https://luna-hotel-api.onrender.com/api";
 
+        // Hàm gọi API tích hợp sẵn Token
         async function apiFetch(endpoint, method = 'GET', body = null) {
-            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            const token = localStorage.getItem('luna_token');
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            };
             if (body) options.body = JSON.stringify(body);
             try {
                 const res = await fetch(`${API_URL}/${endpoint}`, options);
+                const data = await res.json().catch(() => null);
                 if (!res.ok) {
-                    if (res.status === 404) return null;
-                    throw new Error(`API Error: ${res.status}`);
+                    if (res.status === 404 && !data) return null; // Case 404 Not Found return null
+                    throw new Error((data && data.message) ? data.message : `Lỗi hệ thống: ${res.status}`);
                 }
-                return await res.json();
+                return data;
             } catch (error) {
                 console.error(`Fetch error on ${endpoint}:`, error);
-                return null;
+                throw error;
             }
         }
 
@@ -309,8 +301,8 @@
         let currentDiscount = 0;
         let currentDiscountCode = '';
 
-        function formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
-        function formatDate(dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
+        window.formatCurrency = function (amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
+        window.formatDate = function (dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
 
         window.showToast = function (message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -380,23 +372,29 @@
         window.handleLogout = async function () {
             if (confirm('Bạn có chắc muốn đăng xuất?')) {
                 try {
-                    document.getElementById('loading-screen').style.opacity = '1';
-                    document.getElementById('loading-screen').style.display = 'flex';
-                    await signOut(auth);
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) {
+                        loadingDiv.style.opacity = '1';
+                        loadingDiv.style.display = 'flex';
+                    }
+                    localStorage.removeItem('luna_token');
                     localStorage.removeItem('currentUser');
-                    window.location.href = '../index.html';
+                    currentUser = null;
+                    updateUserUI();
+                    window.showToast('Đã đăng xuất', 'success');
+                    setTimeout(() => { window.location.href = '../index.html'; }, 500);
                 } catch (error) {
-                    showToast('Lỗi đăng xuất: ' + error.message, 'error');
-                    document.getElementById('loading-screen').style.display = 'none';
+                    window.showToast('Lỗi đăng xuất: ' + error.message, 'error');
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
                 }
             }
         };
 
-        // --- FETCH TRA CỨU ĐẶT PHÒNG QUA API ---
+        // --- TRA CỨU ĐẶT PHÒNG QUA API NODE.JS ---
         window.lookupBooking = async function (e) {
             e.preventDefault();
             const email = document.getElementById('lookupEmail').value.trim();
-            // Xóa dấu # nếu khách hàng lỡ nhập
             const bookingId = document.getElementById('lookupBookingId').value.replace('#', '').trim();
             const resultDiv = document.getElementById('lookupResult');
             const btnSubmit = document.getElementById('btn-submit-lookup');
@@ -407,23 +405,19 @@
 
             try {
                 // Gọi API backend xử lý logic lookup
-                const response = await fetch(`${API_URL}/bookings/lookup?email=${encodeURIComponent(email)}&bookingId=${encodeURIComponent(bookingId)}`);
+                const data = await apiFetch(`bookings/lookup?email=${encodeURIComponent(email)}&bookingId=${encodeURIComponent(bookingId)}`);
                 resultDiv.classList.remove('hidden');
 
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        resultDiv.innerHTML = `
-                            <div class="bg-white rounded-[2rem] p-8 text-center shadow-lg border border-red-100">
-                                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-file-circle-xmark text-3xl text-red-400"></i></div>
-                                <h3 class="text-xl font-bold text-slate-800 mb-2">Không tìm thấy thông tin</h3>
-                                <p class="text-slate-500 text-[15px]">Mã đặt phòng hoặc email không chính xác. Vui lòng kiểm tra lại!</p>
-                            </div>`;
-                        return;
-                    }
-                    throw new Error('Lỗi kết nối máy chủ');
+                if (!data) {
+                    // Xử lý khi API báo lỗi hoặc không tìm thấy (404)
+                    resultDiv.innerHTML = `
+                        <div class="bg-white rounded-[2rem] p-8 text-center shadow-lg border border-red-100">
+                            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-file-circle-xmark text-3xl text-red-400"></i></div>
+                            <h3 class="text-xl font-bold text-slate-800 mb-2">Không tìm thấy thông tin</h3>
+                            <p class="text-slate-500 text-[15px]">Mã đặt phòng hoặc email không chính xác. Vui lòng kiểm tra lại!</p>
+                        </div>`;
+                    return;
                 }
-
-                const data = await response.json();
 
                 // Map lại _id sang id
                 currentBooking = { id: data._id, ...data };
@@ -459,11 +453,11 @@
                             <div class="grid grid-cols-2 gap-y-6 gap-x-4 mb-8">
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Nhận phòng</p>
-                                    <p class="font-bold text-slate-800">${formatDate(currentBooking.checkIn)}</p>
+                                    <p class="font-bold text-slate-800">${window.formatDate(currentBooking.checkIn)}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Trả phòng</p>
-                                    <p class="font-bold text-slate-800">${formatDate(currentBooking.checkOut)}</p>
+                                    <p class="font-bold text-slate-800">${window.formatDate(currentBooking.checkOut)}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Thời gian</p>
@@ -486,13 +480,13 @@
                             <div class="bg-blue-50/50 rounded-2xl p-5 border border-blue-100 flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">Tổng chi phí</p>
-                                    <p class="text-2xl font-bold text-blue-700">${currentBooking.finalPaidAmount ? formatCurrency(currentBooking.finalPaidAmount) : formatCurrency(currentBooking.totalPrice)}</p>
-                                    ${currentBooking.discountApplied ? `<p class="text-xs text-green-600">Đã giảm ${formatCurrency(currentBooking.discountApplied)}</p>` : ''}
+                                    <p class="text-2xl font-bold text-blue-700">${currentBooking.finalPaidAmount ? window.formatCurrency(currentBooking.finalPaidAmount) : window.formatCurrency(currentBooking.totalPrice)}</p>
+                                    ${currentBooking.discountApplied ? `<p class="text-xs text-green-600">Đã giảm ${window.formatCurrency(currentBooking.discountApplied)}</p>` : ''}
                                 </div>
                                 ${currentBooking.paymentStatus === 'paid' ?
                         `<div class="bg-white px-4 py-2 rounded-xl text-green-600 font-bold shadow-sm border border-green-100 flex items-center"><i class="fa-solid fa-check-circle mr-2 text-lg"></i>Đã thanh toán</div>`
                         : currentBooking.status !== 'cancelled' ?
-                            `<button onclick="openPaymentModal('${currentBooking.id || currentBooking._id}')" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:-translate-y-0.5 transition-all">Thanh toán ngay</button>`
+                            `<button onclick="window.openPaymentModal('${currentBooking.id || currentBooking._id}')" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:-translate-y-0.5 transition-all">Thanh toán ngay</button>`
                             : ''}
                             </div>
                         </div>
@@ -515,12 +509,11 @@
         window.openPaymentModal = async function (bookingId) {
             if (!currentBooking || (currentBooking.id !== bookingId && currentBooking._id !== bookingId)) {
                 try {
-                    const res = await fetch(`${API_URL}/bookings/${bookingId}`);
-                    if (!res.ok) throw new Error();
-                    const data = await res.json();
+                    const data = await apiFetch(`bookings/${bookingId}`);
+                    if (!data) throw new Error();
                     currentBooking = { id: data._id, ...data };
                 } catch (e) {
-                    showToast('Không tìm thấy thông tin đặt phòng', 'error');
+                    window.showToast('Không tìm thấy thông tin đặt phòng', 'error');
                     return;
                 }
             }
@@ -550,7 +543,7 @@
                             <span class="text-sm font-medium text-blue-100 tracking-wide uppercase">Tổng thanh toán</span>
                             <span class="text-right text-sm text-blue-100">Phòng ${currentBooking.roomCode}<br>${currentBooking.nights || 1} đêm</span>
                         </div>
-                        <span class="text-4xl font-bold tracking-tight" id="modal-total-amount">${formatCurrency(currentBooking.totalPrice)}</span>
+                        <span class="text-4xl font-bold tracking-tight" id="modal-total-amount">${window.formatCurrency(currentBooking.totalPrice)}</span>
                     </div>
                 </div>
 
@@ -558,13 +551,13 @@
                     <div class="bg-slate-50 rounded-2xl p-5 mb-6">
                         <div class="flex justify-between items-center mb-4">
                             <span class="font-bold text-slate-700">Tạm tính</span>
-                            <span class="text-xl font-bold text-slate-800" id="subtotal-amount">${formatCurrency(currentBooking.totalPrice)}</span>
+                            <span class="text-xl font-bold text-slate-800" id="subtotal-amount">${window.formatCurrency(currentBooking.totalPrice)}</span>
                         </div>
                         
                         <div class="border-t border-slate-200 pt-4 mb-4">
                             <div class="flex gap-3">
                                 <input type="text" id="promo-code-input" placeholder="Nhập mã giảm giá" class="form-input flex-1 text-sm">
-                                <button onclick="applyPromoCodeToPayment()" class="px-5 py-2 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-blue-600 transition-all whitespace-nowrap">
+                                <button onclick="window.applyPromoCodeToPayment()" class="px-5 py-2 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-blue-600 transition-all whitespace-nowrap">
                                     Áp dụng
                                 </button>
                             </div>
@@ -581,7 +574,7 @@
                         <div class="border-t border-slate-200 pt-4">
                             <div class="flex justify-between items-center">
                                 <span class="font-bold text-slate-800 text-lg">Tổng cộng</span>
-                                <span class="text-2xl font-bold text-blue-600" id="final-total-amount">${formatCurrency(currentBooking.totalPrice)}</span>
+                                <span class="text-2xl font-bold text-blue-600" id="final-total-amount">${window.formatCurrency(currentBooking.totalPrice)}</span>
                             </div>
                         </div>
                     </div>
@@ -607,7 +600,7 @@
                             <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3 group-hover:bg-white peer-checked:bg-blue-100 peer-checked:text-blue-600 transition-colors">
                                 <i class="fa-regular fa-credit-card text-xl text-slate-600 peer-checked:text-blue-600"></i>
                             </div>
-                            <span class="text-sm font-bold text-slate-700">Thẻ Visa/Master</span>
+                            <span class="text-sm font-bold text-slate-700">Thẻ quốc tế</span>
                         </label>
                         <label class="flex flex-col items-center p-4 bg-white rounded-2xl border-2 border-slate-100 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group">
                             <input type="radio" name="paymentMethod" value="wallet" class="hidden peer">
@@ -626,7 +619,7 @@
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-slate-50 pb-2"><span class="text-slate-500 text-sm mb-1 sm:mb-0">Chủ tài khoản</span><span class="font-bold text-slate-900">LUNA HOTEL & RESORT</span></div>
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center"><span class="text-slate-500 text-sm mb-1 sm:mb-0">Nội dung</span><span class="font-mono font-bold bg-slate-100 px-3 py-1 rounded" id="payment-bank-content">PAY ${safeId.slice(-8).toUpperCase()}</span></div>
                         </div>
-                        <button onclick="copyBankInfo()" class="mt-4 w-full bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                        <button onclick="window.copyBankInfo()" class="mt-4 w-full bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                             <i class="fa-regular fa-copy mr-2"></i>Sao chép thông tin
                         </button>
                     </div>
@@ -753,24 +746,18 @@
             }
 
             try {
-                const response = await fetch(`${API_URL}/promotions/check`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, originalAmount })
-                });
+                const result = await apiFetch('promotions/check', 'POST', { code, originalAmount });
 
-                const result = await response.json();
-
-                if (result.success) {
+                if (result && result.success) {
                     currentDiscount = result.discount;
                     currentDiscountCode = code;
 
                     const finalAmount = originalAmount - currentDiscount;
 
                     discountSection.classList.remove('hidden');
-                    discountAmountSpan.textContent = `-${formatCurrency(currentDiscount)}`;
-                    finalTotalSpan.textContent = formatCurrency(finalAmount);
-                    if (modalTotalSpan) modalTotalSpan.textContent = formatCurrency(finalAmount);
+                    discountAmountSpan.textContent = `-${window.formatCurrency(currentDiscount)}`;
+                    finalTotalSpan.textContent = window.formatCurrency(finalAmount);
+                    if (modalTotalSpan) modalTotalSpan.textContent = window.formatCurrency(finalAmount);
 
                     promoMessage.textContent = result.message || 'Áp dụng mã thành công!';
                     promoMessage.className = 'text-xs mt-2 text-green-600 font-bold';
@@ -780,22 +767,22 @@
                     currentDiscountCode = '';
 
                     discountSection.classList.add('hidden');
-                    finalTotalSpan.textContent = formatCurrency(originalAmount);
-                    if (modalTotalSpan) modalTotalSpan.textContent = formatCurrency(originalAmount);
+                    finalTotalSpan.textContent = window.formatCurrency(originalAmount);
+                    if (modalTotalSpan) modalTotalSpan.textContent = window.formatCurrency(originalAmount);
 
-                    promoMessage.textContent = result.message || 'Mã giảm giá không hợp lệ';
+                    promoMessage.textContent = (result && result.message) ? result.message : 'Mã giảm giá không hợp lệ';
                     promoMessage.className = 'text-xs mt-2 text-red-500';
                     promoMessage.classList.remove('hidden');
                 }
             } catch (error) {
-                showToast('Lỗi hệ thống khi kiểm tra mã', 'error');
+                window.showToast('Lỗi hệ thống khi kiểm tra mã', 'error');
             }
         };
 
         window.copyBankInfo = function () {
             const content = document.getElementById('payment-bank-content')?.textContent || '';
             navigator.clipboard.writeText(`Ngân hàng: Vietcombank\nSố TK: 1234 5678 9012 3456\nChủ TK: LUNA HOTEL & RESORT\nNội dung: ${content}`);
-            showToast('Đã sao chép thông tin chuyển khoản', 'success');
+            window.showToast('Đã sao chép thông tin chuyển khoản', 'success');
         };
 
         window.processPayment = async function () {
@@ -828,37 +815,29 @@
                 if (currentUser) paymentData.userId = currentUser.uid;
                 else paymentData.isGuest = true;
 
-                const response = await fetch(`${API_URL}/payments`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(paymentData)
-                });
+                // Xử lý gửi API bằng apiFetch
+                const response = await apiFetch('payments', 'POST', paymentData);
 
-                if (!response.ok) throw new Error('Không thể xử lý thanh toán lúc này');
+                if (!response) throw new Error('Không thể xử lý thanh toán lúc này');
 
-                showToast('Thanh toán hoàn tất!', 'success');
-                closeModal('paymentModal');
+                window.showToast('Thanh toán hoàn tất!', 'success');
+                window.closeModal('paymentModal');
 
                 setTimeout(() => {
                     const searchBtn = document.getElementById('btn-submit-lookup');
-                    if (searchBtn) searchBtn.click();
+                    if (searchBtn) searchBtn.click(); // Tự động load lại form
                 }, 800);
             } catch (error) {
                 console.error('Payment error:', error);
-                showToast('Lỗi thanh toán: ' + error.message, 'error');
+                window.showToast('Lỗi thanh toán: ' + error.message, 'error');
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         };
 
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            updateUserUI();
-        }
-
-        onAuthStateChanged(auth, (user) => {
+        // Khởi động hệ thống
+        document.addEventListener('DOMContentLoaded', async () => {
             setTimeout(() => {
                 const loadingScreen = document.getElementById('loading-screen');
                 if (loadingScreen) {
@@ -869,22 +848,23 @@
                 }
             }, 800);
 
-            if (user) {
-                currentUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    name: user.displayName || user.email.split('@')[0]
-                };
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            // Kiểm tra Auth 
+            const token = localStorage.getItem('luna_token');
+            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+            if (token && savedUser) {
+                currentUser = savedUser;
                 const emailInput = document.getElementById('lookupEmail');
                 if (emailInput) emailInput.value = currentUser.email;
             } else {
                 currentUser = null;
                 localStorage.removeItem('currentUser');
+                localStorage.removeItem('luna_token');
             }
 
             updateUserUI();
 
+            // Nếu người dùng nhấp từ mail có param URL booking
             const urlParams = new URLSearchParams(window.location.search);
             const bookingIdFromUrl = urlParams.get('booking');
             if (bookingIdFromUrl && !currentUser) {

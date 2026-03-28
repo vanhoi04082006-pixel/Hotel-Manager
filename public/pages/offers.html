@@ -329,40 +329,49 @@
         loadHeader('offers');
         loadFooter();
 
-        // Firebase Auth giữ nguyên
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
-            authDomain: "hotel-manager-2442d.firebaseapp.com",
-            projectId: "hotel-manager-2442d",
-            storageBucket: "hotel-manager-2442d.firebasestorage.app",
-            messagingSenderId: "379010173725",
-            appId: "1:379010173725:web:20908f11fb0589ca432ff4"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-
-        // API Node.js/MongoDB
+        // ==================== KẾT NỐI BACKEND NODE.JS ====================
         const API_URL = "https://luna-hotel-api.onrender.com/api";
 
+        // Hàm gọi API kẹp sẵn Token
+        async function apiFetch(endpoint, method = 'GET', body = null) {
+            const token = localStorage.getItem('luna_token');
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            };
+            if (body) options.body = JSON.stringify(body);
+            try {
+                const res = await fetch(`${API_URL}/${endpoint}`, options);
+                if (!res.ok) {
+                    if (res.status === 404) return null;
+                    throw new Error(`API Error: ${res.status}`);
+                }
+                return await res.json();
+            } catch (error) {
+                console.error(`Fetch error on ${endpoint}:`, error);
+                return null;
+            }
+        }
+
+        // ==================== QUẢN LÝ STATE ====================
         let currentUser = null;
         let userProfile = {};
         let localPromotions = [];
 
-        function formatCurrency(amount) {
+        window.formatCurrency = function (amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
-        function formatDate(dateString) {
+        window.formatDate = function (dateString) {
             if (!dateString) return '';
             const d = new Date(dateString);
             return d.toLocaleDateString('vi-VN');
         }
 
-        function showToast(message, type = 'success') {
+        window.showToast = function (message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const icons = { success: 'fa-check text-green-500', error: 'fa-xmark text-red-500', warning: 'fa-exclamation text-amber-500', info: 'fa-info text-blue-500' };
@@ -381,28 +390,29 @@
         }
 
         window.toggleMobileMenu = function () {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
+            const menu = document.getElementById('mobile-menu');
+            if (menu) menu.classList.toggle('hidden');
         };
 
         window.copyPromoCode = function (code) {
             navigator.clipboard.writeText(code);
-            showToast('Đã sao chép mã khuyến mãi: ' + code, 'success');
+            window.showToast('Đã sao chép mã khuyến mãi: ' + code, 'success');
         };
 
         window.viewPromoDetails = function (id) {
             const promo = localPromotions.find(p => p.id === id);
             if (promo) {
-                showToast(`<b>${promo.name}</b><br/>Mã: ${promo.code}<br/>Giảm: ${promo.type === 'percent' ? promo.value + '%' : formatCurrency(promo.value)}<br/>HSD: ${formatDate(promo.endDate)}`, 'info');
+                window.showToast(`<b>${promo.name}</b><br/>Mã: ${promo.code}<br/>Giảm: ${promo.type === 'percent' ? promo.value + '%' : window.formatCurrency(promo.value)}<br/>HSD: ${window.formatDate(promo.endDate)}`, 'info');
             }
         };
 
         window.claimOffer = function (type) {
             if (!currentUser) {
-                showToast('Vui lòng đăng nhập để nhận ưu đãi', 'warning');
+                window.showToast('Vui lòng đăng nhập để nhận ưu đãi', 'warning');
                 setTimeout(() => window.location.href = '../login.html', 1500);
                 return;
             }
-            showToast(`Tuyệt vời! Ưu đãi đã được gửi vào email của bạn.`, 'success');
+            window.showToast(`Tuyệt vời! Ưu đãi đã được gửi vào email của bạn.`, 'success');
         };
 
         window.navigateToLoyalty = function () {
@@ -446,28 +456,35 @@
         window.handleLogout = async function () {
             if (confirm('Bạn có chắc muốn đăng xuất?')) {
                 try {
-                    document.getElementById('loading-screen').style.opacity = '1';
-                    document.getElementById('loading-screen').style.display = 'flex';
-                    await signOut(auth);
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) {
+                        loadingDiv.style.opacity = '1';
+                        loadingDiv.style.display = 'flex';
+                    }
+
+                    localStorage.removeItem('luna_token');
                     localStorage.removeItem('currentUser');
                     currentUser = null;
+                    userProfile = {};
+
                     updateUserUI();
+                    window.showToast('Đã đăng xuất', 'success');
                     setTimeout(() => window.location.href = '../index.html', 500);
                 } catch (error) {
-                    showToast('Lỗi đăng xuất: ' + error.message, 'error');
-                    document.getElementById('loading-screen').style.display = 'none';
+                    window.showToast('Lỗi đăng xuất: ' + error.message, 'error');
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
                 }
             }
         };
 
-        // Render danh sách Voucher dùng Fetch API
+        // Render danh sách Voucher dùng Fetch API Node.js
         async function loadPromotions() {
             const container = document.getElementById('promotions-container');
             try {
-                const response = await fetch(`${API_URL}/promotions`);
-                if (!response.ok) throw new Error('Failed to fetch promotions');
+                const data = await apiFetch('promotions');
+                if (!data) throw new Error('Không có dữ liệu');
 
-                const data = await response.json();
                 localPromotions = data.map(doc => ({ id: doc._id, ...doc })).filter(p => p.active);
 
                 if (localPromotions.length === 0) {
@@ -483,7 +500,7 @@
                         const daysLeft = Math.ceil((new Date(p.endDate) - new Date()) / (1000 * 60 * 60 * 24));
                         const discountType = p.type === 'percent' ? '% Giảm giá' : '₫ Giảm tiền';
                         const discountValue = p.type === 'percent' ? p.value + '%' : (p.value / 1000) + 'K';
-                        const conditionText = p.condition === 'all' ? 'Áp dụng mọi đơn' : p.condition === 'min_amount' ? `Đơn từ ${formatCurrency(p.minAmount)}` : 'Chỉ lần đầu';
+                        const conditionText = p.condition === 'all' ? 'Áp dụng mọi đơn' : p.condition === 'min_amount' ? `Đơn từ ${window.formatCurrency(p.minAmount)}` : 'Chỉ lần đầu';
 
                         const daysColor = daysLeft <= 3 ? 'text-red-500 font-bold' : 'text-slate-500';
                         const daysIconColor = daysLeft <= 3 ? 'text-red-500' : 'text-blue-500';
@@ -512,7 +529,7 @@
                                     <div class="space-y-3 mb-6 bg-slate-50 rounded-xl p-4 border border-slate-100">
                                         <div class="flex items-center text-[13px] font-medium">
                                             <i class="fa-regular fa-calendar-check text-blue-500 w-6 text-center"></i>
-                                            <span class="text-slate-600">HSD: ${formatDate(p.endDate)}</span>
+                                            <span class="text-slate-600">HSD: ${window.formatDate(p.endDate)}</span>
                                         </div>
                                         <div class="flex items-center text-[13px] font-medium">
                                             <i class="fa-solid fa-circle-exclamation text-blue-500 w-6 text-center"></i>
@@ -520,15 +537,15 @@
                                         </div>
                                         <div class="flex items-center text-[13px] font-medium">
                                             <i class="fa-regular fa-clock ${daysIconColor} w-6 text-center"></i>
-                                            <span class="${daysColor}">Còn lại ${daysLeft} ngày</span>
+                                            <span class="${daysColor}">Còn lại ${daysLeft > 0 ? daysLeft : 0} ngày</span>
                                         </div>
                                     </div>
 
                                     <div class="flex gap-3">
-                                        <button onclick="copyPromoCode('${p.code}')" class="flex-1 bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-blue-600 shadow-md transition-all text-sm flex items-center justify-center">
+                                        <button onclick="window.copyPromoCode('${p.code}')" class="flex-1 bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-blue-600 shadow-md transition-all text-sm flex items-center justify-center">
                                             <i class="fa-regular fa-copy mr-2"></i>Copy Mã
                                         </button>
-                                        <button onclick="viewPromoDetails('${p.id}')" class="w-12 h-12 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 hover:text-blue-600 flex items-center justify-center transition-all" title="Xem chi tiết">
+                                        <button onclick="window.viewPromoDetails('${p.id}')" class="w-12 h-12 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 hover:text-blue-600 flex items-center justify-center transition-all" title="Xem chi tiết">
                                             <i class="fa-solid fa-circle-info"></i>
                                         </button>
                                     </div>
@@ -542,12 +559,9 @@
             }
         }
 
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-        }
-
-        onAuthStateChanged(auth, async (user) => {
+        // KHỞI ĐỘNG HỆ THỐNG VỚI TOKEN NODE.JS
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Tắt loading screen
             setTimeout(() => {
                 const loadingScreen = document.getElementById('loading-screen');
                 if (loadingScreen) {
@@ -556,25 +570,28 @@
                 }
             }, 800);
 
-            if (user) {
-                currentUser = { uid: user.uid, email: user.email, name: user.displayName || user.email.split('@')[0] };
+            const token = localStorage.getItem('luna_token');
+            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+            if (token && savedUser) {
+                currentUser = savedUser;
                 try {
-                    const res = await fetch(`${API_URL}/users/${user.uid}`);
-                    if (res.ok) {
-                        userProfile = await res.json();
+                    const res = await apiFetch(`users/${savedUser.uid}`);
+                    if (res) {
+                        userProfile = res;
                         currentUser.name = userProfile.name || currentUser.name;
                     }
                 } catch (e) { console.error("Error fetching profile", e); }
 
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                updateUserUI();
-                await loadPromotions();
             } else {
                 currentUser = null;
                 localStorage.removeItem('currentUser');
-                updateUserUI();
-                await loadPromotions();
+                localStorage.removeItem('luna_token');
             }
+
+            updateUserUI();
+            await loadPromotions();
         });
     </script>
 </body>

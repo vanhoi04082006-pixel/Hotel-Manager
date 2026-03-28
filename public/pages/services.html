@@ -311,27 +311,34 @@
         loadHeader('services');
         loadFooter();
 
-        // Firebase Auth giữ nguyên
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        // ==================== KẾT NỐI BACKEND NODE.JS ====================
+        const API_URL = "https://luna-hotel-api.onrender.com/api";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
-            authDomain: "hotel-manager-2442d.firebaseapp.com",
-            projectId: "hotel-manager-2442d",
-            storageBucket: "hotel-manager-2442d.firebasestorage.app",
-            messagingSenderId: "379010173725",
-            appId: "1:379010173725:web:20908f11fb0589ca432ff4"
-        };
+        // Hàm gọi API kẹp sẵn Token
+        async function apiFetch(endpoint, method = 'GET', body = null) {
+            const token = localStorage.getItem('luna_token');
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            };
+            if (body) options.body = JSON.stringify(body);
+            try {
+                const res = await fetch(`${API_URL}/${endpoint}`, options);
+                if (!res.ok) {
+                    if (res.status === 404) return null;
+                    throw new Error(`API Error: ${res.status}`);
+                }
+                return await res.json();
+            } catch (error) {
+                console.error(`Fetch error on ${endpoint}:`, error);
+                return null;
+            }
+        }
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // --- API NODE.JS / MONGODB CHO SERVICES ---
-        const SERVICES_API_URL = "https://luna-hotel-api.onrender.com/api/services";
-
+        // ==================== QUẢN LÝ STATE ====================
         let currentUser = null;
         let allServices = [];
         let filteredServices = [];
@@ -340,16 +347,11 @@
         let searchQuery = '';
         const servicesPerPage = 6;
 
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-        }
-
         window.formatCurrency = function (amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
-        function showToast(message, type = 'success') {
+        window.showToast = function (message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const icons = { success: 'fa-check text-green-500', error: 'fa-xmark text-red-500', warning: 'fa-exclamation text-amber-500', info: 'fa-info text-blue-500' };
@@ -406,8 +408,6 @@
             }
         }
 
-        if (currentUser) updateUserUI();
-
         window.handleLogout = async function () {
             if (confirm('Bạn có chắc muốn đăng xuất?')) {
                 try {
@@ -416,12 +416,13 @@
                         loadingDiv.style.opacity = '1';
                         loadingDiv.style.display = 'flex';
                     }
-                    await signOut(auth);
+                    // Xóa Token của Backend
+                    localStorage.removeItem('luna_token');
                     localStorage.removeItem('currentUser');
                     currentUser = null;
                     updateUserUI();
-                    showToast('Đã đăng xuất', 'success');
-                    setTimeout(() => { window.location.href = '../index.html'; }, 500);
+                    showToast('Đã đăng xuất thành công', 'success');
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } catch (error) {
                     console.error('Logout error:', error);
                     showToast('Lỗi đăng xuất: ' + error.message, 'error');
@@ -441,7 +442,6 @@
             } else {
                 clearBtn.classList.add('hidden');
             }
-
             applyFiltersAndSearch();
         };
 
@@ -498,11 +498,8 @@
             applyFiltersAndSearch();
         };
 
-        /* HIỂN THỊ THẺ DỊCH VỤ DÀNH CHO KHÁCH HÀNG (Đã xóa Admin mode) */
         function renderServices() {
             const container = document.getElementById('services-container');
-
-            // Lấy data phân trang
             const start = (currentPage - 1) * servicesPerPage;
             const paginatedServices = filteredServices.slice(start, start + servicesPerPage);
 
@@ -568,7 +565,7 @@
             }
 
             let paginationHtml = `
-                <button onclick="goToPage(${currentPage - 1})" class="page-btn ${currentPage === 1 ? 'disabled' : ''}" ${currentPage === 1 ? 'disabled' : ''}>
+                <button onclick="window.goToPage(${currentPage - 1})" class="page-btn ${currentPage === 1 ? 'disabled' : ''}" ${currentPage === 1 ? 'disabled' : ''}>
                     <i class="fa-solid fa-arrow-left text-sm"></i>
                 </button>
             `;
@@ -582,14 +579,14 @@
 
             for (let i = startPage; i <= endPage; i++) {
                 paginationHtml += `
-                    <button onclick="goToPage(${i})" class="page-btn ${i === currentPage ? 'active' : ''}">
+                    <button onclick="window.goToPage(${i})" class="page-btn ${i === currentPage ? 'active' : ''}">
                         ${i}
                     </button>
                 `;
             }
 
             paginationHtml += `
-                <button onclick="goToPage(${currentPage + 1})" class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" ${currentPage === totalPages ? 'disabled' : ''}>
+                <button onclick="window.goToPage(${currentPage + 1})" class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" ${currentPage === totalPages ? 'disabled' : ''}>
                     <i class="fa-solid fa-arrow-right text-sm"></i>
                 </button>
             `;
@@ -618,8 +615,7 @@
         window.addToCart = function (serviceId) {
             const service = allServices.find(s => s.id === serviceId);
             if (service) {
-                showToast(`Bạn đang quan tâm: ${service.name}. Vui lòng tích chọn dịch vụ này khi đặt phòng!`, 'info');
-                // Gợi ý: Có thể lưu vào localStorage để auto-check bên trang Đặt Phòng
+                window.showToast(`Bạn đang quan tâm: ${service.name}. Vui lòng tích chọn dịch vụ này khi đặt phòng!`, 'info');
                 let interestedServices = JSON.parse(localStorage.getItem('interestedServices') || '[]');
                 if (!interestedServices.includes(service.id)) {
                     interestedServices.push(service.id);
@@ -628,54 +624,48 @@
             }
         }
 
-        // --- HÀM TẢI DỊCH VỤ DÙNG FETCH API NODE.JS ---
+        // TẢI DỊCH VỤ TỪ BACKEND NODE.JS
         async function loadServices() {
             try {
-                const response = await fetch(SERVICES_API_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await apiFetch('services');
+                if (data) {
+                    allServices = data.map(doc => ({ id: doc._id, ...doc }));
+                    applyFiltersAndSearch();
                 }
-                const data = await response.json();
-
-                // Map _id từ MongoDB thành id để code hiển thị chạy bình thường
-                allServices = data.map(doc => ({ id: doc._id, ...doc }));
-
-                applyFiltersAndSearch();
             } catch (error) {
-                console.error("Lỗi tải dịch vụ từ Render API:", error);
-                showToast('Lỗi tải dữ liệu dịch vụ', 'error');
+                console.error("Lỗi tải dịch vụ:", error);
+                window.showToast('Lỗi tải dữ liệu dịch vụ', 'error');
             }
         }
 
-        onAuthStateChanged(auth, async (user) => {
+        // KHỞI ĐỘNG HỆ THỐNG VỚI TOKEN NODE.JS
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Tắt màn hình loading
             setTimeout(() => {
-                document.getElementById('loading-screen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loading-screen').style.display = 'none';
-                    document.getElementById('main-content').classList.add('loaded');
-                }, 500);
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        document.getElementById('main-content').classList.add('loaded');
+                    }, 500);
+                }
             }, 1000);
 
-            if (user) {
-                try {
-                    const userDoc = await getDoc(doc(db, 'users', user.uid));
-                    currentUser = {
-                        uid: user.uid,
-                        email: user.email,
-                        name: userDoc.data()?.name || user.email.split('@')[0]
-                    };
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                } catch (e) {
-                    console.error("Error fetching profile", e);
-                    currentUser = { uid: user.uid, email: user.email, name: user.email.split('@')[0] };
-                }
+            // Kiểm tra Auth bằng JWT LocalStorage
+            const token = localStorage.getItem('luna_token');
+            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+            if (token && savedUser) {
+                currentUser = savedUser;
             } else {
                 currentUser = null;
+                localStorage.removeItem('luna_token');
                 localStorage.removeItem('currentUser');
             }
             updateUserUI();
 
-            // Gọi hàm tải dữ liệu từ NodeJS API
+            // Load Data
             await loadServices();
         });
     </script>

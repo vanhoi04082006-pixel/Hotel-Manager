@@ -225,38 +225,32 @@
         loadHeader('my-bookings');
         loadFooter();
 
-        // CHỈ SỬ DỤNG FIREBASE CHO PHẦN ĐĂNG NHẬP (AUTH)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
-            authDomain: "hotel-manager-2442d.firebaseapp.com",
-            projectId: "hotel-manager-2442d",
-            storageBucket: "hotel-manager-2442d.firebasestorage.app",
-            messagingSenderId: "379010173725",
-            appId: "1:379010173725:web:20908f11fb0589ca432ff4"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-
         // === CẤU HÌNH API ĐẾN NODE.JS BACKEND MỚI ===
         const API_URL = "https://luna-hotel-api.onrender.com/api";
 
+        // Hàm gọi API kẹp sẵn Token
         async function apiFetch(endpoint, method = 'GET', body = null) {
-            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            const token = localStorage.getItem('luna_token');
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            };
             if (body) options.body = JSON.stringify(body);
             try {
                 const res = await fetch(`${API_URL}/${endpoint}`, options);
+                // Với API check mã KM, nó có thể trả về 400 kèm message, ta lấy luôn json
+                const data = await res.json().catch(() => null);
                 if (!res.ok) {
-                    if (res.status === 404) return null;
-                    throw new Error(`API Error: ${res.status}`);
+                    if (res.status === 404 && !data) return null;
+                    throw new Error((data && data.message) ? data.message : `API Error: ${res.status}`);
                 }
-                return await res.json();
+                return data;
             } catch (error) {
                 console.error(`Fetch error on ${endpoint}:`, error);
-                return null;
+                throw error;
             }
         }
 
@@ -265,8 +259,8 @@
         let currentDiscount = 0;
         let currentDiscountCode = '';
 
-        function formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
-        function formatDate(dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
+        window.formatCurrency = function (amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
+        window.formatDate = function (dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
 
         window.showToast = function (message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -342,13 +336,13 @@
                         loadingDiv.style.opacity = '1';
                         loadingDiv.style.display = 'flex';
                     }
-                    await signOut(auth);
+                    localStorage.removeItem('luna_token');
                     localStorage.removeItem('currentUser');
                     currentUser = null;
                     updateUserUI();
                     setTimeout(() => { window.location.href = '../index.html'; }, 500);
                 } catch (error) {
-                    showToast('Lỗi đăng xuất: ' + error.message, 'error');
+                    window.showToast('Lỗi đăng xuất: ' + error.message, 'error');
                     const loadingDiv = document.getElementById('loading-screen');
                     if (loadingDiv) loadingDiv.style.display = 'none';
                 }
@@ -356,7 +350,6 @@
         };
 
         window.openDirectPayment = async function (bookingId, bookingStr) {
-            // Nhận JSON string từ HTML để tránh lỗi ngoặc kép
             const booking = typeof bookingStr === 'string' ? JSON.parse(bookingStr) : bookingStr;
             const modal = document.getElementById('paymentModal');
             const content = document.getElementById('payment-content');
@@ -376,7 +369,7 @@
                             <span class="text-sm font-medium text-blue-100 tracking-wide uppercase">Tổng thanh toán</span>
                             <span class="text-right text-sm text-blue-100">Phòng ${booking.roomCode}<br>${booking.nights || 1} đêm</span>
                         </div>
-                        <span class="text-4xl font-bold tracking-tight" id="modal-total-amount">${formatCurrency(booking.totalPrice)}</span>
+                        <span class="text-4xl font-bold tracking-tight" id="modal-total-amount">${window.formatCurrency(booking.totalPrice)}</span>
                     </div>
                 </div>
 
@@ -384,13 +377,13 @@
                     <div class="bg-slate-50 rounded-2xl p-5 mb-6">
                         <div class="flex justify-between items-center mb-4">
                             <span class="font-bold text-slate-700">Tạm tính</span>
-                            <span class="text-xl font-bold text-slate-800" id="subtotal-amount">${formatCurrency(booking.totalPrice)}</span>
+                            <span class="text-xl font-bold text-slate-800" id="subtotal-amount">${window.formatCurrency(booking.totalPrice)}</span>
                         </div>
                         
                         <div class="border-t border-slate-200 pt-4 mb-4">
                             <div class="flex gap-3">
                                 <input type="text" id="promo-code-input" placeholder="Nhập mã giảm giá" class="form-input flex-1 text-sm">
-                                <button onclick="applyPromoCodeToPayment()" class="px-5 py-2 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-blue-600 transition-all whitespace-nowrap">
+                                <button onclick="window.applyPromoCodeToPayment()" class="px-5 py-2 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-blue-600 transition-all whitespace-nowrap">
                                     Áp dụng
                                 </button>
                             </div>
@@ -407,7 +400,7 @@
                         <div class="border-t border-slate-200 pt-4">
                             <div class="flex justify-between items-center">
                                 <span class="font-bold text-slate-800 text-lg">Tổng cộng</span>
-                                <span class="text-2xl font-bold text-blue-600" id="final-total-amount">${formatCurrency(booking.totalPrice)}</span>
+                                <span class="text-2xl font-bold text-blue-600" id="final-total-amount">${window.formatCurrency(booking.totalPrice)}</span>
                             </div>
                         </div>
                     </div>
@@ -445,14 +438,14 @@
                     </div>
 
                     <div id="payment-bank-details" class="mt-5 p-5 bg-blue-50/80 rounded-2xl border border-blue-100 hidden slide-in-up">
-                        <div class="flex items-center mb-4 text-blue-800"><i class="fa-solid fa-circle-info mr-2"></i><h4 class="font-bold">Thông tin chuyển khoản</h4></div>
+                        <div class="flex items-center mb-4 text-blue-800"><i class="fa-solid fa-circle-info mr-2"></i><h4 class="font-bold">Thông khoản</h4></div>
                         <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-3 text-[15px] text-slate-700">
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-slate-50 pb-2"><span class="text-slate-500 text-sm mb-1 sm:mb-0">Ngân hàng</span><span class="font-bold text-slate-900">Vietcombank</span></div>
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-slate-50 pb-2"><span class="text-slate-500 text-sm mb-1 sm:mb-0">Số tài khoản</span><span class="font-mono font-bold text-blue-600 text-lg">1234 5678 9012 3456</span></div>
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-slate-50 pb-2"><span class="text-slate-500 text-sm mb-1 sm:mb-0">Chủ tài khoản</span><span class="font-bold text-slate-900">LUNA HOTEL & RESORT</span></div>
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center"><span class="text-slate-500 text-sm mb-1 sm:mb-0">Nội dung</span><span class="font-mono font-bold bg-slate-100 px-3 py-1 rounded" id="payment-bank-content">PAY ${safeId.slice(-8).toUpperCase()}</span></div>
                         </div>
-                        <button onclick="copyBankInfo()" class="mt-4 w-full bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                        <button onclick="window.copyBankInfo()" class="mt-4 w-full bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                             <i class="fa-regular fa-copy mr-2"></i>Sao chép thông tin
                         </button>
                     </div>
@@ -520,24 +513,18 @@
             }
 
             try {
-                // Kiểm tra mã qua API
-                const response = await fetch(`${API_URL}/promotions/check`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, originalAmount })
-                });
+                // Đã chuyển sang dùng apiFetch kẹp Token
+                const result = await apiFetch('promotions/check', 'POST', { code, originalAmount });
 
-                const result = await response.json();
-
-                if (result.success) {
+                if (result && result.success) {
                     currentDiscount = result.discount;
                     currentDiscountCode = code;
                     const finalAmount = originalAmount - currentDiscount;
 
                     discountSection.classList.remove('hidden');
-                    discountAmountSpan.textContent = `-${formatCurrency(currentDiscount)}`;
-                    finalTotalSpan.textContent = formatCurrency(finalAmount);
-                    if (modalTotalSpan) modalTotalSpan.textContent = formatCurrency(finalAmount);
+                    discountAmountSpan.textContent = `-${window.formatCurrency(currentDiscount)}`;
+                    finalTotalSpan.textContent = window.formatCurrency(finalAmount);
+                    if (modalTotalSpan) modalTotalSpan.textContent = window.formatCurrency(finalAmount);
 
                     promoMessage.textContent = result.message || 'Áp dụng mã thành công!';
                     promoMessage.className = 'text-xs mt-2 text-green-600 font-bold';
@@ -547,33 +534,33 @@
                     currentDiscountCode = '';
 
                     discountSection.classList.add('hidden');
-                    finalTotalSpan.textContent = formatCurrency(originalAmount);
-                    if (modalTotalSpan) modalTotalSpan.textContent = formatCurrency(originalAmount);
+                    finalTotalSpan.textContent = window.formatCurrency(originalAmount);
+                    if (modalTotalSpan) modalTotalSpan.textContent = window.formatCurrency(originalAmount);
 
-                    promoMessage.textContent = result.message || 'Mã giảm giá không hợp lệ';
+                    promoMessage.textContent = (result && result.message) ? result.message : 'Mã giảm giá không hợp lệ';
                     promoMessage.className = 'text-xs mt-2 text-red-500';
                     promoMessage.classList.remove('hidden');
                 }
             } catch (error) {
-                showToast('Lỗi kiểm tra mã giảm giá', 'error');
+                window.showToast('Lỗi kiểm tra mã giảm giá: ' + error.message, 'error');
             }
         };
 
         window.copyBankInfo = function () {
             const content = document.getElementById('payment-bank-content')?.textContent || '';
             navigator.clipboard.writeText(`Ngân hàng: Vietcombank\nSố TK: 1234 5678 9012 3456\nChủ TK: LUNA HOTEL & RESORT\nNội dung: ${content}`);
-            showToast('Đã sao chép thông tin chuyển khoản', 'success');
+            window.showToast('Đã sao chép thông tin chuyển khoản', 'success');
         };
 
         window.processDirectPayment = async function () {
             if (!currentBookingForPayment) {
-                showToast('Không tìm thấy thông tin đặt phòng', 'error');
+                window.showToast('Không tìm thấy thông tin đặt phòng', 'error');
                 return;
             }
 
             const method = document.querySelector('input[name="paymentMethod"]:checked')?.value;
             if (!method) {
-                showToast('Vui lòng chọn phương thức thanh toán', 'warning');
+                window.showToast('Vui lòng chọn phương thức thanh toán', 'warning');
                 return;
             }
 
@@ -599,20 +586,15 @@
                     userId: currentUser?.uid || null
                 };
 
-                const response = await fetch(`${API_URL}/payments`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(paymentData)
-                });
+                // Gọi qua Node.js API
+                await apiFetch('payments', 'POST', paymentData);
 
-                if (!response.ok) throw new Error('Không thể xử lý thanh toán.');
-
-                showToast('Thanh toán thành công!', 'success');
-                closePaymentModal();
+                window.showToast('Thanh toán thành công!', 'success');
+                window.closePaymentModal();
                 await loadMyBookings();
             } catch (error) {
                 console.error('Payment error:', error);
-                showToast('Lỗi thanh toán: ' + error.message, 'error');
+                window.showToast('Lỗi thanh toán: ' + error.message, 'error');
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -630,19 +612,16 @@
                         </div>
                         <h3 class="text-2xl font-playfair font-bold text-slate-800 mb-3">Vui lòng đăng nhập</h3>
                         <p class="text-slate-500 mb-8 text-[15px]">Đăng nhập để xem lịch sử và quản lý đặt phòng của bạn tại Luna Hotel.</p>
-                        <a href="../login.html" class="inline-flex items-center px-8 py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-blue-600 shadow-lg transition-all">Đăng nhập ngay</a>
+                        <a href="login.html" class="inline-flex items-center px-8 py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-blue-600 shadow-lg transition-all">Đăng nhập ngay</a>
                     </div>`;
                 return;
             }
 
             try {
                 // Gọi API lấy lịch sử booking của User hiện tại qua Email
-                const response = await fetch(`${API_URL}/bookings/user/${currentUser.email}`);
-                if (!response.ok) throw new Error('Failed to fetch bookings');
+                const data = await apiFetch(`bookings/user/${currentUser.email}`);
 
-                const data = await response.json();
-
-                // MongoDB trả về _id, sắp xếp từ mới đến cũ
+                // data đã là mảng nếu request thành công
                 const bookings = data.map(b => ({ id: b._id, ...b })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                 if (bookings.length === 0) {
@@ -672,10 +651,7 @@
                         ? `<span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-green-50 text-green-600 border border-green-200"><i class="fa-solid fa-check mr-1"></i>Đã thanh toán</span>`
                         : `<span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-200">Chưa thanh toán</span>`;
 
-                    // Lấy mã đơn thật sự, nếu lấy từ DB là 24 số thì cắt lấy 8 số cuối cho đẹp
                     const displayCode = b.id ? b.id.slice(-8).toUpperCase() : 'N/A';
-
-                    // Chuyển object booking thành chuỗi an toàn để đưa vào button onclick
                     const bookingStringForPayment = JSON.stringify(b).replace(/"/g, '&quot;');
 
                     return `
@@ -700,11 +676,11 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Nhận phòng</p>
-                                    <p class="font-bold text-slate-800 text-[15px]">${formatDate(b.checkIn)}</p>
+                                    <p class="font-bold text-slate-800 text-[15px]">${window.formatDate(b.checkIn)}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Trả phòng</p>
-                                    <p class="font-bold text-slate-800 text-[15px]">${formatDate(b.checkOut)}</p>
+                                    <p class="font-bold text-slate-800 text-[15px]">${window.formatDate(b.checkOut)}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Thời gian</p>
@@ -720,7 +696,7 @@
                             <div class="mt-5 pt-5 border-t border-slate-100">
                                 <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Dịch vụ đi kèm</p>
                                 <div class="flex flex-wrap gap-2">
-                                    ${b.services.map(s => `<span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1 rounded-full font-medium shadow-sm">${s.name} (+${formatCurrency(s.price)})</span>`).join('')}
+                                    ${b.services.map(s => `<span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1 rounded-full font-medium shadow-sm">${s.name} (+${window.formatCurrency(s.price)})</span>`).join('')}
                                 </div>
                             </div>` : ''}
                             
@@ -734,19 +710,19 @@
                             <div>
                                 <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Tổng chi phí</p>
                                 <p class="text-2xl font-bold text-blue-600 font-mono">
-                                    ${b.finalPaidAmount ? formatCurrency(b.finalPaidAmount) : formatCurrency(b.totalPrice)}
+                                    ${b.finalPaidAmount ? window.formatCurrency(b.finalPaidAmount) : window.formatCurrency(b.totalPrice)}
                                 </p>
                                 ${b.discountApplied ? `
-                                    <p class="text-[11px] text-slate-400 mt-1">Giá gốc: <del>${formatCurrency(b.totalPrice)}</del></p>
-                                    <p class="text-xs text-green-600 font-medium">Đã áp mã: -${formatCurrency(b.discountApplied)}</p>
+                                    <p class="text-[11px] text-slate-400 mt-1">Giá gốc: <del>${window.formatCurrency(b.totalPrice)}</del></p>
+                                    <p class="text-xs text-green-600 font-medium">Đã áp mã: -${window.formatCurrency(b.discountApplied)}</p>
                                 ` : ''}
                             </div>
                             <div class="flex gap-3 w-full sm:w-auto">
                                 ${b.status === 'pending' || (b.status === 'confirmed' && b.paymentStatus !== 'paid') ?
-                            `<button onclick="cancelBooking('${b.id}')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-all text-sm">Hủy lịch</button>` : ''}
+                            `<button onclick="window.cancelBooking('${b.id}')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-all text-sm">Hủy lịch</button>` : ''}
                                 
                                 ${b.status !== 'cancelled' && b.paymentStatus !== 'paid' ?
-                            `<button onclick="openDirectPayment('${b.id}', '${bookingStringForPayment}')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all text-sm text-center">Thanh toán ngay</button>` : ''}
+                            `<button onclick="window.openDirectPayment('${b.id}', '${bookingStringForPayment}')" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all text-sm text-center">Thanh toán ngay</button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -766,18 +742,18 @@
         window.cancelBooking = async function (bookingId) {
             if (confirm('Bạn có chắc chắn muốn hủy đặt phòng này? Hành động này không thể hoàn tác.')) {
                 try {
-                    const response = await fetch(`${API_URL}/bookings/${bookingId}/cancel`, { method: 'PUT' });
-                    if (!response.ok) throw new Error('Lỗi server khi hủy phòng');
-
-                    showToast('Đã hủy lịch đặt phòng', 'success');
+                    await apiFetch(`bookings/${bookingId}/cancel`, 'PUT');
+                    window.showToast('Đã hủy lịch đặt phòng', 'success');
                     await loadMyBookings();
                 } catch (error) {
-                    showToast('Có lỗi xảy ra: ' + error.message, 'error');
+                    window.showToast('Có lỗi xảy ra: ' + error.message, 'error');
                 }
             }
         }
 
-        onAuthStateChanged(auth, async (user) => {
+        // KHỞI ĐỘNG HỆ THỐNG NODE.JS
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Tắt Loading
             setTimeout(() => {
                 const loadingScreen = document.getElementById('loading-screen');
                 if (loadingScreen) {
@@ -786,21 +762,19 @@
                 }
             }, 800);
 
-            if (user) {
-                const userDoc = await apiFetch(`users/${user.uid}`) || {};
-                currentUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    name: userDoc.name || user.displayName || user.email.split('@')[0],
-                    role: userDoc.role || (user.email === ADMIN_EMAIL ? 'admin' : 'user')
-                };
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            // Kiểm tra Login
+            const token = localStorage.getItem('luna_token');
+            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+            if (token && savedUser) {
+                currentUser = savedUser;
                 updateUserUI();
                 await loadMyBookings();
             } else {
                 currentUser = null;
                 localStorage.removeItem('currentUser');
-                window.location.href = '../login.html';
+                localStorage.removeItem('luna_token');
+                window.location.href = '../login.html'; // Bắt đăng nhập
             }
         });
     </script>

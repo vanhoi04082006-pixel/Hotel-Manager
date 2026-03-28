@@ -415,31 +415,46 @@
         loadHeader('profile');
         loadFooter();
 
-        // Giữ lại Firebase Auth cho phần đăng nhập / đổi mật khẩu
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
-            authDomain: "hotel-manager-2442d.firebaseapp.com",
-            projectId: "hotel-manager-2442d",
-            storageBucket: "hotel-manager-2442d.firebasestorage.app",
-            messagingSenderId: "379010173725",
-            appId: "1:379010173725:web:20908f11fb0589ca432ff4"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-
-        // --- API NODE.JS / MONGODB ---
+        // ==================== KẾT NỐI BACKEND NODE.JS ====================
         const API_URL = "https://luna-hotel-api.onrender.com/api";
 
+        // Hàm gọi API kẹp sẵn Token
+        async function apiFetch(endpoint, method = 'GET', body = null) {
+            const token = localStorage.getItem('luna_token');
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            };
+            if (body) options.body = JSON.stringify(body);
+            try {
+                const res = await fetch(`${API_URL}/${endpoint}`, options);
+                if (!res.ok) {
+                    if (res.status === 404) return null;
+                    throw new Error(await res.text());
+                }
+                return await res.json();
+            } catch (error) {
+                console.error(`Fetch error on ${endpoint}:`, error);
+                throw error;
+            }
+        }
+
+        // ==================== QUẢN LÝ STATE ====================
         let currentUser = null;
         let userProfile = { name: '', phone: '', birthday: '', address: '', preferences: '' };
         let userBookings = [];
 
         function formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
-        function formatDate(dateString) { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('vi-VN'); }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const d = new Date(dateString);
+            if (isNaN(d)) return '';
+            return d.toLocaleDateString('vi-VN');
+        }
 
         window.closeModal = function (id) { document.getElementById(id).classList.add('hidden'); };
         window.toggleMobileMenu = function () {
@@ -447,7 +462,7 @@
             if (mobileMenu) mobileMenu.classList.toggle('hidden');
         };
 
-        function showToast(message, type = 'success') {
+        window.showToast = function (message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const icons = { success: 'fa-check text-green-500', error: 'fa-xmark text-red-500', warning: 'fa-exclamation text-amber-500', info: 'fa-info text-blue-500' };
@@ -474,7 +489,7 @@
             const navItems = ['my-bookings', 'profile', 'loyalty', 'offers'];
 
             if (currentUser) {
-                const name = userProfile.name || currentUser.email?.split('@')[0] || 'Khách';
+                const name = userProfile.name || currentUser.name || currentUser.email?.split('@')[0] || 'Khách';
                 if (nameSpan) nameSpan.textContent = name;
                 if (avatar) avatar.textContent = name.charAt(0).toUpperCase();
                 if (loginBtn) loginBtn.classList.add('hidden');
@@ -506,14 +521,21 @@
         window.handleLogout = async function () {
             if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
                 try {
-                    document.getElementById('loading-screen').style.opacity = '1';
-                    document.getElementById('loading-screen').style.display = 'flex';
-                    await signOut(auth);
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) {
+                        loadingDiv.style.opacity = '1';
+                        loadingDiv.style.display = 'flex';
+                    }
+
+                    // Xóa Token Node.js
+                    localStorage.removeItem('luna_token');
                     localStorage.removeItem('currentUser');
+
                     window.location.href = '../index.html';
                 } catch (error) {
                     showToast('Lỗi đăng xuất: ' + error.message, 'error');
-                    document.getElementById('loading-screen').style.display = 'none';
+                    const loadingDiv = document.getElementById('loading-screen');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
                 }
             }
         }
@@ -525,29 +547,29 @@
             return { tier: 'Bronze', next: 'Silver', progress: points / 10, color: 'from-amber-600 to-amber-800', icon: 'fa-medal' };
         }
 
-        // Kéo dữ liệu người dùng từ Node.js API thay vì Firebase
+        // Tải dữ liệu người dùng từ Backend Node.js
         async function loadUserData() {
-            if (!currentUser) { window.location.href = '../login.html'; return; }
+            if (!currentUser) return;
 
             try {
                 // 1. Kéo Profile
-                const profileRes = await fetch(`${API_URL}/users/${currentUser.uid}`);
-                if (profileRes.ok) {
-                    userProfile = await profileRes.json();
+                const profileData = await apiFetch(`users/${currentUser.uid}`);
+                if (profileData) {
+                    userProfile = profileData;
 
                     document.getElementById('profile-name').value = userProfile.name || '';
-                    document.getElementById('profile-email').value = currentUser.email;
+                    document.getElementById('profile-email').value = userProfile.email || currentUser.email;
                     document.getElementById('profile-phone').value = userProfile.phone || '';
                     document.getElementById('profile-birthday').value = userProfile.birthday || '';
                     document.getElementById('profile-address').value = userProfile.address || '';
-                    document.getElementById('profile-preferences').value = userProfile.preferences || '';
+                    document.getElementById('profile-preferences').value = userProfile.notes || ''; // Đổi trường lưu ghi chú
 
                     document.getElementById('display-name').textContent = userProfile.name || currentUser.email.split('@')[0];
                     document.getElementById('member-since').textContent = formatDate(userProfile.createdAt || new Date());
                     document.getElementById('avatar-letter').textContent = (userProfile.name || 'K').charAt(0).toUpperCase();
                 }
 
-                // Load Avatar từ localStorage
+                // Load Avatar từ localStorage (Tuỳ chọn)
                 const savedAvatar = localStorage.getItem('userAvatar');
                 if (savedAvatar) {
                     const avatarContainer = document.getElementById('avatar-letter').parentElement;
@@ -555,15 +577,14 @@
                 }
 
                 // 2. Kéo Lịch sử Booking
-                const bookingRes = await fetch(`${API_URL}/bookings/user/${currentUser.email}`);
-                if (bookingRes.ok) {
-                    const data = await bookingRes.json();
+                const bookingData = await apiFetch(`bookings/user/${currentUser.email}`);
+                if (bookingData && Array.isArray(bookingData)) {
                     // Map _id sang id cho UI
-                    userBookings = data.map(b => ({ id: b._id, ...b }));
+                    userBookings = bookingData.map(b => ({ id: b._id, ...b }));
                 }
 
                 // Cập nhật thẻ thành viên
-                const totalSpent = userBookings.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + (b.totalPrice || 0), 0);
+                const totalSpent = userBookings.filter(b => b.status === 'completed').reduce((s, b) => s + (b.totalPrice || 0), 0);
                 const points = Math.floor(totalSpent / 100000);
                 const tierInfo = getMemberTier(points);
 
@@ -571,7 +592,9 @@
                 document.getElementById('loyalty-points').textContent = points;
 
                 const membershipCard = document.getElementById('membership-card');
-                membershipCard.className = `bg-gradient-to-br ${tierInfo.color} rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-300`;
+                if (membershipCard) {
+                    membershipCard.className = `bg-gradient-to-br ${tierInfo.color} rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-300`;
+                }
 
                 document.getElementById('points-display').textContent = points.toLocaleString('vi-VN');
                 document.getElementById('total-spent').textContent = formatCurrency(totalSpent);
@@ -582,12 +605,14 @@
                 document.getElementById('next-tier').textContent = tierInfo.next;
 
                 setTimeout(() => {
-                    document.getElementById('tier-progress').style.width = `${Math.min(tierInfo.progress, 100)}%`;
+                    const progress = document.getElementById('tier-progress');
+                    if (progress) progress.style.width = `${Math.min(tierInfo.progress, 100)}%`;
                 }, 500);
 
                 // Hoạt động gần đây
                 const recentActivity = document.getElementById('recent-activity');
                 const recent = userBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3);
+
                 if (recent.length === 0) {
                     recentActivity.innerHTML = '<p class="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-xl">Chưa có hoạt động</p>';
                 } else {
@@ -620,43 +645,35 @@
             btn.disabled = true;
 
             const newData = {
-                uid: currentUser.uid,
-                email: currentUser.email,
                 name: document.getElementById('profile-name').value,
                 phone: document.getElementById('profile-phone').value,
                 birthday: document.getElementById('profile-birthday').value,
                 address: document.getElementById('profile-address').value,
-                preferences: document.getElementById('profile-preferences').value
+                notes: document.getElementById('profile-preferences').value // Map với trường notes trong User model
             };
 
             try {
                 // Đẩy dữ liệu lên API Render Node.js
-                const res = await fetch(`${API_URL}/users/${currentUser.uid}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newData)
-                });
-
-                if (!res.ok) throw new Error('Không thể cập nhật hồ sơ trên server.');
+                const res = await apiFetch(`users/${currentUser.uid}`, 'PUT', newData);
 
                 userProfile = { ...userProfile, ...newData };
+
+                // Update Storage để đồng bộ Name trên Header
+                currentUser.name = newData.name;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
                 // Cập nhật lại UI
                 document.getElementById('display-name').textContent = newData.name || currentUser.email.split('@')[0];
                 const avatarLetter = document.getElementById('avatar-letter');
                 if (avatarLetter) avatarLetter.textContent = (newData.name || 'K').charAt(0).toUpperCase();
 
-                // Xử lý đổi mật khẩu qua Firebase Auth
+                // Lưu ý: Tính năng đổi mật khẩu bị vô hiệu hóa vì JWT không hỗ trợ cơ chế đổi mật khẩu tự động phía client giống Firebase. 
+                // Cần làm API quên mật khẩu riêng.
                 const currentPassword = document.getElementById('current-password').value;
                 const newPassword = document.getElementById('new-password').value;
 
-                if (newPassword && newPassword.length < 6) {
-                    showToast('Mật khẩu mới phải có ít nhất 6 ký tự', 'warning');
-                } else if (currentPassword && newPassword) {
-                    const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
-                    await reauthenticateWithCredential(currentUser, credential);
-                    await updatePassword(currentUser, newPassword);
-                    showToast('Đã đổi mật khẩu thành công!', 'success');
+                if (currentPassword || newPassword) {
+                    showToast('Tính năng đổi mật khẩu đang được bảo trì', 'info');
                     document.getElementById('current-password').value = '';
                     document.getElementById('new-password').value = '';
                 }
@@ -694,9 +711,18 @@
             const modal = document.getElementById('paymentHistoryModal');
             const content = document.getElementById('payment-history-content');
 
-            const paidBookings = userBookings.filter(b => b.paymentStatus === 'paid').sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+            // Với hệ thống mới, ta tìm invoice thay vì dựa vào paymentStatus của Booking
+            let paidInvoices = [];
+            try {
+                const invoicesData = await apiFetch('invoices');
+                if (invoicesData) {
+                    paidInvoices = invoicesData.filter(i => i.customerEmail === currentUser.email && i.status === 'paid');
+                }
+            } catch (error) {
+                console.error("Lỗi lấy hóa đơn:", error);
+            }
 
-            if (paidBookings.length === 0) {
+            if (paidInvoices.length === 0) {
                 content.innerHTML = `
                     <div class="text-center py-16 bg-white rounded-3xl border border-slate-100">
                         <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -706,7 +732,7 @@
                         <p class="text-slate-500 text-sm">Bạn chưa thực hiện thanh toán nào trên hệ thống.</p>
                     </div>`;
             } else {
-                content.innerHTML = paidBookings.map(b => `
+                content.innerHTML = paidInvoices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(i => `
                     <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
                         <div class="flex justify-between items-start mb-4 border-b border-slate-50 pb-3">
                             <div class="flex items-center">
@@ -714,23 +740,23 @@
                                     <i class="fa-solid fa-check-double"></i>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-0.5">Mã giao dịch / Booking</p>
-                                    <p class="font-mono font-bold text-slate-800">#${(b.paymentId || b.id).slice(-8).toUpperCase()}</p>
+                                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-0.5">Mã Hóa Đơn</p>
+                                    <p class="font-mono font-bold text-slate-800">#${(i._id || i.id).slice(-8).toUpperCase()}</p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-lg text-blue-600 font-mono">${formatCurrency(b.totalPrice)}</p>
+                                <p class="font-bold text-lg text-blue-600 font-mono">${formatCurrency(i.total)}</p>
                                 <span class="badge badge-success mt-1">Đã thanh toán</span>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4 text-[14px]">
                             <div>
                                 <p class="text-slate-500 mb-1">Nội dung</p>
-                                <p class="font-semibold text-slate-800">Thanh toán Phòng ${b.roomCode || 'N/A'}</p>
+                                <p class="font-semibold text-slate-800">Thanh toán Phòng ${i.roomCode || 'N/A'}</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-slate-500 mb-1">Thời gian</p>
-                                <p class="font-medium text-slate-700">${formatDate(b.updatedAt || b.createdAt)}</p>
+                                <p class="font-medium text-slate-700">${formatDate(i.createdAt)}</p>
                             </div>
                         </div>
                     </div>
@@ -739,28 +765,32 @@
             modal.classList.remove('hidden');
         };
 
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            updateUserUI();
-        }
-
-        onAuthStateChanged(auth, async (user) => {
+        // KHỞI ĐỘNG HỆ THỐNG VỚI TOKEN NODE.JS
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Tắt màn hình loading
             setTimeout(() => {
-                const screen = document.getElementById('loading-screen');
-                if (screen) {
-                    screen.style.opacity = '0';
-                    setTimeout(() => { screen.style.display = 'none'; }, 500);
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
                 }
             }, 800);
 
-            if (user) {
-                currentUser = user;
-                localStorage.setItem('currentUser', JSON.stringify({ uid: user.uid, email: user.email }));
+            // Kiểm tra Auth bằng JWT LocalStorage
+            const token = localStorage.getItem('luna_token');
+            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+            if (token && savedUser) {
+                currentUser = savedUser;
                 updateUserUI();
-                await loadUserData();
+                await loadUserData(); // Lấy dữ liệu hồ sơ
             } else {
-                window.location.href = '../login.html';
+                currentUser = null;
+                localStorage.removeItem('luna_token');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../login.html'; // Bắt buộc đăng nhập mới xem được trang này
             }
         });
     </script>
