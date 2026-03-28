@@ -137,6 +137,7 @@
     <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3"></div>
 
     <div id="main-content">
+        <!-- Header sẽ được load vào đây -->
         <div id="app-header"></div>
 
         <main class="user-main">
@@ -253,6 +254,7 @@
             </div>
         </main>
 
+        <!-- Footer sẽ được load vào đây -->
         <div id="app-footer"></div>
     </div>
 
@@ -265,9 +267,9 @@
         loadFooter();
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Chỉ dùng Firebase cho phần Đăng nhập (Auth)
         const firebaseConfig = {
             apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
             authDomain: "hotel-manager-2442d.firebaseapp.com",
@@ -278,40 +280,21 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         const auth = getAuth(app);
         const ADMIN_EMAIL = 'lunanewyear@gmail.com';
-
-        // === CẤU HÌNH BACKEND NODEJS ===
-        const API_URL = "https://luna-hotel-api-backend.onrender.com/api";
-
-        // Hàm gọi API Node.js dùng chung
-        async function apiFetch(endpoint, method = 'GET', body = null) {
-            const options = { method, headers: { 'Content-Type': 'application/json' } };
-            if (body) options.body = JSON.stringify(body);
-            try {
-                const res = await fetch(`${API_URL}/${endpoint}`, options);
-                if (!res.ok) {
-                    if (res.status === 404) return null;
-                    throw new Error(`API Error: ${res.status}`);
-                }
-                return await res.json();
-            } catch (error) {
-                console.error("Fetch error:", error);
-                return null;
-            }
-        }
 
         let currentUser = null;
         let localRooms = [];
         let localServices = [];
 
         // Format currency
-        window.formatCurrency = function (amount) {
+        function formatCurrency(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
         // Show toast
-        window.showToast = function (message, type = 'success') {
+        function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const icons = { success: 'fa-check text-green-500', error: 'fa-xmark text-red-500', warning: 'fa-exclamation text-amber-500', info: 'fa-info text-blue-500' };
@@ -401,19 +384,14 @@
             }
         };
 
-        // Render Rooms từ MongoDB (Qua Node.js API)
+        // Render Rooms
         async function loadFeaturedRooms() {
             const container = document.getElementById('featured-rooms');
             if (!container) return;
 
             try {
-                const data = await apiFetch('rooms');
-                if (!data) throw new Error("No data fetched from backend");
-
-                // Mapping dữ liệu _id của MongoDB thành id
-                localRooms = data.map(d => ({ id: d._id, ...d }));
-
-                // Lọc lấy 3 phòng đang có sẵn
+                const roomsSnap = await getDocs(collection(db, 'rooms'));
+                localRooms = roomsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const featured = localRooms.filter(r => r.status === 'available').slice(0, 3);
 
                 if (featured.length === 0) {
@@ -424,7 +402,7 @@
                 container.innerHTML = featured.map((room, index) => `
                     <div class="animate-item bg-white p-4 md:p-5 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(37,99,235,0.08)] border border-slate-100/50 flex flex-col h-full transition-all duration-300 group" style="animation-delay: ${index * 0.1}s">
                         <div class="h-60 relative rounded-2xl overflow-hidden mb-6">
-                            <img src="${room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.src='https://images.unsplash.com/photo-1611892440504-42a792e24d32'">
+                            <img src="${room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                             <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-slate-800 shadow-sm">${room.type || 'Cao cấp'}</div>
                             <div class="absolute top-3 right-3 bg-blue-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center shadow-sm">
                                 <i class="fa-solid fa-star text-amber-300 mr-1 text-[10px]"></i> 5.0
@@ -435,7 +413,7 @@
                             <div class="flex justify-between items-start mb-2">
                                 <h3 class="text-2xl font-bold text-slate-900 leading-tight">Phòng ${room.code}</h3>
                                 <div class="text-right">
-                                    <span class="text-xl font-bold text-blue-600 block">${window.formatCurrency(room.price)}</span>
+                                    <span class="text-xl font-bold text-blue-600 block">${formatCurrency(room.price)}</span>
                                     <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">/ Đêm</span>
                                 </div>
                             </div>
@@ -455,21 +433,18 @@
                 `).join('');
             } catch (error) {
                 console.error('Error loading rooms:', error);
-                container.innerHTML = '<div class="col-span-3 text-center py-12"><p class="text-red-500">Lỗi tải dữ liệu phòng. Hãy chắc chắn Backend của bạn đang chạy.</p></div>';
+                container.innerHTML = '<div class="col-span-3 text-center py-12"><p class="text-red-500">Lỗi tải dữ liệu phòng</p></div>';
             }
         }
 
-        // Render Services từ MongoDB (Qua Node.js API)
+        // Render Services
         async function loadFeaturedServices() {
             const container = document.getElementById('featured-services');
             if (!container) return;
 
             try {
-                const data = await apiFetch('services');
-                if (!data) throw new Error("No data fetched from backend");
-
-                // Mapping dữ liệu _id của MongoDB thành id
-                localServices = data.map(d => ({ id: d._id, ...d }));
+                const servicesSnap = await getDocs(collection(db, 'services'));
+                localServices = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const featured = localServices.slice(0, 4);
 
                 if (featured.length === 0) {
@@ -491,7 +466,7 @@
                         
                         <div class="pt-4 border-t border-slate-100 mt-auto flex items-end justify-between">
                             <div>
-                                <span class="text-lg font-bold text-blue-600 block">${window.formatCurrency(service.price)}</span>
+                                <span class="text-lg font-bold text-blue-600 block">${formatCurrency(service.price)}</span>
                                 <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">${unitStr}</span>
                             </div>
                             <a href="pages/services.html" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-900 hover:text-white transition-all">
@@ -502,7 +477,7 @@
                 `}).join('');
             } catch (error) {
                 console.error('Error loading services:', error);
-                container.innerHTML = '<div class="col-span-4 text-center py-12"><p class="text-red-500">Lỗi tải dữ liệu dịch vụ. Hãy chắc chắn Backend của bạn đang chạy.</p></div>';
+                container.innerHTML = '<div class="col-span-4 text-center py-12"><p class="text-red-500">Lỗi tải dữ liệu dịch vụ</p></div>';
             }
         }
 
@@ -516,8 +491,8 @@
             }, 800);
 
             if (user) {
-                // Lấy thông tin user từ MongoDB
-                const userData = await apiFetch(`users/${user.uid}`) || {};
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                const userData = userDoc.exists() ? userDoc.data() : {};
                 currentUser = {
                     uid: user.uid,
                     email: user.email,
@@ -532,7 +507,6 @@
                 updateUserUI();
             }
 
-            // Gọi hàm render dữ liệu từ Backend Nodejs
             await loadFeaturedRooms();
             await loadFeaturedServices();
         });

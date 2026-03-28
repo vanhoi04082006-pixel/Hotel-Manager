@@ -200,7 +200,7 @@
         </div>
     </div>
 
-    <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3 z-[10000]"></div>
+    <div id="toast-container" class="fixed top-5 right-5 z-[9998] space-y-3"></div>
 
     <div id="main-content">
         <div id="app-header"></div>
@@ -210,7 +210,7 @@
                 <div class="hero-overlay"></div>
                 <div class="max-w-4xl mx-auto px-4 text-center relative z-10 w-full">
                     <span
-                        class="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-bold tracking-widest uppercase mb-6 animate-pulse">Luna
+                        class="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-bold tracking-widest uppercase mb-6">Luna
                         Hotel & Resort</span>
                     <h2
                         class="text-4xl md:text-6xl font-playfair font-bold text-white mb-6 leading-tight drop-shadow-lg">
@@ -299,9 +299,11 @@
         class="fixed inset-0 modal-backdrop z-[100] hidden flex items-center justify-center p-4 sm:p-6">
         <div
             class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col md:flex-row overflow-hidden relative animate-item border border-slate-100">
+
             <button onclick="closeModal('bookingModal')"
                 class="absolute top-4 right-4 z-20 text-slate-400 hover:text-slate-800 bg-white/80 backdrop-blur-md rounded-full w-10 h-10 flex items-center justify-center shadow-sm transition-all hover:scale-105"><i
                     class="fa-solid fa-xmark text-lg"></i></button>
+
             <div
                 class="w-full md:w-2/5 bg-gradient-to-br from-blue-50 to-indigo-50/50 p-8 md:p-10 flex flex-col relative border-r border-slate-100">
                 <div class="relative z-10 h-full flex flex-col">
@@ -310,23 +312,32 @@
                         <i class="fa-solid fa-key mr-2"></i>Mã: <span id="book-room-code-display"
                             class="ml-1">P101</span>
                     </div>
+
                     <h3 class="text-3xl font-playfair font-bold text-slate-900 mb-2" id="book-room-name">Phòng Superior
                     </h3>
                     <div class="flex text-amber-400 text-sm mb-8"><i class="fa-solid fa-star"></i><i
                             class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
                             class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+
                     <div
                         class="space-y-5 mb-8 text-slate-600 text-[15px] bg-white/60 p-5 rounded-2xl border border-white">
-                        <div class="flex justify-between items-center"><span class="flex items-center"><i
-                                    class="fa-regular fa-bookmark w-5 text-blue-500"></i> Phân hạng</span><span
-                                class="font-semibold text-slate-900" id="book-room-type">Deluxe</span></div>
-                        <div class="flex justify-between items-center"><span class="flex items-center"><i
-                                    class="fa-regular fa-user w-5 text-blue-500"></i> Sức chứa</span><span
-                                class="font-semibold text-slate-900" id="book-room-capacity">2 người</span></div>
-                        <div class="flex justify-between items-center"><span class="flex items-center"><i
-                                    class="fa-solid fa-tag w-5 text-blue-500"></i> Giá cơ bản</span><span
-                                class="font-bold text-blue-600 text-lg" id="book-room-price">1.500.000₫</span></div>
+                        <div class="flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-regular fa-bookmark w-5 text-blue-500"></i>
+                                Phân hạng</span>
+                            <span class="font-semibold text-slate-900" id="book-room-type">Deluxe</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-regular fa-user w-5 text-blue-500"></i> Sức
+                                chứa</span>
+                            <span class="font-semibold text-slate-900" id="book-room-capacity">2 người</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-solid fa-tag w-5 text-blue-500"></i> Giá cơ
+                                bản</span>
+                            <span class="font-bold text-blue-600 text-lg" id="book-room-price">1.500.000₫</span>
+                        </div>
                     </div>
+
                     <div class="mt-auto bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                         <h4 class="text-sm font-bold text-slate-800 mb-4 flex items-center"><i
                                 class="fa-solid fa-receipt text-blue-500 mr-2"></i>Chi tiết thanh toán</h4>
@@ -339,9 +350,10 @@
                             <div class="flex justify-between"><span>Thuế & Phí (10%)</span><span id="book-fee-total"
                                     class="font-semibold text-slate-800">0₫</span></div>
                             <div class="border-t border-slate-200 mt-4 pt-4">
-                                <div class="flex justify-between items-center"><span
-                                        class="font-bold text-slate-900">Tổng cộng</span><span id="book-total-price"
-                                        class="text-2xl font-bold text-blue-600">0₫</span></div>
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-slate-900">Tổng cộng</span>
+                                    <span id="book-total-price" class="text-2xl font-bold text-blue-600">0₫</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -360,7 +372,8 @@
                         <h4 class="text-sm font-bold text-amber-800 mb-2"><i
                                 class="fa-solid fa-calendar-xmark mr-2"></i>Phòng này đã kẹt lịch vào các ngày:</h4>
                         <ul id="booked-dates-list"
-                            class="text-[13px] text-amber-700 font-medium space-y-1 ml-6 list-disc"></ul>
+                            class="text-[13px] text-amber-700 font-medium space-y-1 ml-6 list-disc">
+                        </ul>
                         <p class="text-xs text-amber-600 mt-2 italic">* Vui lòng không chọn ngày Nhận/Trả phòng trùng
                             vào khoảng thời gian trên.</p>
                     </div>
@@ -417,7 +430,8 @@
                     <div class="pt-2">
                         <label class="form-label mb-3">Thêm dịch vụ tiện ích</label>
                         <div id="booking-services-list"
-                            class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-2"></div>
+                            class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-2">
+                        </div>
                     </div>
 
                     <div>
@@ -443,25 +457,23 @@
         loadHeader('rooms');
         loadFooter();
 
-        // === CẤU HÌNH API ĐẾN NODE.JS BACKEND MỚI ===
-        const API_URL = "https://luna-hotel-api.onrender.com/api";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Hàm gọi API Node.js
-        async function apiFetch(endpoint, method = 'GET', body = null) {
-            const options = { method, headers: { 'Content-Type': 'application/json' } };
-            if (body) options.body = JSON.stringify(body);
-            try {
-                const res = await fetch(`${API_URL}/${endpoint}`, options);
-                if (!res.ok) {
-                    if (res.status === 404) return null;
-                    throw new Error(`API Error: ${res.status}`);
-                }
-                return await res.json();
-            } catch (error) {
-                console.error(`Fetch error on ${endpoint}:`, error);
-                return null;
-            }
-        }
+        const firebaseConfig = {
+            apiKey: "AIzaSyAg9Ex89QaMSyRH-0O7pwvWBJDvyz_x3jw",
+            authDomain: "hotel-manager-2442d.firebaseapp.com",
+            projectId: "hotel-manager-2442d",
+            storageBucket: "hotel-manager-2442d.firebasestorage.app",
+            messagingSenderId: "379010173725",
+            appId: "1:379010173725:web:20908f11fb0589ca432ff4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const ADMIN_EMAIL = 'lunanewyear@gmail.com';
 
         let currentUser = null;
         let allRooms = [];
@@ -470,6 +482,7 @@
         let currentPage = 1;
         const roomsPerPage = 6;
 
+        // TRẠNG THÁI TÌM KIẾM BÊN NGOÀI
         let searchQuery = '';
         let filterCheckIn = '';
         let filterCheckOut = '';
@@ -477,6 +490,7 @@
         let lastSearchedCheckIn = '';
         let lastSearchedCheckOut = '';
 
+        // TRẠNG THÁI MODAL ĐẶT PHÒNG
         let currentRoom = null;
         let currentTotalPrice = 0;
         let localServices = [];
@@ -486,7 +500,7 @@
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
-        window.showToast = function (message, type = 'success') {
+        function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const icons = { success: 'fa-check text-green-500', error: 'fa-xmark text-red-500', warning: 'fa-exclamation text-amber-500', info: 'fa-info text-blue-500' };
@@ -501,7 +515,7 @@
                 toast.style.transform = 'translateY(-20px)';
                 toast.style.transition = 'all 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            }, 3000);
         }
 
         window.closeModal = function (id) {
@@ -552,17 +566,12 @@
                         loadingDiv.style.opacity = '1';
                         loadingDiv.style.display = 'flex';
                     }
-
-                    // Xóa Token Node.js thay vì Firebase
-                    localStorage.removeItem('luna_token');
+                    await signOut(auth);
                     localStorage.removeItem('currentUser');
-
                     currentUser = null;
                     updateUserUI();
                     showToast('Đã đăng xuất thành công', 'success');
-
-                    // Khởi động lại trang để làm mới giao diện
-                    setTimeout(() => { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.href = '../index.html'; }, 500);
                 } catch (error) {
                     console.error('Logout error:', error);
                     showToast('Lỗi đăng xuất: ' + error.message, 'error');
@@ -585,15 +594,13 @@
             updateUserUI();
         }
 
-        // TẢI BOOKINGS TỪ API ĐỂ CHECK NGÀY
+        // --- CÁC HÀM XỬ LÝ LỌC & TÌM KIẾM ---
         async function loadActiveBookings() {
             try {
-                const bookings = await apiFetch('bookings');
-                if (bookings) {
-                    activeBookings = bookings.filter(b => b.status !== 'cancelled');
-                } else {
-                    activeBookings = [];
-                }
+                const snapshot = await getDocs(collection(db, 'bookings'));
+                activeBookings = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(b => b.status !== 'cancelled');
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu booking:", error);
             }
@@ -722,6 +729,7 @@
             }
 
             container.innerHTML = paginatedRooms.map((room, index) => {
+                // Kiểm tra trạng thái phòng
                 const isAvailable = room.status === 'available';
                 const statusText = room.status === 'maintenance' ? 'Đang bảo trì' : 'Đã có khách';
 
@@ -746,7 +754,7 @@
                     
                     <div class="flex flex-col flex-grow px-2">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-2xl font-bold text-slate-900 leading-tight">Phòng ${room.code || 'N/A'}</h3>
+                            <h3 class="text-2xl font-bold text-slate-900 leading-tight">Phòng ${room.code}</h3>
                             <div class="text-right">
                                 <span class="text-xl font-bold ${isAvailable ? 'text-blue-600' : 'text-slate-400'} block">${formatCurrency(room.price)}</span>
                                 <span class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">/ Đêm</span>
@@ -755,8 +763,8 @@
                         <p class="text-slate-500 text-[15px] mb-6 line-clamp-2">${room.name}</p>
                         
                         <div class="grid grid-cols-2 gap-3 text-[14px] text-slate-600 font-medium mb-8 bg-slate-50/50 p-4 rounded-2xl mt-auto border border-slate-100">
-                            <div class="flex items-center"><i class="fa-solid fa-expand ${isAvailable ? 'text-blue-400' : 'text-slate-300'} w-5"></i>${room.area || 0}m²</div>
-                            <div class="flex items-center"><i class="fa-regular fa-user ${isAvailable ? 'text-blue-400' : 'text-slate-300'} w-5"></i>${room.capacity || 2} khách</div>
+                            <div class="flex items-center"><i class="fa-solid fa-expand ${isAvailable ? 'text-blue-400' : 'text-slate-300'} w-5"></i>${room.area}m²</div>
+                            <div class="flex items-center"><i class="fa-regular fa-user ${isAvailable ? 'text-blue-400' : 'text-slate-300'} w-5"></i>${room.capacity} khách</div>
                             <div class="flex items-center col-span-2"><i class="fa-solid fa-bed ${isAvailable ? 'text-blue-400' : 'text-slate-300'} w-5"></i>${room.bedType || '1 giường King'}</div>
                         </div>
                         
@@ -814,33 +822,27 @@
             }, 300);
         };
 
-        // LOAD DỮ LIỆU PHÒNG TỪ API
         async function loadRooms() {
             try {
-                const data = await apiFetch('rooms');
-                if (data) {
-                    allRooms = data.map(doc => ({ id: doc._id, ...doc }));
-                    applyFiltersAndSearch();
-                }
+                const roomsSnap = await getDocs(collection(db, 'rooms'));
+                allRooms = roomsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                applyFiltersAndSearch();
             } catch (error) {
                 console.error('Error loading rooms:', error);
-                showToast('Lỗi tải dữ liệu phòng từ máy chủ', 'error');
+                showToast('Lỗi tải dữ liệu phòng', 'error');
             }
         }
 
-        // LOAD DỊCH VỤ TỪ API
         async function loadServices() {
             try {
-                const data = await apiFetch('services');
-                if (data) {
-                    localServices = data.map(doc => ({ id: doc._id, ...doc }));
-                }
+                const servicesSnap = await getDocs(collection(db, 'services'));
+                localServices = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             } catch (error) {
                 console.error('Error loading services:', error);
             }
         }
 
-        // KIỂM TRA LỊCH TRỐNG QUA API
+        // TẢI VÀ HIỂN THỊ CÁC NGÀY KẸT TRÊN MODAL
         window.loadRoomBookedDates = async function (roomId) {
             const warningBox = document.getElementById('booked-dates-warning');
             const listEl = document.getElementById('booked-dates-list');
@@ -850,17 +852,24 @@
             currentRoomBookedRanges = [];
 
             try {
-                const bookings = await apiFetch('bookings');
+                const bookingsRef = collection(db, 'bookings');
                 const todayStr = new Date().toISOString().split('T')[0];
+
+                const q = query(
+                    bookingsRef,
+                    where('roomId', '==', roomId),
+                    where('status', 'in', ['pending', 'confirmed', 'completed'])
+                );
+
+                const snapshot = await getDocs(q);
                 const bookedDates = [];
 
-                if (bookings) {
-                    bookings.forEach(b => {
-                        if (b.roomId === roomId && ['pending', 'confirmed', 'completed'].includes(b.status) && b.checkOut >= todayStr) {
-                            bookedDates.push({ checkIn: b.checkIn, checkOut: b.checkOut });
-                        }
-                    });
-                }
+                snapshot.forEach(docSnap => {
+                    const b = docSnap.data();
+                    if (b.checkOut >= todayStr) {
+                        bookedDates.push({ checkIn: b.checkIn, checkOut: b.checkOut });
+                    }
+                });
 
                 if (bookedDates.length > 0) {
                     bookedDates.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
@@ -885,35 +894,42 @@
             const room = allRooms.find(r => r.id === roomId);
             if (!room) return;
 
+            // --- KIỂM TRA TRẠNG THÁI PHÒNG (Bổ sung từ đoạn code 2) ---
             if (room.status !== 'available') {
                 showToast('Rất tiếc, phòng này hiện không có sẵn để đặt!', 'warning');
                 return;
             }
+            // -------------------------------------------------------
 
             currentRoom = room;
 
+            // Cập nhật thông tin ẩn và hiển thị của phòng
             document.getElementById('book-room-id').value = room.id;
-            document.getElementById('book-room-code').value = room.code || 'N/A';
+            document.getElementById('book-room-code').value = room.code;
             document.getElementById('book-room-base-price').value = room.price;
             document.getElementById('book-room-name').textContent = `${room.name}`;
-            document.getElementById('book-room-code-display').textContent = `${room.code || 'N/A'}`;
+            document.getElementById('book-room-code-display').textContent = `${room.code}`;
             document.getElementById('book-room-type').textContent = room.type;
             document.getElementById('book-room-price').textContent = formatCurrency(room.price);
-            document.getElementById('book-room-capacity').textContent = `${room.capacity || 2} người`;
+            document.getElementById('book-room-capacity').textContent = `${room.capacity} người`;
 
+            // Điền thông tin khách hàng nếu đã đăng nhập
             if (currentUser) {
                 document.getElementById('guestName').value = currentUser.name || '';
                 document.getElementById('guestEmail').value = currentUser.email || '';
                 document.getElementById('guestPhone').value = currentUser.phone || '';
             }
 
+            // Thiết lập giới hạn ngày chọn (không được chọn ngày quá khứ)
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('checkInDate').min = today;
             document.getElementById('checkOutDate').min = today;
 
+            // Nếu đã có ngày lọc từ trước thì điền sẵn vào ô input
             if (filterCheckIn) document.getElementById('checkInDate').value = filterCheckIn;
             if (filterCheckOut) document.getElementById('checkOutDate').value = filterCheckOut;
 
+            // Hiển thị danh sách dịch vụ đi kèm
             const servicesList = document.getElementById('booking-services-list');
             if (localServices.length === 0) {
                 servicesList.innerHTML = '<p class="text-slate-400 italic text-sm col-span-2 bg-slate-50 p-4 rounded-xl text-center">Chưa có dịch vụ nào cung cấp</p>';
@@ -929,6 +945,7 @@
         `).join('');
             }
 
+            // Reset các giá trị tính toán về 0
             document.getElementById('book-nights').textContent = '0 đêm';
             document.getElementById('book-room-total').textContent = '0₫';
             document.getElementById('book-service-total').textContent = '0₫';
@@ -936,11 +953,15 @@
             document.getElementById('book-total-price').textContent = '0₫';
             document.getElementById('btn-submit-booking').disabled = true;
 
+            // Nếu đã có đủ ngày check-in/out thì tính toán tổng tiền luôn
             if (filterCheckIn && filterCheckOut) {
                 window.calculateTotal();
             }
 
+            // Gọi hàm kiểm tra lịch đã đặt của phòng này
             loadRoomBookedDates(room.id);
+
+            // Hiển thị Modal
             document.getElementById('bookingModal').classList.remove('hidden');
         };
 
@@ -975,6 +996,7 @@
                 return;
             }
 
+            // KIỂM TRA TRÙNG LỊCH REAL-TIME TỪ DANH SÁCH ĐÃ TẢI
             const reqIn = start.setHours(0, 0, 0, 0);
             const reqOut = end.setHours(0, 0, 0, 0);
             let isOverlap = false;
@@ -1011,7 +1033,6 @@
             document.getElementById('btn-submit-booking').disabled = false;
         };
 
-        // ĐẨY DỮ LIỆU ĐẶT PHÒNG LÊN MONGODB QUA API
         window.submitBooking = async function (e) {
             e.preventDefault();
 
@@ -1047,37 +1068,36 @@
             btn.disabled = true;
 
             try {
-                // Kiểm tra lại lần cuối xem có ai vừa đặt phòng này không
-                const bookings = await apiFetch('bookings');
-                let isOverlap = false;
+                // CHỐNG ĐẶT ĐÈ BẢO MẬT TRÊN DATABASE
+                const bookingsRef = collection(db, 'bookings');
+                const q = query(bookingsRef,
+                    where('roomId', '==', currentRoom.id),
+                    where('status', 'in', ['pending', 'confirmed', 'completed'])
+                );
+                const snapshot = await getDocs(q);
 
-                if (bookings) {
-                    bookings.forEach(b => {
-                        if (b.roomId === currentRoom.id && ['pending', 'confirmed', 'completed'].includes(b.status)) {
-                            if (checkIn < b.checkOut && b.checkIn < checkOut) {
-                                isOverlap = true;
-                            }
-                        }
-                    });
-                }
+                let isOverlap = false;
+                snapshot.forEach(docSnap => {
+                    const b = docSnap.data();
+                    if (checkIn < b.checkOut && b.checkIn < checkOut) {
+                        isOverlap = true;
+                    }
+                });
 
                 if (isOverlap) {
                     showToast('Rất tiếc! Phòng này vừa có người đặt xong.', 'error');
                     btn.innerHTML = 'Xác nhận đặt phòng';
                     btn.disabled = false;
+                    // Lập tức tải lại lịch kẹt cho khách thấy
                     loadRoomBookedDates(currentRoom.id);
                     return;
                 }
 
                 btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang xử lý...';
 
-                // Tạo mã B + 8 ký tự ngẫu nhiên
-                const generateCode = "B" + Math.random().toString(36).substr(2, 8).toUpperCase();
-
                 const bookingData = {
-                    id: generateCode,
                     roomId: currentRoom.id,
-                    roomCode: currentRoom.code || 'N/A',
+                    roomCode: currentRoom.code,
                     userId: currentUser?.uid || 'guest_' + Date.now(),
                     userEmail: guestEmail,
                     userName: guestName,
@@ -1101,13 +1121,8 @@
                     createdAt: new Date().toISOString()
                 };
 
-                // Lưu qua Backend Node.js
-                const savedBooking = await apiFetch('bookings', 'POST', bookingData);
-
-                // Lấy ID trả về để báo cho khách
-                const displayId = (savedBooking && savedBooking._id) ? savedBooking._id.slice(-8).toUpperCase() : generateCode;
-
-                showToast('Đặt phòng thành công! Mã: #' + displayId, 'success');
+                const docRef = await addDoc(collection(db, 'bookings'), bookingData);
+                showToast('Đặt phòng thành công! Mã: #' + docRef.id.slice(-8), 'success');
                 window.closeModal('bookingModal');
 
             } catch (error) {
@@ -1121,49 +1136,46 @@
             }
         };
 
-        // KHỞI ĐỘNG HỆ THỐNG VỚI TOKEN NODE.JS
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 1. Tắt màn hình Loading
+        onAuthStateChanged(auth, async (user) => {
             setTimeout(() => {
-                const loadingScreen = document.getElementById('loading-screen');
-                if (loadingScreen) {
-                    loadingScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                        document.getElementById('main-content').classList.add('loaded');
-                    }, 500);
-                }
+                document.getElementById('loading-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('main-content').classList.add('loaded');
+                }, 500);
             }, 1000);
 
-            // 2. Lấy thông tin User từ LocalStorage
-            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-            const token = localStorage.getItem('luna_token');
-
-            if (savedUser && token) {
-                currentUser = savedUser;
+            if (user) {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                const userData = userDoc.exists() ? userDoc.data() : {};
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    name: userData.name || user.displayName || user.email.split('@')[0],
+                    phone: userData.phone || '',
+                    role: userData.role || (user.email === ADMIN_EMAIL ? 'admin' : 'user')
+                };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 updateUserUI();
             } else {
                 currentUser = null;
+                localStorage.removeItem('currentUser');
                 updateUserUI();
             }
 
-            // 3. Set bộ lọc ngày tháng
             const todayStr = new Date().toISOString().split('T')[0];
-            const filterCheckInEl = document.getElementById('filterCheckIn');
-            const filterCheckOutEl = document.getElementById('filterCheckOut');
-            if (filterCheckInEl) filterCheckInEl.min = todayStr;
-            if (filterCheckOutEl) filterCheckOutEl.min = todayStr;
+            document.getElementById('filterCheckIn').min = todayStr;
+            document.getElementById('filterCheckOut').min = todayStr;
 
-            // 4. Tải dữ liệu phòng và dịch vụ
             await loadRooms();
             await loadServices();
 
-            // 5. Mở modal phòng nếu có URL params (Ví dụ: khách từ trang chủ bấm "Đặt ngay")
             const urlParams = new URLSearchParams(window.location.search);
             const bookId = urlParams.get('book');
             if (bookId) {
                 setTimeout(() => {
                     const room = allRooms.find(r => r.id === bookId);
+                    // --- ĐÃ SỬA CHỖ NÀY ---
                     if (room) {
                         if (room.status === 'available') {
                             window.openBookingModal(bookId);
@@ -1171,6 +1183,7 @@
                             showToast('Phòng từ liên kết này hiện không có sẵn để đặt!', 'warning');
                         }
                     }
+                    // -----------------------
                 }, 1200);
             }
         });
