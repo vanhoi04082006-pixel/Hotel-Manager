@@ -1,6 +1,4 @@
 // src/app/booking/page.jsx
-// Developer: Nguyễn Minh Nhân (MaSV: 124000104)
-
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -54,6 +52,7 @@ function BookingContent() {
 
         const fetchBookingData = async () => {
             try {
+                // Lấy thông tin phòng
                 const roomDoc = await getDoc(doc(db, "rooms", roomId));
                 if (!roomDoc.exists() || roomDoc.data().status !== "available") {
                     router.push("/rooms");
@@ -61,9 +60,11 @@ function BookingContent() {
                 }
                 setCurrentRoom({ id: roomDoc.id, ...roomDoc.data() });
 
+                // Lấy danh sách dịch vụ
                 const servicesSnap = await getDocs(collection(db, "services"));
                 setServices(servicesSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.available !== false));
 
+                // Lấy lịch đã đặt của phòng này
                 const todayStr = new Date().toISOString().split("T")[0];
                 const q = query(collection(db, "bookings"), where("roomId", "==", roomId), where("status", "in", ["pending", "confirmed", "completed"]));
                 const snapshot = await getDocs(q);
@@ -74,6 +75,7 @@ function BookingContent() {
                 });
                 setBookedDates(dates.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn)));
 
+                // Lấy dịch vụ đã lưu từ Session
                 const savedServicesStr = sessionStorage.getItem("selectedServices");
                 if (savedServicesStr) {
                     try { setSelectedServices(JSON.parse(savedServicesStr)); } catch (e) { }
@@ -200,145 +202,219 @@ function BookingContent() {
 
     const today = new Date().toISOString().split("T")[0];
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-10 h-10 border-4 border-amber-600 border-t-transparent rounded-full animate-spin"></div></div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
     if (!currentRoom) return null;
 
     return (
-        <div className="bg-[#fcfbf9] min-h-screen flex flex-col font-sans">
+        <div className="bg-[#f0f2f5] min-h-screen flex flex-col font-sans">
             <Header />
 
-            <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-28 md:py-32">
-                <div className="mb-10">
-                    <button onClick={() => router.back()} className="text-slate-500 hover:text-amber-700 font-medium text-sm flex items-center transition-colors group">
-                        <i className="fa-solid fa-arrow-left mr-2 transform group-hover:-translate-x-1 transition-transform"></i> Trở về
+            <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-24 md:py-32">
+                <div className="mb-6">
+                    <button onClick={() => router.back()} className="text-blue-600 hover:text-blue-800 font-bold text-sm flex items-center transition-colors mb-2">
+                        <i className="fa-solid fa-arrow-left mr-2"></i> Trở về
                     </button>
-                    <h1 className="text-3xl md:text-5xl font-playfair font-bold text-slate-900 mt-5 tracking-tight">Hoàn tất đặt phòng</h1>
-                    <p className="text-slate-500 mt-2">Vui lòng điền thông tin bên dưới để xác nhận kỳ nghỉ của bạn.</p>
+                    <h1 className="text-3xl font-bold text-slate-900">Chi tiết đặt phòng của bạn</h1>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-10 items-start">
+                <div className="flex flex-col lg:flex-row gap-6 items-start">
 
-                    {/* Cột Trái: Form Điền Thông Tin */}
-                    <div className="w-full lg:w-[60%] bg-white rounded-2xl p-6 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
-                        <h3 className="text-xl font-playfair font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Thông tin liên hệ</h3>
-
-                        <form id="booking-form" onSubmit={handleBookingSubmit} className="space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="col-span-1 md:col-span-2">
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Họ và tên <span className="text-amber-600">*</span></label>
-                                    <input required className="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all text-sm font-medium text-slate-800" value={bookingForm.guestName} onChange={e => setBookingForm({ ...bookingForm, guestName: e.target.value })} placeholder="VD: Nguyễn Văn A" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Email <span className="text-amber-600">*</span></label>
-                                    <input required type="email" className="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all text-sm font-medium text-slate-800" value={bookingForm.guestEmail} onChange={e => setBookingForm({ ...bookingForm, guestEmail: e.target.value })} placeholder="email@example.com" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Số điện thoại <span className="text-amber-600">*</span></label>
-                                    <input required type="tel" className="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all text-sm font-medium text-slate-800" value={bookingForm.guestPhone} onChange={e => setBookingForm({ ...bookingForm, guestPhone: e.target.value })} placeholder="0901234567" />
-                                </div>
-                            </div>
-
-                            <h3 className="text-xl font-playfair font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 pt-4">Lịch trình & Số lượng khách</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Nhận phòng <span className="text-amber-600">*</span></label>
-                                    <input required type="date" min={today} className="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all text-sm font-medium text-slate-800 cursor-pointer" value={bookingForm.checkInDate} onChange={e => setBookingForm({ ...bookingForm, checkInDate: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Trả phòng <span className="text-amber-600">*</span></label>
-                                    <input required type="date" min={bookingForm.checkInDate || today} className="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all text-sm font-medium text-slate-800 cursor-pointer" value={bookingForm.checkOutDate} onChange={e => setBookingForm({ ...bookingForm, checkOutDate: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Người lớn</label>
-                                    <select className="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium text-slate-800 cursor-pointer appearance-none" value={bookingForm.adultCount} onChange={e => setBookingForm({ ...bookingForm, adultCount: e.target.value })}>
-                                        {[1, 2, 3, 4].map(n => <option key={n} value={n}>{n} người lớn</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Trẻ em (Dưới 12t)</label>
-                                    <select className="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium text-slate-800 cursor-pointer appearance-none" value={bookingForm.childCount} onChange={e => setBookingForm({ ...bookingForm, childCount: e.target.value })}>
-                                        {[0, 1, 2].map(n => <option key={n} value={n}>{n === 0 ? "Không có" : `${n} trẻ em`}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <h3 className="text-xl font-playfair font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 pt-4">Dịch vụ & Tiện ích thêm</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {services.map(s => {
-                                    const isChecked = selectedServices.some(sel => sel.id === s.id);
-                                    return (
-                                        <label key={s.id} className={`flex items-start p-5 border rounded-xl cursor-pointer transition-all duration-200 group ${isChecked ? 'bg-amber-50/50 border-amber-500 shadow-[0_0_0_1px_#f59e0b]' : 'bg-white border-slate-200 hover:border-amber-300'}`}>
-                                            <input type="checkbox" className="mt-0.5 mr-4 w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer" checked={isChecked} onChange={(e) => {
-                                                let updated = e.target.checked
-                                                    ? [...selectedServices, { id: s.id, name: s.name, price: s.price }]
-                                                    : selectedServices.filter(sel => sel.id !== s.id);
-                                                setSelectedServices(updated);
-                                                sessionStorage.setItem("selectedServices", JSON.stringify(updated));
-                                            }} />
-                                            <div>
-                                                <span className={`font-semibold text-sm block ${isChecked ? 'text-amber-900' : 'text-slate-700'}`}>{s.name}</span>
-                                                <span className={`font-bold text-xs mt-1.5 block ${isChecked ? 'text-amber-600' : 'text-slate-500'}`}>+{formatCurrency(s.price)}</span>
-                                            </div>
-                                        </label>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="pt-4">
-                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Yêu cầu đặc biệt</label>
-                                <textarea rows="3" placeholder="Ghi chú thêm về dị ứng thực phẩm, yêu cầu phòng tầng cao..." className="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all text-sm text-slate-800" value={bookingForm.specialRequests} onChange={e => setBookingForm({ ...bookingForm, specialRequests: e.target.value })}></textarea>
-                            </div>
-                        </form>
-                    </div>
-
-                    {/* Cột Phải: Bill Tạm Tính - Sticky */}
-                    <div className="w-full lg:w-[40%] sticky top-28">
-                        <div className="bg-slate-900 rounded-2xl shadow-xl overflow-hidden text-white">
-                            <div className="h-56 relative bg-slate-800">
-                                <img src={currentRoom.image} className="w-full h-full object-cover opacity-80 mix-blend-overlay" alt="Room" />
-                                <div className="absolute top-5 left-5 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/20">
-                                    Phòng {currentRoom.code}
-                                </div>
-                            </div>
-
-                            <div className="p-8">
-                                <h3 className="text-2xl font-playfair font-bold text-amber-500 mb-2">{currentRoom.name}</h3>
-                                <div className="flex gap-4 text-xs text-slate-300 font-medium mb-8">
-                                    <span className="flex items-center"><i className="fa-solid fa-expand text-slate-400 mr-2"></i>{currentRoom.area}m²</span>
-                                    <span className="flex items-center"><i className="fa-regular fa-user text-slate-400 mr-2"></i>{currentRoom.capacity} Khách</span>
+                    {/* Cột Trái: Thông tin phòng & Bill Tạm Tính (Chiếm 35%) */}
+                    <div className="w-full lg:w-[35%] flex flex-col gap-6 lg:sticky lg:top-24">
+                        {/* Box 1: Tóm tắt phòng */}
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="p-5">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Khách sạn Luna Hotel</span>
+                                <h2 className="text-xl font-bold text-slate-900 mb-1">{currentRoom.name}</h2>
+                                <div className="flex items-center text-xs text-slate-600 mb-4">
+                                    <i className="fa-solid fa-star text-yellow-400 mr-1"></i>
+                                    <i className="fa-solid fa-star text-yellow-400 mr-1"></i>
+                                    <i className="fa-solid fa-star text-yellow-400 mr-1"></i>
+                                    <i className="fa-solid fa-star text-yellow-400 mr-1"></i>
+                                    <i className="fa-solid fa-star text-yellow-400 mr-2"></i>
+                                    (Tuyệt hảo)
                                 </div>
 
-                                <div className="space-y-4 text-sm text-slate-300 border-t border-slate-700/50 pt-6">
-                                    <div className="flex justify-between items-center">
-                                        <span>Phòng ({calculation.nights || 0} đêm)</span>
-                                        <span className="font-semibold text-white">{formatCurrency(calculation.roomTotal)}</span>
-                                    </div>
-                                    {selectedServices.length > 0 && (
-                                        <div className="flex justify-between items-start">
-                                            <span className="max-w-[70%]">Dịch vụ bổ sung ({selectedServices.length})</span>
-                                            <span className="font-semibold text-white">{formatCurrency(calculation.serviceTotal)}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between items-center">
-                                        <span>Thuế & Phí (10%)</span>
-                                        <span className="font-semibold text-white">{formatCurrency(calculation.fee)}</span>
+                                <div className="aspect-[4/3] rounded-lg overflow-hidden mb-4 relative">
+                                    <img src={currentRoom.image} alt={currentRoom.name} className="w-full h-full object-cover" />
+                                    <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-md">
+                                        Phòng {currentRoom.code}
                                     </div>
                                 </div>
 
-                                <div className="border-t border-dashed border-slate-600 mt-6 pt-6 flex justify-between items-end">
-                                    <span className="font-bold text-slate-400 uppercase tracking-widest text-xs mb-1">Tổng thanh toán</span>
-                                    <span className="text-3xl font-bold text-amber-500 font-mono">{formatCurrency(calculation.total)}</span>
+                                <div className="grid grid-cols-2 gap-2 text-sm text-slate-700">
+                                    <div className="flex items-center"><i className="fa-solid fa-bed w-5 text-slate-400"></i> {currentRoom.bedType || '1 Giường King'}</div>
+                                    <div className="flex items-center"><i className="fa-regular fa-user w-5 text-slate-400"></i> Max {currentRoom.capacity} khách</div>
+                                    <div className="flex items-center"><i className="fa-solid fa-expand w-5 text-slate-400"></i> {currentRoom.area} m²</div>
                                 </div>
-
-                                <button form="booking-form" type="submit" disabled={!calculation.isValid || isSubmitting} className="w-full mt-8 bg-amber-600 text-white py-4 rounded-xl font-bold text-[15px] shadow-[0_0_20px_rgba(217,119,6,0.3)] hover:bg-amber-500 hover:shadow-[0_0_25px_rgba(217,119,6,0.5)] disabled:bg-slate-700 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-300">
-                                    {isSubmitting ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i> Đang xử lý...</> : "Xác nhận đặt phòng"}
-                                </button>
-
-                                {calculation.error && (
-                                    <p className="text-rose-400 text-xs text-center mt-4 font-medium flex items-center justify-center bg-rose-400/10 py-2 rounded-lg"><i className="fa-solid fa-circle-exclamation mr-2"></i> {calculation.error}</p>
-                                )}
                             </div>
                         </div>
+
+                        {/* Box 2: Tóm tắt chi phí */}
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="bg-blue-50/50 p-5 border-b border-slate-100">
+                                <h3 className="font-bold text-slate-800 text-lg">Chi tiết giá</h3>
+                            </div>
+                            <div className="p-5">
+                                {calculation.error ? (
+                                    <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
+                                        <i className="fa-solid fa-circle-exclamation mt-0.5"></i>
+                                        <span>{calculation.error}</span>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3 text-sm text-slate-700">
+                                        <div className="flex justify-between items-center">
+                                            <span>{formatCurrency(currentRoom.price)} x {calculation.nights} đêm</span>
+                                            <span className="font-medium">{formatCurrency(calculation.roomTotal)}</span>
+                                        </div>
+                                        {selectedServices.length > 0 && (
+                                            <div className="flex justify-between items-center">
+                                                <span>Dịch vụ thêm ({selectedServices.length})</span>
+                                                <span className="font-medium">{formatCurrency(calculation.serviceTotal)}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between items-center">
+                                            <span>Thuế & Phí (10%)</span>
+                                            <span className="font-medium">{formatCurrency(calculation.fee)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-[#ebf3ff] p-5 flex flex-col items-end">
+                                <span className="text-sm font-bold text-slate-700 mb-1">Tổng cộng (Gồm thuế)</span>
+                                <span className="text-3xl font-bold text-blue-700 font-mono tracking-tight">{formatCurrency(calculation.total)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Cột Phải: Form Điền Thông Tin (Chiếm 65%) */}
+                    <div className="w-full lg:w-[65%] flex flex-col gap-6">
+
+                        {/* Cảnh báo ngày kẹt */}
+                        {bookedDates.length > 0 && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex gap-3">
+                                <i className="fa-solid fa-triangle-exclamation text-yellow-600 text-xl mt-0.5"></i>
+                                <div>
+                                    <h4 className="font-bold text-yellow-800 text-sm mb-1">Chú ý: Phòng này đã có lịch đặt trước</h4>
+                                    <p className="text-xs text-yellow-700 mb-2">Vui lòng không chọn ngày trùng với các mốc thời gian sau:</p>
+                                    <div className="flex flex-wrap gap-2 text-xs font-medium">
+                                        {bookedDates.map((d, i) => (
+                                            <span key={i} className="bg-white border border-yellow-300 px-2 py-1 rounded shadow-sm text-slate-700">
+                                                {new Date(d.checkIn).toLocaleDateString('vi-VN')} <i className="fa-solid fa-arrow-right mx-1 text-[10px] text-slate-400"></i> {new Date(d.checkOut).toLocaleDateString('vi-VN')}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <form id="booking-form" onSubmit={handleBookingSubmit} className="flex flex-col gap-6">
+
+                            {/* Section 1: Lịch trình */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <h3 className="text-xl font-bold text-slate-900 mb-5 flex items-center gap-2">
+                                    <i className="fa-regular fa-calendar-check text-blue-600"></i> Lịch trình chuyến đi
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Ngày nhận phòng <span className="text-red-500">*</span></label>
+                                        <input required type="date" min={today} className="w-full p-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm cursor-pointer" value={bookingForm.checkInDate} onChange={e => setBookingForm({ ...bookingForm, checkInDate: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Ngày trả phòng <span className="text-red-500">*</span></label>
+                                        <input required type="date" min={bookingForm.checkInDate || today} className="w-full p-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm cursor-pointer" value={bookingForm.checkOutDate} onChange={e => setBookingForm({ ...bookingForm, checkOutDate: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Người lớn</label>
+                                        <select className="w-full p-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm cursor-pointer" value={bookingForm.adultCount} onChange={e => setBookingForm({ ...bookingForm, adultCount: e.target.value })}>
+                                            {[1, 2, 3, 4].map(n => <option key={n} value={n}>{n} người lớn</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Trẻ em (Dưới 12t)</label>
+                                        <select className="w-full p-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm cursor-pointer" value={bookingForm.childCount} onChange={e => setBookingForm({ ...bookingForm, childCount: e.target.value })}>
+                                            {[0, 1, 2].map(n => <option key={n} value={n}>{n === 0 ? "Không có" : `${n} trẻ em`}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 2: Thông tin cá nhân */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <h3 className="text-xl font-bold text-slate-900 mb-5 flex items-center gap-2">
+                                    <i className="fa-regular fa-address-card text-blue-600"></i> Chi tiết liên hệ
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="col-span-1 md:col-span-2">
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Họ và tên <span className="text-red-500">*</span></label>
+                                        <input required className="w-full p-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm placeholder-slate-400" placeholder="VD: Nguyễn Văn A" value={bookingForm.guestName} onChange={e => setBookingForm({ ...bookingForm, guestName: e.target.value })} />
+                                        <p className="text-xs text-slate-500 mt-1">Điền tên chính xác như trên CMND/CCCD để nhận phòng.</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Email <span className="text-red-500">*</span></label>
+                                        <input required type="email" className="w-full p-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm placeholder-slate-400" placeholder="Email xác nhận sẽ gửi về đây" value={bookingForm.guestEmail} onChange={e => setBookingForm({ ...bookingForm, guestEmail: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Số điện thoại <span className="text-red-500">*</span></label>
+                                        <input required type="tel" className="w-full p-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm placeholder-slate-400" placeholder="09xx xxx xxx" value={bookingForm.guestPhone} onChange={e => setBookingForm({ ...bookingForm, guestPhone: e.target.value })} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 3: Nâng cấp dịch vụ */}
+                            {services.length > 0 && (
+                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                    <h3 className="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                                        <i className="fa-solid fa-bell-concierge text-blue-600"></i> Nâng cấp kỳ nghỉ của bạn
+                                    </h3>
+                                    <p className="text-sm text-slate-500 mb-5">Thêm các tiện ích để có trải nghiệm hoàn hảo nhất (Không bắt buộc)</p>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {services.map(s => {
+                                            const isChecked = selectedServices.some(sel => sel.id === s.id);
+                                            return (
+                                                <label key={s.id} className={`flex items-start p-3 border rounded-lg cursor-pointer transition-all group ${isChecked ? 'bg-[#ebf3ff] border-blue-400' : 'bg-white border-slate-200 hover:border-blue-300'}`}>
+                                                    <input type="checkbox" className="mt-1 mr-3 w-4 h-4 text-blue-600 rounded cursor-pointer" checked={isChecked} onChange={(e) => {
+                                                        let updated = e.target.checked
+                                                            ? [...selectedServices, { id: s.id, name: s.name, price: s.price }]
+                                                            : selectedServices.filter(sel => sel.id !== s.id);
+                                                        setSelectedServices(updated);
+                                                        sessionStorage.setItem("selectedServices", JSON.stringify(updated));
+                                                    }} />
+                                                    <div className="flex-1">
+                                                        <span className="font-bold text-sm text-slate-800 block mb-0.5">{s.name}</span>
+                                                        <span className="font-medium text-xs text-blue-600 block">+{formatCurrency(s.price)}</span>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Section 4: Ghi chú & Nút Submit */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <div className="mb-6">
+                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Ghi chú đặc biệt</label>
+                                    <p className="text-xs text-slate-500 mb-2">Các yêu cầu đặc biệt không được đảm bảo chắc chắn nhưng chỗ nghỉ sẽ cố gắng hết sức để đáp ứng.</p>
+                                    <textarea rows="3" className="w-full p-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm placeholder-slate-400" placeholder="Ví dụ: Tôi cần phòng yên tĩnh, dị ứng..." value={bookingForm.specialRequests} onChange={e => setBookingForm({ ...bookingForm, specialRequests: e.target.value })}></textarea>
+                                </div>
+
+                                <div className="bg-blue-50 rounded-lg p-4 mb-6 text-sm text-blue-800">
+                                    Bằng cách hoàn tất việc đặt phòng này, bạn đồng ý với các <strong>Điều kiện Đặt phòng</strong> và <strong>Chính sách Bảo mật</strong> của chúng tôi.
+                                </div>
+
+                                <div className="flex justify-end">
+                                    <button type="submit" disabled={!calculation.isValid || isSubmitting} className="w-full sm:w-auto px-10 py-4 bg-blue-600 text-white rounded-lg font-bold text-lg shadow-md hover:bg-blue-700 hover:shadow-lg disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed transition-all flex items-center justify-center min-w-[250px]">
+                                        {isSubmitting ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i> Đang xử lý...</> : "Hoàn tất đặt phòng"}
+                                    </button>
+                                </div>
+                            </div>
+
+                        </form>
                     </div>
 
                 </div>
@@ -348,15 +424,15 @@ function BookingContent() {
 
             {/* Notification Modal */}
             {notification.show && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-in zoom-in-95 duration-300">
-                        {notification.type === 'success' && <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-emerald-100"><i className="fa-solid fa-check text-2xl text-emerald-500"></i></div>}
-                        {notification.type === 'error' && <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-rose-100"><i className="fa-solid fa-xmark text-2xl text-rose-500"></i></div>}
-                        {notification.type === 'warning' && <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-amber-100"><i className="fa-solid fa-exclamation text-2xl text-amber-500"></i></div>}
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center animate-in zoom-in-95 duration-200">
+                        {notification.type === 'success' && <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><i className="fa-solid fa-check text-3xl text-green-500"></i></div>}
+                        {notification.type === 'error' && <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><i className="fa-solid fa-xmark text-3xl text-red-500"></i></div>}
+                        {notification.type === 'warning' && <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4"><i className="fa-solid fa-exclamation text-3xl text-yellow-500"></i></div>}
 
                         <h3 className="text-xl font-bold text-slate-800 mb-2">{notification.title}</h3>
-                        <p className="text-sm text-slate-500 mb-8">{notification.message}</p>
-                        <button onClick={closeNotification} className="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all">Đã hiểu</button>
+                        <p className="text-slate-600 mb-6 text-sm">{notification.message}</p>
+                        <button onClick={closeNotification} className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all text-sm">Đóng</button>
                     </div>
                 </div>
             )}
@@ -366,7 +442,7 @@ function BookingContent() {
 
 export default function BookingPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-10 h-10 border-4 border-amber-600 border-t-transparent rounded-full animate-spin"></div></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>}>
             <BookingContent />
         </Suspense>
     );
