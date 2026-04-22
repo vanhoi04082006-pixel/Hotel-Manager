@@ -183,6 +183,28 @@ function BookingContent() {
             };
 
             const docRef = await addDoc(collection(db, "bookings"), bookingData);
+
+            // --- THÊM ĐOẠN GỬI EMAIL Ở ĐÂY ---
+            try {
+                await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customerName: bookingForm.guestName,
+                        customerEmail: bookingForm.guestEmail,
+                        roomCode: currentRoom.code,
+                        checkIn: bookingForm.checkInDate,
+                        checkOut: bookingForm.checkOutDate,
+                        totalPrice: calculation.total,
+                        bookingId: docRef.id.slice(-8).toUpperCase()
+                    }),
+                });
+                console.log("Email xác nhận đã được gửi đi!");
+            } catch (emailErr) {
+                console.error("Gửi email thất bại nhưng booking đã được lưu:", emailErr);
+            }
+            // --------------------------------
+
             sessionStorage.removeItem("selectedServices");
 
             setNotification({ show: true, title: "Đặt phòng thành công!", message: `Mã đặt phòng của bạn là: #${docRef.id.slice(-8).toUpperCase()}`, type: "success" });

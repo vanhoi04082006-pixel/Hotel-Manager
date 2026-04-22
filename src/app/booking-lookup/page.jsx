@@ -447,10 +447,10 @@ function LookupContent() {
                                     </div>
                                     <span
                                         className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${foundBooking.status === "completed"
-                                                ? "bg-green-100 text-green-700"
-                                                : foundBooking.status === "cancelled"
-                                                    ? "bg-red-100 text-red-700"
-                                                    : "bg-blue-100 text-blue-700"
+                                            ? "bg-green-100 text-green-700"
+                                            : foundBooking.status === "cancelled"
+                                                ? "bg-red-100 text-red-700"
+                                                : "bg-blue-100 text-blue-700"
                                             }`}
                                     >
                                         {foundBooking.status === "pending"
@@ -498,9 +498,12 @@ function LookupContent() {
                                         </p>
                                         <p className="font-bold text-slate-800">
                                             {foundBooking.adultCount} <i className="fa-solid fa-user text-slate-300 mx-1"></i>
-                                            {foundBooking.childCount
-                                                ? `, ${foundBooking.childCount} <i className="fa-solid fa-child text-slate-300 ml-1"></i>`
-                                                : ""}
+                                            {/* Dùng điều kiện && và thẻ Fragment <> </> để render icon */}
+                                            {foundBooking.childCount > 0 && (
+                                                <>
+                                                    , {foundBooking.childCount} <i className="fa-solid fa-child text-slate-300 ml-1"></i>
+                                                </>
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -669,8 +672,8 @@ function LookupContent() {
                                         <label
                                             key={method.value}
                                             className={`flex flex-col items-center p-4 bg-white rounded-2xl border-2 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group ${paymentMethod === method.value
-                                                    ? "border-blue-500 ring-2 ring-blue-100"
-                                                    : "border-slate-100"
+                                                ? "border-blue-500 ring-2 ring-blue-100"
+                                                : "border-slate-100"
                                                 }`}
                                         >
                                             <input
