@@ -251,10 +251,15 @@ export default function Home() {
                           <span className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg flex items-center"><i className="fa-regular fa-user text-emerald-500 w-4 mr-1"></i>{room.capacity || 2} khách</span>
                         </div>
 
-                        {/* ĐÃ CẬP NHẬT ĐƯỜNG LINK Ở ĐÂY */}
-                        <Link href={`/booking?roomId=${room.id}`} className="w-full text-center bg-slate-900 text-white py-4 rounded-xl font-bold text-[14px] hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300 transform group-hover:-translate-y-1">
-                          Đặt phòng này
-                        </Link>
+                        {/* NÚT BẤM ĐÃ ĐƯỢC CHIA ĐÔI Ở ĐÂY */}
+                        <div className="flex gap-2">
+                          <Link href={`/rooms/${room.id}`} className="flex-1 text-center py-3.5 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-[14px] hover:border-blue-600 hover:text-blue-600 transition-all duration-300 bg-white">
+                            Chi tiết
+                          </Link>
+                          <Link href={`/booking?roomId=${room.id}`} className="flex-1 text-center bg-slate-900 text-white py-3.5 rounded-xl font-bold text-[14px] hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300 transform group-hover:-translate-y-1">
+                            Đặt ngay
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   ))

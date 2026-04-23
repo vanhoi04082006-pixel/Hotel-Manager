@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useMemo, Suspense, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link"; // ĐÃ THÊM IMPORT LINK
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { db } from "@/lib/firebase";
@@ -291,15 +292,21 @@ function RoomsContent() {
                                                     <span className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg flex items-center w-full mt-1"><i className="fa-solid fa-bed text-purple-400 w-4 mr-1.5"></i>{room.bedType || '1 giường King cỡ lớn'}</span>
                                                 </div>
                                                 
-                                                {isAvailable ? (
-                                                    <button onClick={() => handleBookRoom(room.id)} className="w-full text-center bg-slate-900 text-white py-4 rounded-xl font-bold text-[14px] hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300 transform group-hover:-translate-y-1">
-                                                        Đặt phòng này
-                                                    </button>
-                                                ) : (
-                                                    <button disabled className="w-full bg-slate-50 text-slate-400 py-4 rounded-xl font-bold text-[14px] cursor-not-allowed border border-slate-200">
-                                                        {statusText}
-                                                    </button>
-                                                )}
+                                                {/* KHU VỰC NÚT BẤM CHIA ĐÔI */}
+                                                <div className="flex gap-2 mt-2">
+                                                    <Link href={`/rooms/${room.id}`} className="flex-1 text-center py-3.5 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-[14px] hover:border-blue-600 hover:text-blue-600 transition-all duration-300 bg-white">
+                                                        Chi tiết
+                                                    </Link>
+                                                    {isAvailable ? (
+                                                        <button onClick={() => handleBookRoom(room.id)} className="flex-1 text-center bg-slate-900 text-white py-3.5 rounded-xl font-bold text-[14px] hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300 transform group-hover:-translate-y-1">
+                                                            Đặt ngay
+                                                        </button>
+                                                    ) : (
+                                                        <button disabled className="flex-1 bg-slate-50 text-slate-400 py-3.5 rounded-xl font-bold text-[14px] cursor-not-allowed border border-slate-200">
+                                                            {statusText}
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     );
