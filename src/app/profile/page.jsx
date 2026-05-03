@@ -16,9 +16,7 @@ const formatCurrency = (amount) => new Intl.NumberFormat("vi-VN", { style: "curr
 const formatDate = (dateData) => {
   if (!dateData) return "Chưa cập nhật";
   try {
-    // Nếu là Firebase Timestamp thì dùng hàm toDate(), nếu không thì dùng new Date()
     const date = dateData?.toDate ? dateData.toDate() : new Date(dateData);
-    // Kiểm tra xem ngày có hợp lệ không
     if (isNaN(date.getTime())) return "Chưa rõ";
     return date.toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch (error) {
@@ -36,11 +34,12 @@ const getMemberTier = (points) => {
 
 export default function UltimateProfilePage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("profile"); // profile | loyalty | offers
+  const [activeTab, setActiveTab] = useState("profile");
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [avatar, setAvatar] = useState(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false); // State quản lý loading ảnh đại diện
   const [bookings, setBookings] = useState([]);
   const [promotions, setPromotions] = useState([]);
 
@@ -68,12 +67,11 @@ export default function UltimateProfilePage() {
             birthday: data.birthday || "", address: data.address || "", preferences: data.preferences || "",
             createdAt: data.createdAt || new Date().toISOString()
           });
+          // Lấy avatar từ Firestore thay vì localStorage
+          if (data.avatar) setAvatar(data.avatar);
         } else {
           setFormData(prev => ({ ...prev, email: currentUser.email, name: currentUser.email.split("@")[0] }));
         }
-
-        const savedAvatar = localStorage.getItem("userAvatar");
-        if (savedAvatar) setAvatar(savedAvatar);
 
         const qBookings = query(collection(db, "bookings"), where("userEmail", "==", currentUser.email));
         const snapBookings = await getDocs(qBookings);
@@ -100,15 +98,20 @@ export default function UltimateProfilePage() {
     return { paidBookings, totalSpent, points, tierInfo, totalBookings: bookings.length };
   }, [bookings]);
 
-  // 3. Xử lý Cập nhật
+  // 3. Xử lý Cập nhật Profile
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     try {
       const userRef = doc(db, "users", user.uid);
       await updateDoc(userRef, {
-        name: formData.name, phone: formData.phone, birthday: formData.birthday,
-        address: formData.address, preferences: formData.preferences, updatedAt: new Date().toISOString()
+        name: formData.name,
+        phone: formData.phone,
+        birthday: formData.birthday,
+        address: formData.address,
+        preferences: formData.preferences,
+        avatar: avatar, // Lưu URL ImgBB lên Firestore
+        updatedAt: new Date().toISOString()
       });
 
       const currentLocal = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -132,16 +135,43 @@ export default function UltimateProfilePage() {
     }
   };
 
-  const handleAvatarChange = (e) => {
+  // 4. Hàm xử lý UPLOAD ẢNH LÊN IMGBB
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) return alert("Ảnh quá lớn. Vui lòng chọn ảnh < 2MB");
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setAvatar(event.target.result);
-        localStorage.setItem("userAvatar", event.target.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) return alert("Ảnh quá lớn. Vui lòng chọn ảnh < 2MB");
+
+    setIsUploadingAvatar(true);
+    try {
+      // Chuẩn bị form data như API yêu cầu
+      const imgData = new FormData();
+      imgData.append("image", file);
+
+      // THAY KEY CỦA BẠN VÀO ĐÂY (hoặc dùng process.env)
+      const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY || "ec72a78154d0c398eb6dad6b06947246";
+
+      // Khuyến nghị dùng URL POST theo docs
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST",
+        body: imgData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const imageUrl = data.data.url; // Lấy URL từ cục phản hồi JSON của ImgBB
+        setAvatar(imageUrl);
+        // Lưu ý cho user biết cần ấn nút Lưu
+        // Không gọi alert để tránh phiền người dùng, họ nhìn thấy ảnh đổi là hiểu, 
+        // nhưng URL chưa vào DB cho đến khi bấm "Đồng bộ dữ liệu"
+      } else {
+        alert("Lỗi từ ImgBB: " + data.status);
+      }
+    } catch (error) {
+      console.error("Lỗi khi upload lên ImgBB:", error);
+      alert("Lỗi mạng! Không thể tải ảnh lên.");
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -190,7 +220,6 @@ export default function UltimateProfilePage() {
         {/* HERO BACKGROUND - MESH GRADIENT */}
         <div className="absolute top-0 left-0 right-0 h-[500px] w-full z-0 overflow-hidden bg-slate-900">
           <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2500&auto=format&fit=crop" className="w-full h-full object-cover opacity-40 mix-blend-overlay" alt="Cover" />
-          {/* Ánh sáng mờ ảo (Ambient Orbs) */}
           <div className="absolute top-0 -left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob"></div>
           <div className="absolute top-20 -right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob animation-delay-2000"></div>
           <div className="absolute -bottom-20 left-1/2 w-96 h-96 bg-emerald-500 rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob animation-delay-4000"></div>
@@ -204,10 +233,18 @@ export default function UltimateProfilePage() {
             {/* Cột trái: Avatar & Name */}
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8 text-center md:text-left">
               <div className="relative group shrink-0" style={{ animation: 'float 6s ease-in-out infinite' }}>
-                {/* Vòng Glow bên ngoài Avatar */}
                 <div className={`absolute -inset-1 rounded-full bg-gradient-to-br ${stats.tierInfo.color} blur opacity-50 group-hover:opacity-100 transition duration-500`}></div>
-                <div className={`relative w-40 h-40 rounded-full p-1.5 bg-gradient-to-br ${stats.tierInfo.color} shadow-2xl`}>
+
+                <div className={`relative w-40 h-40 rounded-full p-1.5 bg-gradient-to-br ${stats.tierInfo.color} shadow-2xl overflow-hidden`}>
                   <div className="w-full h-full rounded-full border-4 border-slate-900 overflow-hidden bg-slate-800 flex items-center justify-center relative z-10">
+
+                    {/* Hiệu ứng Đang tải ảnh lên (Spinner mờ) */}
+                    {isUploadingAvatar && (
+                      <div className="absolute inset-0 bg-black/60 z-30 flex flex-col items-center justify-center rounded-full backdrop-blur-[2px]">
+                        <i className="fa-solid fa-spinner fa-spin text-white text-3xl mb-1"></i>
+                      </div>
+                    )}
+
                     {avatar ?
                       <img src={avatar} className="w-full h-full object-cover" alt="Avatar" /> :
                       <span className="text-6xl font-black text-white">{displayName.charAt(0).toUpperCase()}</span>
@@ -217,10 +254,19 @@ export default function UltimateProfilePage() {
                     </div>
                   </div>
                 </div>
-                <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" accept="image/*" onChange={handleAvatarChange} title="Đổi ảnh đại diện" />
+
+                {/* Input chọn ảnh - Khoá khi đang tải ảnh */}
+                <input
+                  type="file"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-40"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  title="Đổi ảnh đại diện"
+                  disabled={isUploadingAvatar}
+                />
 
                 {/* Badge Hạng nổi bật */}
-                <div className={`absolute -bottom-2 -right-2 w-14 h-14 rounded-full bg-gradient-to-br ${stats.tierInfo.color} border-[3px] border-slate-900 flex items-center justify-center text-white shadow-xl z-30 transform group-hover:scale-110 transition-transform`}>
+                <div className={`absolute -bottom-2 -right-2 w-14 h-14 rounded-full bg-gradient-to-br ${stats.tierInfo.color} border-[3px] border-slate-900 flex items-center justify-center text-white shadow-xl z-50 transform group-hover:scale-110 transition-transform`}>
                   <i className={`fa-solid ${stats.tierInfo.icon} text-xl drop-shadow-md`}></i>
                 </div>
               </div>
@@ -250,7 +296,7 @@ export default function UltimateProfilePage() {
             </div>
           </div>
 
-          {/* MENU FLOATING TABS (Viên thuốc lơ lửng) */}
+          {/* MENU FLOATING TABS */}
           <div className="flex justify-center mb-12 sticky top-24 z-40">
             <div className="glass-pill p-1.5 rounded-full flex flex-nowrap overflow-x-auto hide-scrollbar shadow-xl shadow-slate-200/50 w-full sm:w-auto">
               {[
@@ -267,17 +313,11 @@ export default function UltimateProfilePage() {
             </div>
           </div>
 
-          {/* =========================================
-                                NỘI DUNG CÁC TAB 
-                    ========================================= */}
-
           {/* --- TAB 1: TÀI KHOẢN (BENTO GRID STYLE) --- */}
           {activeTab === "profile" && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-              {/* Cột trái (Bento Nhỏ): Lịch sử & Đổi mật khẩu */}
               <div className="lg:col-span-4 space-y-6 flex flex-col">
-                {/* Thẻ Lịch sử thanh toán - Gradient chéo */}
                 <div onClick={() => setIsPaymentModalOpen(true)} className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer border border-slate-700 group shimmer-card overflow-hidden">
                   <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md border border-white/20 group-hover:rotate-12 transition-transform">
                     <i className="fa-solid fa-file-invoice-dollar text-3xl text-emerald-400"></i>
@@ -289,7 +329,6 @@ export default function UltimateProfilePage() {
                   </div>
                 </div>
 
-                {/* Thẻ Đổi Mật Khẩu */}
                 <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 bento-hover flex-1">
                   <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mb-5 text-rose-500">
                     <i className="fa-solid fa-shield-halved text-2xl"></i>
@@ -307,7 +346,6 @@ export default function UltimateProfilePage() {
                 </div>
               </div>
 
-              {/* Cột phải (Bento Lớn): Form Thông tin */}
               <div className="lg:col-span-8 bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-slate-200 relative overflow-hidden bento-hover">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50 rounded-full blur-3xl -mr-48 -mt-48 opacity-70 pointer-events-none"></div>
                 <h3 className="text-3xl font-playfair font-bold text-slate-900 mb-2 relative z-10">Cập Nhật Định Danh</h3>
@@ -316,7 +354,7 @@ export default function UltimateProfilePage() {
                 <form onSubmit={handleSaveProfile} className="space-y-7 relative z-10">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
                     <div className="group">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2.5 block ml-2 group-focus-within:text-blue-600 transition-colors">Họ và tên (Theo CMND/CCCD)</label>
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2.5 block ml-2 group-focus-within:text-blue-600 transition-colors">Họ và tên</label>
                       <div className="relative">
                         <i className="fa-regular fa-user absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
                         <input type="text" className={inputClass} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Nguyễn Văn A" />
@@ -352,12 +390,12 @@ export default function UltimateProfilePage() {
                     </div>
                   </div>
                   <div className="group">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2.5 block ml-2 group-focus-within:text-blue-600 transition-colors">Ghi chú & Sở thích lưu trú (Room Preferences)</label>
-                    <textarea rows="4" className="w-full p-5 bg-slate-50/80 border border-slate-200/60 rounded-[1.25rem] focus:bg-white focus:border-blue-500 focus:ring-[4px] focus:ring-blue-500/10 outline-none transition-all duration-300 text-[15px] leading-relaxed text-slate-800 shadow-sm hover:shadow-md" placeholder="Ví dụ: Tôi bị dị ứng lông vũ, vui lòng sử dụng gối cao su non. Tôi thích phòng ở tầng cao và có cửa sổ đón nắng sớm..." value={formData.preferences} onChange={e => setFormData({ ...formData, preferences: e.target.value })}></textarea>
+                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2.5 block ml-2 group-focus-within:text-blue-600 transition-colors">Ghi chú & Sở thích lưu trú</label>
+                    <textarea rows="4" className="w-full p-5 bg-slate-50/80 border border-slate-200/60 rounded-[1.25rem] focus:bg-white focus:border-blue-500 focus:ring-[4px] focus:ring-blue-500/10 outline-none transition-all duration-300 text-[15px] leading-relaxed text-slate-800 shadow-sm hover:shadow-md" placeholder="Ví dụ: Tôi bị dị ứng lông vũ, vui lòng sử dụng gối cao su non..." value={formData.preferences} onChange={e => setFormData({ ...formData, preferences: e.target.value })}></textarea>
                   </div>
 
                   <div className="pt-6 flex justify-end border-t border-slate-100">
-                    <button type="submit" disabled={isSaving} className="w-full lg:w-auto px-12 py-4 bg-slate-900 text-white rounded-[1.25rem] font-bold text-[15px] hover:bg-blue-600 shadow-xl shadow-slate-900/20 hover:shadow-blue-600/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:transform-none flex items-center justify-center">
+                    <button type="submit" disabled={isSaving || isUploadingAvatar} className="w-full lg:w-auto px-12 py-4 bg-slate-900 text-white rounded-[1.25rem] font-bold text-[15px] hover:bg-blue-600 shadow-xl shadow-slate-900/20 hover:shadow-blue-600/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:transform-none flex items-center justify-center">
                       {isSaving ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i>ĐANG LƯU HỒ SƠ...</> : <><i className="fa-solid fa-cloud-arrow-up mr-2"></i>ĐỒNG BỘ DỮ LIỆU</>}
                     </button>
                   </div>
@@ -366,19 +404,16 @@ export default function UltimateProfilePage() {
             </div>
           )}
 
-          {/* --- TAB 2: THẺ THÀNH VIÊN (LOYALTY 3D CARD LỘT XÁC) --- */}
+          {/* CÁC TAB KHÁC BÊN DƯỚI GIỮ NGUYÊN HOÀN TOÀN NHƯ CŨ */}
+          {/* --- TAB 2: THẺ THÀNH VIÊN --- */}
           {activeTab === "loyalty" && (
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-5xl mx-auto">
-
-              {/* Khối Thẻ 3D Siêu Thực (Holographic Glassmorphism) */}
               <div className="relative w-full max-w-[650px] mx-auto mb-20 [perspective:2500px] group cursor-pointer z-20">
                 <div className="relative transition-transform duration-[1000ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)] [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] min-h-[400px] md:min-h-[450px]">
-
-                  {/* MẶT TRƯỚC THẺ */}
+                  {/* MẶT TRƯỚC */}
                   <div className={`absolute inset-0 [backface-visibility:hidden] rounded-[3rem] overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] border border-white/20 shimmer-card bg-gradient-to-br ${stats.tierInfo.bgCard}`}>
                     <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
                     <div className={`absolute -right-20 -top-20 w-80 h-80 ${stats.tierInfo.glow} rounded-full blur-3xl mix-blend-screen opacity-50`}></div>
-
                     <div className="relative h-full p-10 md:p-14 flex flex-col justify-between text-white z-10 font-sans">
                       <div className="flex justify-between items-start">
                         <div>
@@ -389,12 +424,10 @@ export default function UltimateProfilePage() {
                           <i className={`fa-solid ${stats.tierInfo.icon} text-3xl md:text-4xl ${stats.tierInfo.text} drop-shadow-lg`}></i>
                         </div>
                       </div>
-
                       <div className="mt-auto mb-8">
                         <p className="text-[10px] uppercase tracking-[0.3em] opacity-80 font-bold mb-1">Cấp bậc tinh hoa</p>
                         <p className={`text-5xl md:text-6xl font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-br ${stats.tierInfo.color} drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]`}>{stats.tierInfo.tier}</p>
                       </div>
-
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-6 pt-6 border-t border-white/20">
                         <div>
                           <p className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] opacity-80 mb-1.5 font-bold">Mã thẻ định danh</p>
@@ -408,7 +441,7 @@ export default function UltimateProfilePage() {
                     </div>
                   </div>
 
-                  {/* MẶT SAU THẺ */}
+                  {/* MẶT SAU */}
                   <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-gradient-to-bl from-slate-900 via-slate-950 to-black rounded-[3rem] p-10 md:p-14 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] border border-slate-700 text-white flex flex-col justify-between">
                     <div className="relative z-10">
                       <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-800">
@@ -422,7 +455,6 @@ export default function UltimateProfilePage() {
                       </ul>
                     </div>
                     <div className="w-full h-16 bg-slate-100 rounded flex items-center justify-center opacity-90 px-4">
-                      {/* Giả lập Barcode */}
                       <div className="w-full h-10 border-x-4 border-slate-800 border-l-[8px] border-r-[12px] opacity-70 flex justify-around">
                         {[...Array(20)].map((_, i) => <div key={i} className={`h-full bg-slate-800 ${i % 2 == 0 ? 'w-1' : (i % 3 == 0 ? 'w-2' : 'w-0.5')}`}></div>)}
                       </div>
@@ -436,7 +468,6 @@ export default function UltimateProfilePage() {
                 </div>
               </div>
 
-              {/* Khung Tiến Độ Lên Hạng (Glow Bar) */}
               <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-slate-200 mb-16 relative overflow-hidden bento-hover">
                 <div className="flex justify-between items-end mb-6 relative z-10">
                   <div>
@@ -452,7 +483,6 @@ export default function UltimateProfilePage() {
                 </div>
                 <div className="w-full h-5 bg-slate-100 rounded-full overflow-hidden shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] relative z-10 border border-slate-200">
                   <div className={`h-full bg-gradient-to-r ${stats.tierInfo.color} rounded-full transition-all duration-[1500ms] ease-out relative`} style={{ width: `${Math.min(stats.tierInfo.progress, 100)}%` }}>
-                    {/* Ánh sáng chạy dọc thanh tiến độ */}
                     <div className="absolute top-0 bottom-0 left-0 right-0 overflow-hidden rounded-full">
                       <div className="w-[50px] h-full bg-white/40 blur-[4px] absolute top-0 -left-[50px]" style={{ animation: 'shine 3s infinite' }}></div>
                     </div>
@@ -461,7 +491,6 @@ export default function UltimateProfilePage() {
                 <p className="text-center text-xs font-bold text-slate-400 mt-6 sm:hidden">Cần thêm {(5000 - stats.points > 0 ? 5000 - stats.points : 0).toLocaleString()} điểm để lên hạng.</p>
               </div>
 
-              {/* Quyền lợi Các hạng (Bento Grid) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                   { id: 'bronze', tier: 'Bronze', icon: 'fa-medal', color: 'from-orange-600 to-orange-800', discount: '5%' },
@@ -483,13 +512,10 @@ export default function UltimateProfilePage() {
             </div>
           )}
 
-          {/* --- TAB 3: MÃ ƯU ĐÃI (OFFERS TICKET STYLE) --- */}
+          {/* --- TAB 3: MÃ ƯU ĐÃI --- */}
           {activeTab === "offers" && (
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-6xl mx-auto">
-
-              {/* Banner VIP Sinh nhật */}
               <div className="bg-slate-900 rounded-[3rem] p-8 md:p-14 text-white relative overflow-hidden shadow-2xl mb-16 flex flex-col md:flex-row items-center justify-between gap-10 border border-slate-700 group cursor-pointer hover:shadow-blue-500/20 transition-all duration-500">
-                {/* Ambient Background */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/30 rounded-full blur-[80px] -mr-48 -mt-48 mix-blend-screen group-hover:bg-blue-500/40 transition-colors"></div>
                 <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-600/30 rounded-full blur-[80px] -ml-48 -mb-48 mix-blend-screen"></div>
 
@@ -526,21 +552,18 @@ export default function UltimateProfilePage() {
 
                     return (
                       <div key={p.id} className="bg-white rounded-[2rem] shadow-sm border border-slate-200 flex flex-col sm:flex-row overflow-hidden bento-hover" style={{ animationDelay: `${i * 100}ms` }}>
-                        {/* Left part: Metallic Ticket Head */}
                         <div className="bg-slate-900 sm:w-2/5 p-8 flex flex-col justify-center items-center text-white relative overflow-hidden shrink-0">
                           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30 mix-blend-overlay"></div>
                           <span className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400 mb-3 relative z-10">{discountType}</span>
                           <div className="text-5xl md:text-6xl font-black font-mono tracking-tighter text-white drop-shadow-lg relative z-10">{discountValue}</div>
                         </div>
 
-                        {/* Cutout (Lỗ xé vé) */}
                         <div className="hidden sm:flex flex-col justify-between -ml-4 z-10 relative">
                           <div className="w-8 h-8 bg-[#f1f5f9] rounded-full -mt-4 shadow-[inset_-2px_-2px_4px_rgba(0,0,0,0.05)] border-b border-r border-slate-200"></div>
                           <div className="h-full border-l-2 border-dashed border-slate-300 my-2"></div>
                           <div className="w-8 h-8 bg-[#f1f5f9] rounded-full -mb-4 shadow-[inset_-2px_2px_4px_rgba(0,0,0,0.05)] border-t border-r border-slate-200"></div>
                         </div>
 
-                        {/* Right part: Details */}
                         <div className="p-8 flex flex-col flex-1 bg-white relative z-0">
                           <h5 className="font-bold text-xl text-slate-900 mb-3">{p.name}</h5>
                           <p className="text-slate-500 text-[14px] mb-6 line-clamp-2 leading-relaxed">{p.description}</p>
@@ -566,7 +589,7 @@ export default function UltimateProfilePage() {
 
       <Footer />
 
-      {/* Modal Lịch sử Giao dịch (Giữ nguyên Glassmorphism) */}
+      {/* Modal Lịch sử Giao dịch */}
       {isPaymentModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 z-0" onClick={() => setIsPaymentModalOpen(false)}></div>

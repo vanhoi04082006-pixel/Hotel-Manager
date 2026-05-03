@@ -4,8 +4,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase'; // Thêm db vào đây
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore'; // Import thêm hàm gọi Firestore
 
 export default function Header() {
     const pathname = usePathname();
@@ -16,10 +17,12 @@ export default function Header() {
 
     // Lắng nghe trạng thái đăng nhập từ Firebase
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const savedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                const savedAvatar = localStorage.getItem('userAvatar');
+                
+                // Lấy ảnh từ Auth hoặc LocalStorage trước
+                let photo = user.photoURL || savedUser.avatar || localStorage.getItem('userAvatar');
 
                 setCurrentUser({
                     uid: user.uid,
@@ -27,7 +30,27 @@ export default function Header() {
                     name: savedUser.name || user.displayName || user.email.split('@')[0]
                 });
 
-                if (savedAvatar) setAvatarSrc(savedAvatar);
+                // NẾU CHƯA CÓ ẢNH: Trực tiếp chọc vào DB (Firestore) để lấy ảnh mới nhất
+                if (!photo) {
+                    try {
+                        const userDocRef = doc(db, "users", user.uid);
+                        const userDocSnap = await getDoc(userDocRef);
+                        
+                        if (userDocSnap.exists() && userDocSnap.data().avatar) {
+                            photo = userDocSnap.data().avatar;
+                            
+                            // Lưu ngược lại vào LocalStorage để lần sau load cho nhanh
+                            localStorage.setItem('currentUser', JSON.stringify({
+                                ...savedUser,
+                                avatar: photo
+                            }));
+                        }
+                    } catch (error) {
+                        console.error("Lỗi lấy avatar từ Header:", error);
+                    }
+                }
+
+                setAvatarSrc(photo || null);
             } else {
                 setCurrentUser(null);
                 setAvatarSrc(null);
@@ -96,7 +119,6 @@ export default function Header() {
                     <Link href="/booking-lookup" className={getMenuClass('/booking-lookup')}>
                         <i className="fa-solid fa-magnifying-glass mr-2 text-sm"></i>Tra cứu
                     </Link>
-                    {/* Chỉ giữ lại Đặt phòng, các menu Khác đã gộp vào Avatar */}
                     {currentUser && (
                         <Link href="/my-bookings" className={getMenuClass('/my-bookings')}>Đặt phòng của tôi</Link>
                     )}
@@ -106,7 +128,7 @@ export default function Header() {
                 <div className="hidden lg:flex items-center justify-end space-x-5 flex-shrink-0">
                     {currentUser ? (
                         <div className="flex items-center space-x-5">
-                            {/* Avatar Link - Đường dẫn duy nhất vào Dashboard Cá nhân */}
+                            {/* Avatar Link */}
                             <Link href="/profile" className="flex items-center space-x-3 hover:opacity-80 transition-opacity bg-slate-50 border border-slate-100 pl-2 pr-4 py-1.5 rounded-full">
                                 <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold overflow-hidden shadow-inner">
                                     {avatarSrc ? (
