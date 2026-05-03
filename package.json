@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",  
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -13,6 +13,7 @@
     "firebase": "^12.11.0",
     "next": "^16.2.4",
     "nodemailer": "^8.0.5",
+    "openai": "^6.35.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.12.2",
