@@ -18,7 +18,6 @@ export default function Header() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Lấy thông tin từ localStorage
                 const savedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
                 const savedAvatar = localStorage.getItem('userAvatar');
 
@@ -34,7 +33,6 @@ export default function Header() {
                 setAvatarSrc(null);
             }
         });
-
         return () => unsubscribe();
     }, []);
 
@@ -55,35 +53,28 @@ export default function Header() {
         }
     };
 
-    // Đóng menu mobile khi click chuyển trang
-    const handleLinkClick = () => {
-        setIsMobileMenuOpen(false);
-    };
+    const handleLinkClick = () => setIsMobileMenuOpen(false);
 
-    // Helper check active menu cho Desktop
     const getMenuClass = (path) => {
         const isActive = pathname === path || pathname?.startsWith(path + '/');
-        // Tránh việc trang chủ (/) lúc nào cũng active khi ở trang khác
         const isHomeActive = path === '/' && pathname === '/';
-
         const finalActive = path === '/' ? isHomeActive : isActive;
 
         return `text-[15px] whitespace-nowrap transition-colors ${finalActive
-                ? 'font-semibold text-blue-600 relative after:content-[""] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-0.5 after:bg-blue-600 after:rounded-full'
-                : 'text-slate-500 font-medium hover:text-blue-600'
-            }`;
+            ? 'font-semibold text-blue-600 relative after:content-[""] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-0.5 after:bg-blue-600 after:rounded-full'
+            : 'text-slate-500 font-medium hover:text-blue-600'
+        }`;
     };
 
-    // Helper check active menu cho Mobile
     const getMobileMenuClass = (path) => {
         const isActive = pathname === path || pathname?.startsWith(path + '/');
         const isHomeActive = path === '/' && pathname === '/';
         const finalActive = path === '/' ? isHomeActive : isActive;
 
         return `block w-full text-left px-4 py-3 rounded-xl font-medium transition-colors ${finalActive
-                ? 'bg-blue-50 text-blue-600 font-semibold'
-                : 'hover:bg-slate-50 text-slate-600'
-            }`;
+            ? 'bg-blue-50 text-blue-600 font-semibold'
+            : 'hover:bg-slate-50 text-slate-600'
+        }`;
     };
 
     return (
@@ -105,36 +96,31 @@ export default function Header() {
                     <Link href="/booking-lookup" className={getMenuClass('/booking-lookup')}>
                         <i className="fa-solid fa-magnifying-glass mr-2 text-sm"></i>Tra cứu
                     </Link>
-
-                    {/* Các menu mở rộng khi đăng nhập */}
+                    {/* Chỉ giữ lại Đặt phòng, các menu Khác đã gộp vào Avatar */}
                     {currentUser && (
-                        <>
-                            <Link href="/my-bookings" className={getMenuClass('/my-bookings')}>Đặt phòng</Link>
-                            <Link href="/profile" className={getMenuClass('/profile')}>Hồ sơ</Link>
-                            <Link href="/loyalty" className={getMenuClass('/loyalty')}>Thành viên</Link>
-                            <Link href="/offers" className={getMenuClass('/offers')}>Ưu đãi</Link>
-                        </>
+                        <Link href="/my-bookings" className={getMenuClass('/my-bookings')}>Đặt phòng của tôi</Link>
                     )}
                 </nav>
 
                 {/* User Actions (Desktop) */}
-                <div className="hidden md:flex items-center justify-end space-x-5 flex-shrink-0">
+                <div className="hidden lg:flex items-center justify-end space-x-5 flex-shrink-0">
                     {currentUser ? (
                         <div className="flex items-center space-x-5">
-                            <Link href="/profile" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-                                <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold overflow-hidden">
+                            {/* Avatar Link - Đường dẫn duy nhất vào Dashboard Cá nhân */}
+                            <Link href="/profile" className="flex items-center space-x-3 hover:opacity-80 transition-opacity bg-slate-50 border border-slate-100 pl-2 pr-4 py-1.5 rounded-full">
+                                <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold overflow-hidden shadow-inner">
                                     {avatarSrc ? (
                                         <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
                                     ) : (
                                         <span>{currentUser.name.charAt(0).toUpperCase()}</span>
                                     )}
                                 </div>
-                                <span className="text-[15px] font-medium text-slate-700 max-w-[120px] truncate">
+                                <span className="text-[14px] font-bold text-slate-700 max-w-[120px] truncate">
                                     {currentUser.name}
                                 </span>
                             </Link>
-                            <button onClick={handleLogout} className="text-slate-500 hover:text-red-600 text-[15px] font-medium transition-colors flex items-center">
-                                <i className="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất
+                            <button onClick={handleLogout} className="w-10 h-10 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Đăng xuất">
+                                <i className="fa-solid fa-power-off"></i>
                             </button>
                         </div>
                     ) : (
@@ -144,11 +130,8 @@ export default function Header() {
                     )}
                 </div>
 
-                {/* Nút mở menu cho Mobile */}
-                <button
-                    className="lg:hidden p-2 text-slate-600 hover:text-blue-600 transition-colors ml-auto"
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                >
+                {/* Mobile Menu Button */}
+                <button className="lg:hidden p-2 text-slate-600 hover:text-blue-600 transition-colors ml-auto" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                     <i className={`fa-solid ${isMobileMenuOpen ? 'fa-xmark' : 'fa-bars'} text-2xl`}></i>
                 </button>
             </header>
@@ -160,30 +143,25 @@ export default function Header() {
                         <Link href="/" className={getMobileMenuClass('/')} onClick={handleLinkClick}>Trang chủ</Link>
                         <Link href="/rooms" className={getMobileMenuClass('/rooms')} onClick={handleLinkClick}>Phòng & Suite</Link>
                         <Link href="/services" className={getMobileMenuClass('/services')} onClick={handleLinkClick}>Dịch vụ</Link>
-                        <Link href="/booking-lookup" className={getMobileMenuClass('/booking-lookup')} onClick={handleLinkClick}>
-                            <i className="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu
-                        </Link>
+                        <Link href="/booking-lookup" className={getMobileMenuClass('/booking-lookup')} onClick={handleLinkClick}><i className="fa-solid fa-magnifying-glass mr-2"></i>Tra cứu</Link>
 
                         {currentUser && (
                             <>
-                                <Link href="/my-bookings" className={getMobileMenuClass('/my-bookings')} onClick={handleLinkClick}>Đặt phòng của tôi</Link>
-                                <Link href="/profile" className={getMobileMenuClass('/profile')} onClick={handleLinkClick}>Hồ sơ</Link>
-                                <Link href="/loyalty" className={getMobileMenuClass('/loyalty')} onClick={handleLinkClick}>Thẻ thành viên</Link>
-                                <Link href="/offers" className={getMobileMenuClass('/offers')} onClick={handleLinkClick}>Ưu đãi</Link>
+                                <div className="h-px bg-slate-100 my-2"></div>
+                                <Link href="/my-bookings" className={getMobileMenuClass('/my-bookings')} onClick={handleLinkClick}><i className="fa-solid fa-bed mr-2"></i> Đặt phòng của tôi</Link>
+                                <Link href="/profile" className={getMobileMenuClass('/profile')} onClick={handleLinkClick}><i className="fa-solid fa-user-circle mr-2"></i> Tài khoản & Ưu đãi</Link>
+                                <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors flex items-center">
+                                    <i className="fa-solid fa-power-off mr-2"></i>Đăng xuất
+                                </button>
                             </>
                         )}
-
-                        <div className="border-t border-slate-100 my-2 pt-2">
-                            {currentUser ? (
-                                <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors mt-2 flex items-center">
-                                    <i className="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất
-                                </button>
-                            ) : (
-                                <Link href="/login" className="block w-full text-center px-4 py-3 bg-slate-900 text-white hover:bg-blue-600 rounded-xl font-medium transition-colors mt-2" onClick={handleLinkClick}>
+                        {!currentUser && (
+                            <div className="pt-2">
+                                <Link href="/login" className="block w-full text-center px-4 py-3 bg-slate-900 text-white hover:bg-blue-600 rounded-xl font-medium transition-colors" onClick={handleLinkClick}>
                                     Đăng nhập
                                 </Link>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
