@@ -1,231 +1,231 @@
+// src/components/AIChatbot.jsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function AIChatbot() {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState([
-        {
-            role: "ai",
-            text: "Xin chào Quý khách ✨ Luna rất hân hạnh đồng hành cùng Quý khách hôm nay. Quý khách cần hỗ trợ đặt phòng hay dịch vụ nào ạ?"
-        }
-    ]);
-
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
+    const [userEmail, setUserEmail] = useState(null);
+    const [authInitialized, setAuthInitialized] = useState(false); // Đợi Firebase Auth check xong
+    
+    // Tin nhắn mặc định nếu chưa từng chat
+    const defaultMessage = {
+        role: "ai",
+        text: "Xin chào Quý khách ✨ Luna rất hân hạnh đồng hành cùng Quý khách hôm nay. Quý khách cần hỗ trợ đặt phòng hay dịch vụ nào ạ?"
+    };
+
+    const [messages, setMessages] = useState([]);
     const endRef = useRef(null);
 
+    // 1. Lắng nghe trạng thái Đăng nhập
     useEffect(() => {
-        endRef.current?.scrollIntoView({
-            behavior: "smooth"
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setUserEmail(user ? user.email : null);
+            setAuthInitialized(true);
         });
-    }, [messages, loading]);
+        return () => unsubscribe();
+    }, []);
+
+    // 2. Load lịch sử trò chuyện dựa trên Tài khoản (Chạy khi Auth đã sẵn sàng)
+    useEffect(() => {
+        if (!authInitialized) return;
+
+        // Tạo khóa lưu trữ riêng cho mỗi người (nếu chưa đăng nhập thì dùng 'luna_chat_guest')
+        const storageKey = userEmail ? `luna_chat_${userEmail}` : 'luna_chat_guest';
+        
+        try {
+            const savedChat = localStorage.getItem(storageKey);
+            if (savedChat) {
+                setMessages(JSON.parse(savedChat));
+            } else {
+                setMessages([defaultMessage]);
+            }
+        } catch (error) {
+            setMessages([defaultMessage]);
+        }
+    }, [userEmail, authInitialized]);
+
+    // 3. Tự động lưu cuộc trò chuyện mỗi khi có tin nhắn mới
+    useEffect(() => {
+        if (!authInitialized || messages.length === 0) return;
+
+        const storageKey = userEmail ? `luna_chat_${userEmail}` : 'luna_chat_guest';
+        // Tránh lưu mảng trống hoặc chỉ có tin nhắn mặc định lúc mới load
+        if (messages.length > 1) {
+            localStorage.setItem(storageKey, JSON.stringify(messages));
+        }
+    }, [messages, userEmail, authInitialized]);
+
+    // Tự động cuộn xuống cuối
+    useEffect(() => {
+        if (isOpen) {
+            setTimeout(() => {
+                endRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, 100);
+        }
+    }, [messages, loading, isOpen]);
+
+    // Xóa lịch sử chat
+    const handleClearChat = () => {
+        if(confirm("Bạn có muốn xóa toàn bộ lịch sử trò chuyện với Luna không?")) {
+            const storageKey = userEmail ? `luna_chat_${userEmail}` : 'luna_chat_guest';
+            localStorage.removeItem(storageKey);
+            setMessages([defaultMessage]);
+        }
+    };
 
     async function sendMessage(e) {
         e.preventDefault();
-
         if (!input.trim()) return;
 
         const userText = input.trim();
-
-        setMessages((prev) => [
-            ...prev,
-            { role: "user", text: userText }
-        ]);
-
+        const newMessages = [...messages, { role: "user", text: userText }];
+        
+        setMessages(newMessages);
         setInput("");
         setLoading(true);
 
         try {
             const res = await fetch("/api/chat", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    message: userText
-                })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userText, userEmail: userEmail })
             });
 
             const data = await res.json();
 
             setMessages((prev) => [
                 ...prev,
-                {
-                    role: "ai",
-                    text:
-                        data.reply ||
-                        "Luna đã nhận yêu cầu của Quý khách."
-                }
+                { role: "ai", text: data.reply || "Luna đã nhận yêu cầu của Quý khách." }
             ]);
         } catch {
             setMessages((prev) => [
                 ...prev,
-                {
-                    role: "ai",
-                    text:
-                        "Xin lỗi Quý khách, Luna đang tạm bận. Vui lòng thử lại sau ít phút ạ."
-                }
+                { role: "ai", text: "Xin lỗi Quý khách, Luna đang tạm bận. Vui lòng thử lại sau ít phút ạ." }
             ]);
         }
-
         setLoading(false);
     }
 
+    if (!authInitialized) return null; // Chờ check đăng nhập xong mới render
+
     return (
         <div className="fixed bottom-6 right-6 z-[9999] font-sans">
-
-            {/* PANEL CHAT */}
             {isOpen && (
-                <div className="absolute bottom-24 right-0 w-[390px] sm:w-[420px] h-[620px] rounded-[32px] overflow-hidden border border-white/40 bg-white/80 backdrop-blur-2xl shadow-[0_30px_80px_rgba(15,23,42,0.22)] flex flex-col">
-
+                <div className="absolute bottom-24 right-0 w-[390px] sm:w-[420px] h-[620px] rounded-[32px] overflow-hidden border border-white/40 bg-white/95 backdrop-blur-3xl shadow-[0_30px_80px_rgba(15,23,42,0.25)] flex flex-col">
                     {/* HEADER */}
-                    <div className="relative px-5 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 text-white">
-
+                    <div className="relative px-5 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 text-white shrink-0">
                         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,white,transparent_40%)]"></div>
-
                         <div className="relative flex items-center justify-between">
                             <div className="flex items-center gap-3">
-
                                 <div className="relative">
-                                    <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-xl border border-white/20 flex items-center justify-center text-xl">
+                                    <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-xl border border-white/20 flex items-center justify-center text-xl shadow-inner">
                                         ✨
                                     </div>
-
-                                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900"></span>
+                                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-slate-900"></span>
                                 </div>
-
                                 <div>
-                                    <h2 className="font-semibold text-[16px] tracking-wide">
-                                        Luna AI Concierge
-                                    </h2>
-                                    <p className="text-xs text-slate-200">
-                                        Trợ lý nghỉ dưỡng 24/7
+                                    <h2 className="font-bold text-[16px] tracking-wide">Luna AI Concierge</h2>
+                                    <p className="text-[11px] text-blue-200 uppercase tracking-widest font-medium">
+                                        {userEmail ? userEmail.split('@')[0] : "Khách vãng lai"}
                                     </p>
                                 </div>
                             </div>
-
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 transition-all"
-                            >
-                                ✕
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button onClick={handleClearChat} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-all text-xs" title="Xóa lịch sử">
+                                    <i className="fa-solid fa-trash-can"></i>
+                                </button>
+                                <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full bg-white/10 hover:bg-rose-500 hover:text-white transition-all text-xs">
+                                    <i className="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    {/* BODY */}
-                    <div className="flex-1 overflow-y-auto px-4 py-5 bg-gradient-to-b from-slate-50 to-white space-y-4">
-
+                    {/* BODY CHAT */}
+                    <div className="flex-1 overflow-y-auto px-4 py-6 bg-slate-50/50 space-y-5 custom-scrollbar">
                         {messages.map((msg, i) => (
-                            <div
-                                key={i}
-                                className={`flex ${msg.role === "user"
-                                        ? "justify-end"
-                                        : "justify-start"
-                                    }`}
-                            >
+                            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                                {msg.role === "ai" && (
+                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs mr-2 shrink-0 border border-blue-200">
+                                        ✨
+                                    </div>
+                                )}
                                 <div
-                                    className={`max-w-[82%] px-4 py-3 text-[14px] leading-relaxed shadow-sm animate-[fadeUp_.25s_ease]
-                  ${msg.role === "user"
-                                            ? "bg-slate-900 text-white rounded-[22px] rounded-br-md"
-                                            : "bg-white text-slate-700 border border-slate-100 rounded-[22px] rounded-bl-md"
-                                        }`}
+                                    className={`max-w-[80%] px-5 py-3.5 text-[14px] leading-relaxed shadow-sm animate-[fadeUp_.3s_ease_out]
+                                    ${msg.role === "user"
+                                        ? "bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-[24px] rounded-br-sm"
+                                        : "bg-white text-slate-700 border border-slate-100 rounded-[24px] rounded-bl-sm"
+                                    }`}
+                                    dangerouslySetInnerHTML={msg.role === "ai" ? { __html: msg.text } : undefined}
                                 >
-                                    {msg.text}
+                                    {msg.role === "user" ? msg.text : null}
                                 </div>
                             </div>
                         ))}
 
                         {loading && (
-                            <div className="flex justify-start">
-                                <div className="bg-white border border-slate-100 rounded-[22px] rounded-bl-md px-4 py-3 shadow-sm flex gap-1.5">
+                            <div className="flex justify-start items-end">
+                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs mr-2 shrink-0 border border-blue-200">✨</div>
+                                <div className="bg-white border border-slate-100 rounded-[24px] rounded-bl-sm px-5 py-4 shadow-sm flex gap-2">
                                     <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce"></span>
-                                    <span
-                                        className="w-2 h-2 rounded-full bg-blue-400 animate-bounce"
-                                        style={{ animationDelay: "0.15s" }}
-                                    ></span>
-                                    <span
-                                        className="w-2 h-2 rounded-full bg-blue-400 animate-bounce"
-                                        style={{ animationDelay: "0.3s" }}
-                                    ></span>
+                                    <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0.15s" }}></span>
+                                    <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0.3s" }}></span>
                                 </div>
                             </div>
                         )}
-
-                        <div ref={endRef}></div>
+                        <div ref={endRef} className="h-2"></div>
                     </div>
 
-                    {/* INPUT */}
-                    <form
-                        onSubmit={sendMessage}
-                        className="p-4 bg-white/90 backdrop-blur-xl border-t border-slate-100"
-                    >
-                        <div className="flex items-center gap-2 bg-slate-50 rounded-full border border-slate-200 px-2 py-2 focus-within:border-blue-400 focus-within:bg-white transition-all">
-
+                    {/* INPUT FORM */}
+                    <form onSubmit={sendMessage} className="p-4 bg-white border-t border-slate-100 shrink-0">
+                        <div className="flex items-center gap-2 bg-slate-50/80 rounded-full border border-slate-200 p-1.5 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm transition-all">
                             <input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                placeholder="Nhập yêu cầu của Quý khách..."
-                                className="flex-1 bg-transparent outline-none px-3 text-[14px] text-slate-700 placeholder:text-slate-400"
+                                placeholder="Gửi tin nhắn cho Luna..."
+                                className="flex-1 bg-transparent outline-none px-4 py-2 text-[14px] text-slate-700 placeholder:text-slate-400 font-medium"
                             />
-
                             <button
                                 type="submit"
                                 disabled={!input.trim() || loading}
-                                className="w-11 h-11 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                                className="w-10 h-10 shrink-0 rounded-full bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                             >
-                                ➜
+                                <i className="fa-solid fa-paper-plane text-xs ml-0.5"></i>
                             </button>
                         </div>
                     </form>
                 </div>
             )}
 
-            {/* NÚT MỞ CHAT */}
+            {/* NÚT FLOAT ĐỂ MỞ CHAT */}
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="relative w-16 h-16 rounded-full bg-gradient-to-r from-slate-900 to-blue-900 text-white shadow-[0_20px_40px_rgba(15,23,42,0.35)] hover:scale-110 active:scale-95 transition-all"
+                    className="relative w-16 h-16 rounded-full bg-gradient-to-r from-slate-900 to-blue-900 text-white shadow-[0_20px_40px_rgba(15,23,42,0.35)] hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center group"
                 >
-                    <span className="absolute inset-0 rounded-full bg-blue-400 blur-xl opacity-30 animate-pulse"></span>
-                    <span className="relative text-2xl">✨</span>
+                    <span className="absolute inset-0 rounded-full bg-blue-400 blur-xl opacity-40 group-hover:opacity-60 transition-opacity animate-pulse"></span>
+                    <i className="fa-solid fa-sparkles text-2xl relative z-10 group-hover:rotate-12 transition-transform"></i>
+                    
+                    {/* Chấm đỏ thông báo (Trang trí) */}
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 border-2 border-white rounded-full z-20"></span>
                 </button>
             )}
 
-            {/* STYLE */}
             <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(25px) scale(0.96);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        @keyframes fadeUp {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        ::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-          background: rgba(100, 116, 139, 0.25);
-          border-radius: 20px;
-        }
-      `}</style>
+                @keyframes fadeUp {
+                    from { opacity: 0; transform: translateY(15px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+            `}</style>
         </div>
     );
 }
