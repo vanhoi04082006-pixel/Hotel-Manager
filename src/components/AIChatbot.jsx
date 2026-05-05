@@ -5,17 +5,20 @@ import { useState, useRef, useEffect } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
+// Link ảnh AI Hiện đại (Bạn có thể tải ảnh khác về thư mục public và đổi thành "/ten-anh.png")
+const LUNA_AVATAR = "https://cdn-icons-png.flaticon.com/512/8943/8943377.png";
+
 export default function AIChatbot() {
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [userEmail, setUserEmail] = useState(null);
-    const [authInitialized, setAuthInitialized] = useState(false); // Đợi Firebase Auth check xong
-    
+    const [authInitialized, setAuthInitialized] = useState(false);
+
     // Tin nhắn mặc định nếu chưa từng chat
     const defaultMessage = {
         role: "ai",
-        text: "Xin chào Quý khách ✨ Luna rất hân hạnh đồng hành cùng Quý khách hôm nay. Quý khách cần hỗ trợ đặt phòng hay dịch vụ nào ạ?"
+        text: "Xin chào Quý khách! Luna rất hân hạnh đồng hành cùng Quý khách hôm nay. Quý khách cần hỗ trợ đặt phòng hay dịch vụ nào ạ?"
     };
 
     const [messages, setMessages] = useState([]);
@@ -30,13 +33,12 @@ export default function AIChatbot() {
         return () => unsubscribe();
     }, []);
 
-    // 2. Load lịch sử trò chuyện dựa trên Tài khoản (Chạy khi Auth đã sẵn sàng)
+    // 2. Load lịch sử trò chuyện dựa trên Tài khoản
     useEffect(() => {
         if (!authInitialized) return;
 
-        // Tạo khóa lưu trữ riêng cho mỗi người (nếu chưa đăng nhập thì dùng 'luna_chat_guest')
         const storageKey = userEmail ? `luna_chat_${userEmail}` : 'luna_chat_guest';
-        
+
         try {
             const savedChat = localStorage.getItem(storageKey);
             if (savedChat) {
@@ -54,7 +56,6 @@ export default function AIChatbot() {
         if (!authInitialized || messages.length === 0) return;
 
         const storageKey = userEmail ? `luna_chat_${userEmail}` : 'luna_chat_guest';
-        // Tránh lưu mảng trống hoặc chỉ có tin nhắn mặc định lúc mới load
         if (messages.length > 1) {
             localStorage.setItem(storageKey, JSON.stringify(messages));
         }
@@ -71,7 +72,7 @@ export default function AIChatbot() {
 
     // Xóa lịch sử chat
     const handleClearChat = () => {
-        if(confirm("Bạn có muốn xóa toàn bộ lịch sử trò chuyện với Luna không?")) {
+        if (confirm("Bạn có muốn xóa toàn bộ lịch sử trò chuyện với Luna không?")) {
             const storageKey = userEmail ? `luna_chat_${userEmail}` : 'luna_chat_guest';
             localStorage.removeItem(storageKey);
             setMessages([defaultMessage]);
@@ -84,7 +85,7 @@ export default function AIChatbot() {
 
         const userText = input.trim();
         const newMessages = [...messages, { role: "user", text: userText }];
-        
+
         setMessages(newMessages);
         setInput("");
         setLoading(true);
@@ -116,15 +117,16 @@ export default function AIChatbot() {
     return (
         <div className="fixed bottom-6 right-6 z-[9999] font-sans">
             {isOpen && (
-                <div className="absolute bottom-24 right-0 w-[390px] sm:w-[420px] h-[620px] rounded-[32px] overflow-hidden border border-white/40 bg-white/95 backdrop-blur-3xl shadow-[0_30px_80px_rgba(15,23,42,0.25)] flex flex-col">
+                <div className="absolute bottom-24 right-0 w-[390px] sm:w-[420px] h-[620px] rounded-[32px] overflow-hidden border border-white/40 bg-white/95 backdrop-blur-3xl shadow-[0_30px_80px_rgba(15,23,42,0.25)] flex flex-col animate-in slide-in-from-bottom-5 fade-in duration-300">
                     {/* HEADER */}
-                    <div className="relative px-5 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 text-white shrink-0">
+                    <div className="relative px-5 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 text-white shrink-0 shadow-md z-10">
                         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,white,transparent_40%)]"></div>
                         <div className="relative flex items-center justify-between">
                             <div className="flex items-center gap-3">
+                                {/* AVATAR AI TRÊN HEADER */}
                                 <div className="relative">
-                                    <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-xl border border-white/20 flex items-center justify-center text-xl shadow-inner">
-                                        ✨
+                                    <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-inner overflow-hidden p-1">
+                                        <img src={LUNA_AVATAR} alt="Luna AI" className="w-full h-full object-contain drop-shadow-md" />
                                     </div>
                                     <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-slate-900"></span>
                                 </div>
@@ -151,16 +153,17 @@ export default function AIChatbot() {
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                                 {msg.role === "ai" && (
-                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs mr-2 shrink-0 border border-blue-200">
-                                        ✨
+                                    /* AVATAR AI CẠNH TIN NHẮN */
+                                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2 shrink-0 border border-blue-100 overflow-hidden shadow-sm p-1">
+                                        <img src={LUNA_AVATAR} alt="Luna AI" className="w-full h-full object-contain" />
                                     </div>
                                 )}
                                 <div
                                     className={`max-w-[80%] px-5 py-3.5 text-[14px] leading-relaxed shadow-sm animate-[fadeUp_.3s_ease_out]
                                     ${msg.role === "user"
-                                        ? "bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-[24px] rounded-br-sm"
-                                        : "bg-white text-slate-700 border border-slate-100 rounded-[24px] rounded-bl-sm"
-                                    }`}
+                                            ? "bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-[24px] rounded-br-sm"
+                                            : "bg-white text-slate-700 border border-slate-100 rounded-[24px] rounded-bl-sm"
+                                        }`}
                                     dangerouslySetInnerHTML={msg.role === "ai" ? { __html: msg.text } : undefined}
                                 >
                                     {msg.role === "user" ? msg.text : null}
@@ -170,7 +173,10 @@ export default function AIChatbot() {
 
                         {loading && (
                             <div className="flex justify-start items-end">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs mr-2 shrink-0 border border-blue-200">✨</div>
+                                {/* AVATAR AI LÚC ĐANG GÕ CHỮ */}
+                                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2 shrink-0 border border-blue-100 overflow-hidden shadow-sm p-1">
+                                    <img src={LUNA_AVATAR} alt="Luna AI" className="w-full h-full object-contain" />
+                                </div>
                                 <div className="bg-white border border-slate-100 rounded-[24px] rounded-bl-sm px-5 py-4 shadow-sm flex gap-2">
                                     <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce"></span>
                                     <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0.15s" }}></span>
@@ -202,17 +208,19 @@ export default function AIChatbot() {
                 </div>
             )}
 
-            {/* NÚT FLOAT ĐỂ MỞ CHAT */}
+            {/* NÚT FLOAT BÊN NGOÀI ĐỂ MỞ CHAT */}
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="relative w-16 h-16 rounded-full bg-gradient-to-r from-slate-900 to-blue-900 text-white shadow-[0_20px_40px_rgba(15,23,42,0.35)] hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center group"
+                    className="relative w-16 h-16 rounded-full bg-slate-900 shadow-[0_20px_40px_rgba(15,23,42,0.35)] hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center group border-2 border-white/20 p-1"
                 >
-                    <span className="absolute inset-0 rounded-full bg-blue-400 blur-xl opacity-40 group-hover:opacity-60 transition-opacity animate-pulse"></span>
-                    <i className="fa-solid fa-sparkles text-2xl relative z-10 group-hover:rotate-12 transition-transform"></i>
-                    
-                    {/* Chấm đỏ thông báo (Trang trí) */}
-                    <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 border-2 border-white rounded-full z-20"></span>
+                    <span className="absolute inset-0 rounded-full bg-blue-500 blur-xl opacity-40 group-hover:opacity-70 transition-opacity animate-pulse"></span>
+
+                    {/* HÌNH ẢNH AI NỔI BẬT BÊN TRONG NÚT */}
+                    <img src={LUNA_AVATAR} alt="Luna AI" className="w-full h-full object-contain relative z-10 group-hover:scale-110 transition-transform drop-shadow-md" />
+
+                    {/* Chấm đỏ thông báo */}
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 border-2 border-slate-900 rounded-full z-20"></span>
                 </button>
             )}
 
