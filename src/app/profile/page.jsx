@@ -232,7 +232,7 @@ export default function UltimateProfilePage() {
           <div className="flex flex-col xl:flex-row items-center justify-between gap-10 mb-16 animate-in slide-in-from-bottom-8 duration-700">
             {/* Cột trái: Avatar & Name */}
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8 text-center md:text-left">
-              <div className="relative group shrink-0" style={{ animation: 'float 6s ease-in-out infinite' }}>
+              <div className="relative group shrin  k-0" style={{ animation: 'float 6s ease-in-out infinite' }}>
                 <div className={`absolute -inset-1 rounded-full bg-gradient-to-br ${stats.tierInfo.color} blur opacity-50 group-hover:opacity-100 transition duration-500`}></div>
 
                 <div className={`relative w-40 h-40 rounded-full p-1.5 bg-gradient-to-br ${stats.tierInfo.color} shadow-2xl overflow-hidden`}>

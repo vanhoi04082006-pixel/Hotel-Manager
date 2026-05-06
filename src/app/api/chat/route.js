@@ -1,7 +1,7 @@
 // src/app/api/chat/route.js
 import OpenAI from "openai";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, getDoc, query, where } from "firebase/firestore";
+import { collection, getDocs, doc, query, where } from "firebase/firestore"; // Đã bỏ getDoc vì không dùng trực tiếp ID nữa
 
 const client = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
@@ -16,25 +16,39 @@ async function checkRoomAvailability() {
     
     const rooms = snap.docs.map(doc => {
         const data = doc.data();
-        return `<li><b>Phòng ${data.type} (Mã: ${data.code})</b> - <b>${data.price.toLocaleString('vi-VN')} VNĐ/đêm</b> <br/><a href="/rooms/${doc.id}" style="color:#2563eb; text-decoration:none; font-weight:600; font-size:12px; background:#eff6ff; padding:4px 10px; border-radius:12px; display:inline-block; margin-top:4px;">Xem chi tiết</a> <a href="/booking?roomId=${doc.id}" style="color:white; text-decoration:none; font-weight:600; font-size:12px; background:#10b981; padding:4px 10px; border-radius:12px; display:inline-block; margin-top:4px; margin-left:4px;">Đặt phòng ngay</a></li>`;
+        return `<li style="margin-bottom: 8px;"><b>Phòng ${data.type} (Mã: ${data.code})</b> - <b>${data.price.toLocaleString('vi-VN')} VNĐ/đêm</b> <br/><a href="/rooms/${doc.id}" style="color:#2563eb; text-decoration:none; font-weight:600; font-size:12px; background:#eff6ff; padding:4px 10px; border-radius:12px; display:inline-block; margin-top:4px;">Xem chi tiết</a> <a href="/booking?roomId=${doc.id}" style="color:white; text-decoration:none; font-weight:600; font-size:12px; background:#10b981; padding:4px 10px; border-radius:12px; display:inline-block; margin-top:4px; margin-left:4px;">Đặt phòng ngay</a></li>`;
     });
     return "<ul style='margin-left: 20px; list-style-type: disc; margin-top: 8px; margin-bottom: 8px; line-height: 1.8;'>" + rooms.join("") + "</ul>";
 }
 
+// ĐÃ SỬA LỖI: Tìm theo Email trước, sau đó đối chiếu đuôi ID
 async function lookupBookingByIdAndEmail(bookingId, email) {
     try {
-        const docRef = doc(db, "bookings", bookingId);
-        const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) return `Xin lỗi Quý khách, Luna không tìm thấy đơn đặt phòng có mã <b>${bookingId}</b> trong hệ thống.`;
-        
-        const data = docSnap.data();
-        if (data.userEmail !== email) return `Email <b>${email}</b> không khớp với mã đặt phòng này.`;
+        // Làm sạch dữ liệu đầu vào: Xóa khoảng trắng, xóa dấu # và viết hoa
+        const cleanId = bookingId.replace("#", "").trim().toUpperCase();
+        const cleanEmail = email.trim().toLowerCase();
 
-        let statusColor = data.status === "completed" ? "color:#10b981" : data.status === "cancelled" ? "color:#ef4444" : "color:#f59e0b";
+        // 1. Lấy tất cả đơn của Email này
+        const q = query(collection(db, "bookings"), where("userEmail", "==", cleanEmail));
+        const snap = await getDocs(q);
+
+        if (snap.empty) return `Xin lỗi Quý khách, Luna không tìm thấy bất kỳ đơn đặt phòng nào dưới email <b>${cleanEmail}</b>.`;
+
+        // 2. Tìm xem có đơn nào có đuôi ID trùng với mã khách nhập không
+        let foundBooking = null;
+        snap.forEach(doc => {
+            if (doc.id.toUpperCase().endsWith(cleanId)) {
+                foundBooking = { id: doc.id, ...doc.data() };
+            }
+        });
+
+        if (!foundBooking) return `Đã tìm thấy email <b>${cleanEmail}</b> trong hệ thống, nhưng không có đơn nào khớp với mã <b>#${cleanId}</b>. Quý khách vui lòng kiểm tra lại mã đơn ạ.`;
+
+        let statusColor = foundBooking.status === "completed" ? "color:#10b981" : foundBooking.status === "cancelled" ? "color:#ef4444" : "color:#f59e0b";
         
-        return `Đã tìm thấy đơn của Quý khách! <br/><br/><b>Phòng:</b> ${data.roomCode} <br/><b>Nhận phòng:</b> ${data.checkIn} <br/><b>Trả phòng:</b> ${data.checkOut} <br/><b>Tổng tiền:</b> ${data.totalPrice.toLocaleString('vi-VN')} VNĐ <br/><b>Trạng thái:</b> <span style="font-weight:bold; ${statusColor}; text-transform:uppercase;">${data.status}</span>`;
+        return `Đã tìm thấy đơn của Quý khách! <br/><br/><b>Mã đơn:</b> #${foundBooking.id.slice(-6).toUpperCase()} <br/><b>Phòng:</b> ${foundBooking.roomCode} <br/><b>Nhận phòng:</b> ${foundBooking.checkIn} <br/><b>Trả phòng:</b> ${foundBooking.checkOut} <br/><b>Tổng tiền:</b> ${foundBooking.totalPrice.toLocaleString('vi-VN')} VNĐ <br/><b>Trạng thái:</b> <span style="font-weight:bold; ${statusColor}; text-transform:uppercase;">${foundBooking.status}</span>`;
     } catch (error) {
-        return "Luna đang gặp chút sự cố khi tra cứu mã đơn. Quý khách vui lòng thử lại sau nhé.";
+        return "Luna đang gặp chút sự cố khi tra cứu hệ thống. Quý khách vui lòng thử lại sau nhé.";
     }
 }
 
@@ -59,6 +73,7 @@ const tools = [
         function: {
             name: "checkRoomAvailability",
             description: "Lấy danh sách các phòng đang trống để báo giá và báo tình trạng cho khách.",
+            parameters: { type: "object", properties: {} } // Thêm properties rỗng để chống lỗi DeepSeek
         }
     },
     {
@@ -69,7 +84,7 @@ const tools = [
             parameters: {
                 type: "object",
                 properties: {
-                    bookingId: { type: "string", description: "Mã ID đặt phòng" },
+                    bookingId: { type: "string", description: "Mã ID đặt phòng (Ví dụ: YYU4KDJB)" },
                     email: { type: "string", description: "Email của khách đặt" }
                 },
                 required: ["bookingId", "email"]
@@ -81,10 +96,7 @@ const tools = [
         function: {
             name: "getMyBookings",
             description: "Lấy lịch sử tất cả các đơn đặt phòng của tài khoản đang đăng nhập.",
-            parameters: {
-                type: "object",
-                properties: {},
-            }
+            parameters: { type: "object", properties: {} } // Thêm properties rỗng
         }
     }
 ];
@@ -95,7 +107,6 @@ export async function POST(req) {
         const userMessage = body.message;
         const userEmail = body.userEmail;
 
-        // TẠO NHÂN CÁCH VÀ QUY TẮC HIỂN THỊ DÀNH CHO AI
         const messages = [
             {
                 role: "system",
@@ -110,20 +121,16 @@ QUY TẮC ĐỊNH DẠNG VÀ TẠO LINK (RẤT QUAN TRỌNG):
 3. Dùng thẻ <br/> để xuống dòng.
 4. Dùng thẻ <ul> và <li> để tạo danh sách nếu cần liệt kê.
 5. Khi chào khách đã đăng nhập, hãy gọi tên họ bằng cách lấy phần trước ký tự @ của email.
-6. Nếu bạn tự tư vấn phòng ngoài tool, luôn đính kèm link HTML: <a href="/rooms/[ID_PHONG]" style="color: blue; text-decoration: underline;">Xem chi tiết</a>
-7. Nếu khách muốn đặt phòng ngay (ngoài tool): <a href="/booking?roomId=[ID_PHONG]" style="color: green; font-weight: bold; text-decoration: underline;">Đặt phòng ngay</a>
+6. Khi có dữ liệu trả về từ tools, hãy phản hồi lại cho khách tự nhiên nhất có thể.
 
 Thông tin chung:
 - Khách sạn 5 sao view biển. Dịch vụ: Spa, Buffet sáng, Nhà hàng hải sản, Hồ bơi vô cực.
 - Nếu khách hỏi những thông tin có thể tra cứu (Tìm đơn, lịch sử, phòng trống), hãy gọi Tools để lấy dữ liệu thực tế.
-
-Trả lời lịch sự và tự nhiên. KHÔNG để lộ việc bạn dùng công cụ.
 `
             },
             { role: "user", content: userMessage }
         ];
 
-        // GỌI AI LẦN 1
         const completion = await client.chat.completions.create({
             model: "deepseek/deepseek-chat",
             messages: messages,
@@ -132,14 +139,41 @@ Trả lời lịch sự và tự nhiên. KHÔNG để lộ việc bạn dùng c�
         });
 
         const responseMessage = completion.choices[0].message;
+        let toolCalls = responseMessage.tool_calls || [];
+        let responseContent = responseMessage.content || "";
+
+        // =========================================================
+        // BỘ LỌC CHỐNG ẢO GIÁC DEEPSEEK (Bắt buộc phải có)
+        // =========================================================
+        if (!toolCalls.length && responseContent.includes("!function_call:")) {
+            try {
+                const match = responseContent.match(/!function_call:\s*(\{[\s\S]*?\})/);
+                if (match) {
+                    const parsedTool = JSON.parse(match[1]);
+                    toolCalls = [{
+                        id: "call_" + Math.random().toString(36).substring(7),
+                        type: "function",
+                        function: {
+                            name: parsedTool.call,
+                            arguments: JSON.stringify(parsedTool.arguments || {})
+                        }
+                    }];
+                    responseMessage.content = responseContent.replace(/!function_call:\s*(\{[\s\S]*?\})/, "").trim();
+                }
+            } catch (e) { console.error("Lỗi parse function_call:", e); }
+        }
 
         // NẾU AI QUYẾT ĐỊNH DÙNG TOOL
-        if (responseMessage.tool_calls) {
-            messages.push(responseMessage); // Lưu lịch sử cho AI hiểu ngữ cảnh
+        if (toolCalls.length > 0) {
+            messages.push({
+                role: "assistant",
+                content: responseMessage.content || null,
+                tool_calls: toolCalls
+            }); 
 
-            for (const toolCall of responseMessage.tool_calls) {
+            for (const toolCall of toolCalls) {
                 const functionName = toolCall.function.name;
-                const args = JSON.parse(toolCall.function.arguments);
+                const args = JSON.parse(toolCall.function.arguments || "{}");
                 let functionResult = "";
 
                 if (functionName === "checkRoomAvailability") {
@@ -150,7 +184,6 @@ Trả lời lịch sự và tự nhiên. KHÔNG để lộ việc bạn dùng c�
                     functionResult = await getMyBookings(userEmail);
                 }
 
-                // Gửi kết quả tool về lại AI
                 messages.push({
                     tool_call_id: toolCall.id,
                     role: "tool",
