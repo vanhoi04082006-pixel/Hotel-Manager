@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { db, auth } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";
+// Thêm setDoc vào import
+import { collection, query, where, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
 import { onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
 // Hàm tiện ích format tiền
@@ -39,12 +40,14 @@ export default function UltimateProfilePage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [avatar, setAvatar] = useState(null);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false); // State quản lý loading ảnh đại diện
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [promotions, setPromotions] = useState([]);
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false); // State cho nút đổi mật khẩu
+  
   const [passwords, setPasswords] = useState({ current: "", new: "" });
   const [formData, setFormData] = useState({
     name: "", email: "", phone: "", birthday: "", address: "", preferences: "", createdAt: new Date().toISOString()
@@ -67,7 +70,6 @@ export default function UltimateProfilePage() {
             birthday: data.birthday || "", address: data.address || "", preferences: data.preferences || "",
             createdAt: data.createdAt || new Date().toISOString()
           });
-          // Lấy avatar từ Firestore thay vì localStorage
           if (data.avatar) setAvatar(data.avatar);
         } else {
           setFormData(prev => ({ ...prev, email: currentUser.email, name: currentUser.email.split("@")[0] }));
@@ -98,44 +100,55 @@ export default function UltimateProfilePage() {
     return { paidBookings, totalSpent, points, tierInfo, totalBookings: bookings.length };
   }, [bookings]);
 
-  // 3. Xử lý Cập nhật Profile
+  // 3. Xử lý Cập nhật Profile (Chỉ lưu thông tin Text định danh)
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     try {
       const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
+      // Dùng setDoc với merge: true để tránh lỗi khi user chưa có document
+      await setDoc(userRef, {
         name: formData.name,
         phone: formData.phone,
         birthday: formData.birthday,
         address: formData.address,
         preferences: formData.preferences,
-        avatar: avatar, // Lưu URL ImgBB lên Firestore
+        avatar: avatar, // Lưu kèm avatar hiện tại
         updatedAt: new Date().toISOString()
-      });
+      }, { merge: true });
 
       const currentLocal = JSON.parse(localStorage.getItem("currentUser") || "{}");
       localStorage.setItem("currentUser", JSON.stringify({ ...currentLocal, name: formData.name, phone: formData.phone }));
 
-      if (passwords.new) {
-        if (passwords.new.length < 6) return alert("Mật khẩu mới phải có ít nhất 6 ký tự");
-        if (!passwords.current) return alert("Vui lòng nhập mật khẩu hiện tại");
-        const credential = EmailAuthProvider.credential(user.email, passwords.current);
-        await reauthenticateWithCredential(user, credential);
-        await updatePassword(user, passwords.new);
-        alert("Đã đổi mật khẩu thành công!");
-        setPasswords({ current: "", new: "" });
-      } else {
-        alert("Đã cập nhật hồ sơ cá nhân thành công!");
-      }
+      alert("Đã lưu hồ sơ cá nhân thành công!");
     } catch (error) {
-      alert("Lỗi: " + error.message);
+      alert("Lỗi khi lưu: " + error.message);
     } finally {
       setIsSaving(false);
     }
   };
 
-  // 4. Hàm xử lý UPLOAD ẢNH LÊN IMGBB
+  // 4. Xử lý Đổi mật khẩu độc lập
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (!passwords.current) return alert("Vui lòng nhập mật khẩu hiện tại");
+    if (passwords.new.length < 6) return alert("Mật khẩu mới phải có ít nhất 6 ký tự");
+    
+    setIsChangingPassword(true);
+    try {
+      const credential = EmailAuthProvider.credential(user.email, passwords.current);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, passwords.new);
+      alert("Đã đổi mật khẩu thành công!");
+      setPasswords({ current: "", new: "" });
+    } catch (error) {
+      alert("Lỗi đổi mật khẩu (Sai mật khẩu cũ hoặc lỗi mạng): " + error.message);
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  // 5. Hàm xử lý UPLOAD ẢNH & TỰ ĐỘNG LƯU
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -143,14 +156,10 @@ export default function UltimateProfilePage() {
 
     setIsUploadingAvatar(true);
     try {
-      // Chuẩn bị form data như API yêu cầu
       const imgData = new FormData();
       imgData.append("image", file);
 
-      // THAY KEY CỦA BẠN VÀO ĐÂY (hoặc dùng process.env)
       const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY || "ec72a78154d0c398eb6dad6b06947246";
-
-      // Khuyến nghị dùng URL POST theo docs
       const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
         method: "POST",
         body: imgData,
@@ -159,11 +168,17 @@ export default function UltimateProfilePage() {
       const data = await response.json();
 
       if (data.success) {
-        const imageUrl = data.data.url; // Lấy URL từ cục phản hồi JSON của ImgBB
+        const imageUrl = data.data.url;
         setAvatar(imageUrl);
-        // Lưu ý cho user biết cần ấn nút Lưu
-        // Không gọi alert để tránh phiền người dùng, họ nhìn thấy ảnh đổi là hiểu, 
-        // nhưng URL chưa vào DB cho đến khi bấm "Đồng bộ dữ liệu"
+        
+        // TỰ ĐỘNG LƯU NGAY LÊN FIREBASE MÀ KHÔNG CẦN BẤM NÚT SAVE
+        if (user) {
+           const userRef = doc(db, "users", user.uid);
+           await setDoc(userRef, { 
+             avatar: imageUrl,
+             updatedAt: new Date().toISOString()
+           }, { merge: true });
+        }
       } else {
         alert("Lỗi từ ImgBB: " + data.status);
       }
@@ -217,7 +232,7 @@ export default function UltimateProfilePage() {
 
       <main className="pb-24 relative">
 
-        {/* HERO BACKGROUND - MESH GRADIENT */}
+        {/* HERO BACKGROUND */}
         <div className="absolute top-0 left-0 right-0 h-[500px] w-full z-0 overflow-hidden bg-slate-900">
           <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2500&auto=format&fit=crop" className="w-full h-full object-cover opacity-40 mix-blend-overlay" alt="Cover" />
           <div className="absolute top-0 -left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob"></div>
@@ -228,17 +243,17 @@ export default function UltimateProfilePage() {
 
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 relative z-10 pt-20">
 
-          {/* KHỐI PROFILE HEADER ĐỈNH CAO */}
+          {/* KHỐI PROFILE HEADER */}
           <div className="flex flex-col xl:flex-row items-center justify-between gap-10 mb-16 animate-in slide-in-from-bottom-8 duration-700">
             {/* Cột trái: Avatar & Name */}
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8 text-center md:text-left">
-              <div className="relative group shrin  k-0" style={{ animation: 'float 6s ease-in-out infinite' }}>
+              <div className="relative group shrink-0" style={{ animation: 'float 6s ease-in-out infinite' }}>
                 <div className={`absolute -inset-1 rounded-full bg-gradient-to-br ${stats.tierInfo.color} blur opacity-50 group-hover:opacity-100 transition duration-500`}></div>
 
                 <div className={`relative w-40 h-40 rounded-full p-1.5 bg-gradient-to-br ${stats.tierInfo.color} shadow-2xl overflow-hidden`}>
                   <div className="w-full h-full rounded-full border-4 border-slate-900 overflow-hidden bg-slate-800 flex items-center justify-center relative z-10">
-
-                    {/* Hiệu ứng Đang tải ảnh lên (Spinner mờ) */}
+                    
+                    {/* Hiệu ứng Đang tải ảnh lên */}
                     {isUploadingAvatar && (
                       <div className="absolute inset-0 bg-black/60 z-30 flex flex-col items-center justify-center rounded-full backdrop-blur-[2px]">
                         <i className="fa-solid fa-spinner fa-spin text-white text-3xl mb-1"></i>
@@ -255,7 +270,6 @@ export default function UltimateProfilePage() {
                   </div>
                 </div>
 
-                {/* Input chọn ảnh - Khoá khi đang tải ảnh */}
                 <input
                   type="file"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-40"
@@ -265,7 +279,6 @@ export default function UltimateProfilePage() {
                   disabled={isUploadingAvatar}
                 />
 
-                {/* Badge Hạng nổi bật */}
                 <div className={`absolute -bottom-2 -right-2 w-14 h-14 rounded-full bg-gradient-to-br ${stats.tierInfo.color} border-[3px] border-slate-900 flex items-center justify-center text-white shadow-xl z-50 transform group-hover:scale-110 transition-transform`}>
                   <i className={`fa-solid ${stats.tierInfo.icon} text-xl drop-shadow-md`}></i>
                 </div>
@@ -313,7 +326,7 @@ export default function UltimateProfilePage() {
             </div>
           </div>
 
-          {/* --- TAB 1: TÀI KHOẢN (BENTO GRID STYLE) --- */}
+          {/* --- TAB 1: TÀI KHOẢN --- */}
           {activeTab === "profile" && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
 
@@ -329,23 +342,28 @@ export default function UltimateProfilePage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 bento-hover flex-1">
+                {/* FORM ĐỔI MẬT KHẨU TÁCH RIÊNG */}
+                <form onSubmit={handleChangePassword} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 bento-hover flex-1">
                   <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mb-5 text-rose-500">
                     <i className="fa-solid fa-shield-halved text-2xl"></i>
                   </div>
                   <h3 className="text-xl font-bold text-slate-800 mb-6">Trung Tâm Bảo Mật</h3>
                   <div className="space-y-5">
                     <div>
-                      <input type="password" placeholder="Nhập mật khẩu hiện tại" className={inputClass} value={passwords.current} onChange={e => setPasswords({ ...passwords, current: e.target.value })} />
+                      <input type="password" required placeholder="Nhập mật khẩu hiện tại" className={inputClass} value={passwords.current} onChange={e => setPasswords({ ...passwords, current: e.target.value })} />
                     </div>
                     <div>
-                      <input type="password" placeholder="Thiết lập mật khẩu mới (Tối thiểu 6 ký tự)" className={inputClass} value={passwords.new} onChange={e => setPasswords({ ...passwords, new: e.target.value })} />
+                      <input type="password" required placeholder="Thiết lập mật khẩu mới (Tối thiểu 6 ký tự)" className={inputClass} value={passwords.new} onChange={e => setPasswords({ ...passwords, new: e.target.value })} />
                     </div>
-                    <p className="text-[11px] text-slate-400 font-medium text-center italic mt-2">Mật khẩu mới sẽ được cập nhật cùng lúc khi bạn lưu hồ sơ ở bảng bên cạnh.</p>
+                    
+                    <button type="submit" disabled={isChangingPassword} className="w-full py-3.5 bg-rose-50 text-rose-600 rounded-[1rem] font-bold text-[14px] hover:bg-rose-500 hover:text-white transition-all duration-300 disabled:opacity-50">
+                      {isChangingPassword ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i>ĐANG XỬ LÝ...</> : "ĐỔI MẬT KHẨU"}
+                    </button>
                   </div>
-                </div>
+                </form>
               </div>
 
+              {/* FORM CẬP NHẬT THÔNG TIN CÁ NHÂN */}
               <div className="lg:col-span-8 bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-slate-200 relative overflow-hidden bento-hover">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50 rounded-full blur-3xl -mr-48 -mt-48 opacity-70 pointer-events-none"></div>
                 <h3 className="text-3xl font-playfair font-bold text-slate-900 mb-2 relative z-10">Cập Nhật Định Danh</h3>
@@ -395,8 +413,8 @@ export default function UltimateProfilePage() {
                   </div>
 
                   <div className="pt-6 flex justify-end border-t border-slate-100">
-                    <button type="submit" disabled={isSaving || isUploadingAvatar} className="w-full lg:w-auto px-12 py-4 bg-slate-900 text-white rounded-[1.25rem] font-bold text-[15px] hover:bg-blue-600 shadow-xl shadow-slate-900/20 hover:shadow-blue-600/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:transform-none flex items-center justify-center">
-                      {isSaving ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i>ĐANG LƯU HỒ SƠ...</> : <><i className="fa-solid fa-cloud-arrow-up mr-2"></i>ĐỒNG BỘ DỮ LIỆU</>}
+                    <button type="submit" disabled={isSaving} className="w-full lg:w-auto px-12 py-4 bg-slate-900 text-white rounded-[1.25rem] font-bold text-[15px] hover:bg-blue-600 shadow-xl shadow-slate-900/20 hover:shadow-blue-600/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:transform-none flex items-center justify-center">
+                      {isSaving ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i>ĐANG LƯU...</> : <><i className="fa-solid fa-cloud-arrow-up mr-2"></i>LƯU HỒ SƠ</>}
                     </button>
                   </div>
                 </form>
@@ -404,7 +422,6 @@ export default function UltimateProfilePage() {
             </div>
           )}
 
-          {/* CÁC TAB KHÁC BÊN DƯỚI GIỮ NGUYÊN HOÀN TOÀN NHƯ CŨ */}
           {/* --- TAB 2: THẺ THÀNH VIÊN --- */}
           {activeTab === "loyalty" && (
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-5xl mx-auto">
