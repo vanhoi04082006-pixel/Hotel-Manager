@@ -135,7 +135,8 @@ Thông tin chung:
             model: "deepseek/deepseek-chat",
             messages: messages,
             tools: tools,
-            tool_choice: "auto"
+            tool_choice: "auto",
+            max_tokens: 1000 // Thêm dòng này để giới hạn token
         });
 
         const responseMessage = completion.choices[0].message;
@@ -196,6 +197,7 @@ Thông tin chung:
             const secondResponse = await client.chat.completions.create({
                 model: "deepseek/deepseek-chat",
                 messages: messages,
+                max_tokens: 1000 // Thêm dòng này nữa
             });
 
             return Response.json({ reply: secondResponse.choices[0].message.content });
