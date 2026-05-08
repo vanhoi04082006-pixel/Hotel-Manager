@@ -5,7 +5,6 @@ import { useState, useRef, useEffect } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
-// Link ảnh AI Hiện đại (Bạn có thể tải ảnh khác về thư mục public và đổi thành "/ten-anh.png")
 const LUNA_AVATAR = "https://cdn-icons-png.flaticon.com/512/8943/8943377.png";
 
 export default function AIChatbot() {
@@ -15,7 +14,6 @@ export default function AIChatbot() {
     const [userEmail, setUserEmail] = useState(null);
     const [authInitialized, setAuthInitialized] = useState(false);
 
-    // Tin nhắn mặc định nếu chưa từng chat
     const defaultMessage = {
         role: "ai",
         text: "Xin chào Quý khách! Luna rất hân hạnh đồng hành cùng Quý khách hôm nay. Quý khách cần hỗ trợ đặt phòng hay dịch vụ nào ạ?"
@@ -24,7 +22,6 @@ export default function AIChatbot() {
     const [messages, setMessages] = useState([]);
     const endRef = useRef(null);
 
-    // 1. Lắng nghe trạng thái Đăng nhập
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUserEmail(user ? user.email : null);
@@ -33,7 +30,6 @@ export default function AIChatbot() {
         return () => unsubscribe();
     }, []);
 
-    // 2. Load lịch sử trò chuyện dựa trên Tài khoản
     useEffect(() => {
         if (!authInitialized) return;
 
@@ -51,7 +47,6 @@ export default function AIChatbot() {
         }
     }, [userEmail, authInitialized]);
 
-    // 3. Tự động lưu cuộc trò chuyện mỗi khi có tin nhắn mới
     useEffect(() => {
         if (!authInitialized || messages.length === 0) return;
 
@@ -61,7 +56,6 @@ export default function AIChatbot() {
         }
     }, [messages, userEmail, authInitialized]);
 
-    // Tự động cuộn xuống cuối
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => {
@@ -70,7 +64,6 @@ export default function AIChatbot() {
         }
     }, [messages, loading, isOpen]);
 
-    // Xóa lịch sử chat
     const handleClearChat = () => {
         if (confirm("Bạn có muốn xóa toàn bộ lịch sử trò chuyện với Luna không?")) {
             const storageKey = userEmail ? `luna_chat_${userEmail}` : 'luna_chat_guest';
@@ -112,18 +105,19 @@ export default function AIChatbot() {
         setLoading(false);
     }
 
-    if (!authInitialized) return null; // Chờ check đăng nhập xong mới render
+    if (!authInitialized) return null;
 
     return (
-        <div className="fixed bottom-6 right-6 z-[9999] font-sans">
+        /* Cập nhật Responsive cho vị trí Float Button (Chừa lề nhỏ hơn trên mobile) */
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] font-sans">
             {isOpen && (
-                <div className="absolute bottom-24 right-0 w-[390px] sm:w-[420px] h-[620px] rounded-[32px] overflow-hidden border border-white/40 bg-white/95 backdrop-blur-3xl shadow-[0_30px_80px_rgba(15,23,42,0.25)] flex flex-col animate-in slide-in-from-bottom-5 fade-in duration-300">
+                /* Cập nhật Responsive: Mobile thì fixed full màn hình, PC (sm trở lên) thì thành hộp thoại nổi */
+                <div className="fixed inset-0 z-[10000] w-full h-full sm:absolute sm:inset-auto sm:bottom-20 sm:right-0 sm:w-[400px] sm:h-[620px] sm:rounded-[24px] overflow-hidden border border-white/40 bg-white/95 backdrop-blur-3xl shadow-[0_30px_80px_rgba(15,23,42,0.25)] flex flex-col animate-in slide-in-from-bottom-5 fade-in duration-300">
                     {/* HEADER */}
                     <div className="relative px-5 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 text-white shrink-0 shadow-md z-10">
                         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,white,transparent_40%)]"></div>
                         <div className="relative flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                {/* AVATAR AI TRÊN HEADER */}
                                 <div className="relative">
                                     <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-inner overflow-hidden p-1">
                                         <img src={LUNA_AVATAR} alt="Luna AI" className="w-full h-full object-contain drop-shadow-md" />
@@ -153,7 +147,6 @@ export default function AIChatbot() {
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                                 {msg.role === "ai" && (
-                                    /* AVATAR AI CẠNH TIN NHẮN */
                                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2 shrink-0 border border-blue-100 overflow-hidden shadow-sm p-1">
                                         <img src={LUNA_AVATAR} alt="Luna AI" className="w-full h-full object-contain" />
                                     </div>
@@ -173,7 +166,6 @@ export default function AIChatbot() {
 
                         {loading && (
                             <div className="flex justify-start items-end">
-                                {/* AVATAR AI LÚC ĐANG GÕ CHỮ */}
                                 <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2 shrink-0 border border-blue-100 overflow-hidden shadow-sm p-1">
                                     <img src={LUNA_AVATAR} alt="Luna AI" className="w-full h-full object-contain" />
                                 </div>
@@ -188,7 +180,8 @@ export default function AIChatbot() {
                     </div>
 
                     {/* INPUT FORM */}
-                    <form onSubmit={sendMessage} className="p-4 bg-white border-t border-slate-100 shrink-0">
+                    {/* Thêm pb-6 để phòng trường hợp thanh bar dưới cùng của iPhone (Home Indicator) che mất input */}
+                    <form onSubmit={sendMessage} className="p-4 pb-6 sm:pb-4 bg-white border-t border-slate-100 shrink-0">
                         <div className="flex items-center gap-2 bg-slate-50/80 rounded-full border border-slate-200 p-1.5 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm transition-all">
                             <input
                                 value={input}
@@ -208,19 +201,14 @@ export default function AIChatbot() {
                 </div>
             )}
 
-            {/* NÚT FLOAT BÊN NGOÀI ĐỂ MỞ CHAT */}
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="relative w-16 h-16 rounded-full bg-slate-900 shadow-[0_20px_40px_rgba(15,23,42,0.35)] hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center group border-2 border-white/20 p-1"
+                    className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-900 shadow-[0_20px_40px_rgba(15,23,42,0.35)] hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center group border-2 border-white/20 p-1"
                 >
                     <span className="absolute inset-0 rounded-full bg-blue-500 blur-xl opacity-40 group-hover:opacity-70 transition-opacity animate-pulse"></span>
-
-                    {/* HÌNH ẢNH AI NỔI BẬT BÊN TRONG NÚT */}
                     <img src={LUNA_AVATAR} alt="Luna AI" className="w-full h-full object-contain relative z-10 group-hover:scale-110 transition-transform drop-shadow-md" />
-
-                    {/* Chấm đỏ thông báo */}
-                    <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 border-2 border-slate-900 rounded-full z-20"></span>
+                    <span className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-rose-500 border-2 border-slate-900 rounded-full z-20"></span>
                 </button>
             )}
 
