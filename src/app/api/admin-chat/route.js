@@ -2,7 +2,7 @@
 
 import OpenAI from "openai";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc, getDoc, Timestamp } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, Timestamp } from "firebase/firestore";
 
 const client = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
@@ -43,9 +43,9 @@ async function resolveServiceId(identifier) {
 async function resolveCustomerId(identifier) {
     const cleanStr = identifier.replace('#', '').trim().toLowerCase();
     const snap = await getDocs(collection(db, "users"));
-    const target = snap.docs.find(d => 
-        d.id.toLowerCase().includes(cleanStr) || 
-        (d.data().email || "").toLowerCase() === cleanStr || 
+    const target = snap.docs.find(d =>
+        d.id.toLowerCase().includes(cleanStr) ||
+        (d.data().email || "").toLowerCase() === cleanStr ||
         (d.data().phone || "").toLowerCase().includes(cleanStr) ||
         (d.data().name || "").toLowerCase().includes(cleanStr)
     );
@@ -75,10 +75,14 @@ async function getDashboardData() {
 
         const activeBookings = loadedBookings.filter(b => b.status !== "cancelled" && b.checkIn <= todayStr && todayStr < b.checkOut);
         const occupiedRoomIds = activeBookings.map(b => b.roomId);
+
         const maintenanceRooms = rooms.filter(r => r.status === "maintenance").length;
         let occupiedCount = rooms.filter(r => r.status !== 'maintenance' && (r.status === 'occupied' || occupiedRoomIds.includes(r.id))).length;
 
-        return JSON.stringify({ date: todayStr, arrivalsToday, checkOutsToday, totalRevenue, maintenanceRooms, occupancyRate: `${((occupiedCount / (rooms.length || 1)) * 100).toFixed(1)}%` });
+        return JSON.stringify({
+            date: todayStr, arrivalsToday, checkOutsToday, totalRevenue,
+            maintenanceRooms, occupancyRate: `${((occupiedCount / (rooms.length || 1)) * 100).toFixed(1)}%`
+        });
     } catch (err) { return JSON.stringify({ error: err.message }); }
 }
 
@@ -132,6 +136,29 @@ async function markPaidAndInvoice({ bookingId }) {
     } catch (err) { return JSON.stringify({ error: err.message }); }
 }
 
+// === PHẦN XUẤT EXCEL ĐÃ ĐƯỢC CẬP NHẬT TỪ CODE 2 ===
+async function exportBookingsToCSV({ status = "all" }) {
+    try {
+        const snap = await getDocs(collection(db, "bookings"));
+        let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (status !== "all") results = results.filter(b => b.status === status);
+
+        // Tạo chuỗi CSV
+        let csvContent = "Mã Đặt Phòng,Khách Hàng,Phòng,Ngày Check-in,Ngày Check-out,Trạng Thái,Thanh Toán,Tổng Tiền\n";
+        results.forEach(b => {
+            const ten = (b.userName || b.userEmail || "Khách").replace(/,/g, " "); // Xóa dấu phẩy tránh lỗi CSV
+            csvContent += `${b.id.slice(-8).toUpperCase()},${ten},${b.roomCode},${b.checkIn},${b.checkOut},${b.status},${b.paymentStatus},${b.totalPrice}\n`;
+        });
+
+        // Encode Base64 để tạo Data URL tải xuống
+        const base64CSV = Buffer.from("\uFEFF" + csvContent, 'utf8').toString('base64'); // Thêm BOM để Excel đọc tiếng Việt không bị lỗi font
+        const downloadLink = `<a href="data:text/csv;base64,${base64CSV}" download="Luna_Bookings_Export.csv" style="display: inline-block; padding: 10px 20px; background: #10b981; color: white; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;"><i class="fa-solid fa-download"></i> Tải xuống file Danh sách (${results.length} đơn)</a>`;
+
+        return JSON.stringify({ success: true, htmlLink: downloadLink });
+    } catch (err) { return JSON.stringify({ error: err.message }); }
+}
+// =================================================
+
 async function searchRooms({ query = "", status = "all" }) {
     try {
         const snap = await getDocs(collection(db, "rooms"));
@@ -176,6 +203,7 @@ async function searchServices({ query = "", category = "all" }) {
     try {
         const snap = await getDocs(collection(db, "services"));
         let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
         if (category !== "all") {
             results = results.filter(s => {
                 let sCat = "other";
@@ -185,18 +213,29 @@ async function searchServices({ query = "", category = "all" }) {
                 return sCat === category;
             });
         }
+
         if (query) {
             const q = query.toLowerCase();
             results = results.filter(s => (s.name || "").toLowerCase().includes(q) || (s.description || "").toLowerCase().includes(q));
         }
-        const compactResults = results.map(s => ({ maDV: s.id.slice(-6).toUpperCase(), tenDV: s.name, gia: s.price, donVi: s.unit, trangThai: s.available !== false ? "Đang phục vụ" : "Đã ngưng" }));
+
+        const compactResults = results.map(s => ({
+            maDV: s.id.slice(-6).toUpperCase(),
+            tenDV: s.name,
+            gia: s.price,
+            donVi: s.unit,
+            trangThai: s.available !== false ? "Đang phục vụ" : "Đã ngưng"
+        }));
         return JSON.stringify(compactResults.length > 0 ? compactResults : { message: "Không tìm thấy dịch vụ nào khớp." });
     } catch (err) { return JSON.stringify({ error: err.message }); }
 }
 
 async function addService({ name, description = "", price, unit = "person", icon = "utensils" }) {
     try {
-        await addDoc(collection(db, "services"), { name, description, price: parseInt(price), unit, icon, image: "", available: true, createdAt: Timestamp.now(), updatedAt: Timestamp.now(), category: "other" });
+        await addDoc(collection(db, "services"), {
+            name, description, price: parseInt(price), unit, icon, image: "",
+            available: true, createdAt: Timestamp.now(), updatedAt: Timestamp.now(), category: "other"
+        });
         return JSON.stringify({ success: true, message: `Đã thêm dịch vụ: ${name}.` });
     } catch (err) { return JSON.stringify({ error: err.message }); }
 }
@@ -213,12 +252,14 @@ async function updateServiceDetails(args) {
     try {
         const { serviceIdentifier, name, description, price, unit, icon } = args;
         const targetDoc = await resolveServiceId(serviceIdentifier);
+
         const updateData = { updatedAt: Timestamp.now() };
         if (name !== undefined) updateData.name = name;
         if (description !== undefined) updateData.description = description;
         if (price !== undefined) updateData.price = parseInt(price);
         if (unit !== undefined) updateData.unit = unit;
         if (icon !== undefined) updateData.icon = icon;
+
         await updateDoc(doc(db, "services", targetDoc.id), updateData);
         return JSON.stringify({ success: true, message: `Cập nhật dịch vụ thành công.` });
     } catch (err) { return JSON.stringify({ error: err.message }); }
@@ -233,7 +274,7 @@ async function deleteServiceAction({ serviceIdentifier }) {
 }
 
 // ==========================================
-// THƯ VIỆN TOOLS 3 MỚI: QUẢN TRỊ KHÁCH HÀNG (CUSTOMERS)
+// THƯ VIỆN TOOLS 3: QUẢN TRỊ KHÁCH HÀNG (CUSTOMERS)
 // ==========================================
 async function searchCustomers({ query = "", role = "all" }) {
     try {
@@ -247,9 +288,9 @@ async function searchCustomers({ query = "", role = "all" }) {
 
         if (query) {
             const q = query.toLowerCase();
-            results = results.filter(u => 
-                (u.name || "").toLowerCase().includes(q) || 
-                (u.email || "").toLowerCase().includes(q) || 
+            results = results.filter(u =>
+                (u.name || "").toLowerCase().includes(q) ||
+                (u.email || "").toLowerCase().includes(q) ||
                 (u.phone || "").toLowerCase().includes(q)
             );
         }
@@ -281,7 +322,7 @@ async function updateCustomerDetails(args) {
     try {
         const { customerIdentifier, name, email, phone, address, birthday, role, notes } = args;
         const targetDoc = await resolveCustomerId(customerIdentifier);
-        
+
         const updateData = { updatedAt: Timestamp.now() };
         if (name !== undefined) updateData.name = name;
         if (email !== undefined) updateData.email = email;
@@ -307,19 +348,20 @@ async function deleteCustomerAction({ customerIdentifier }) {
     } catch (err) { return JSON.stringify({ error: err.message }); }
 }
 
-
 // ==========================================
 // CẤU HÌNH TOOLS CHO OPENAI
 // ==========================================
 const tools = [
     { type: "function", function: { name: "getDashboardData", description: "Lấy tổng quan hệ thống." } },
-    
+
     // Booking
     { type: "function", function: { name: "searchBookings", description: "Tìm kiếm booking.", parameters: { type: "object", properties: { query: { type: "string" }, status: { type: "string", enum: ["all", "pending", "confirmed", "completed", "cancelled"] } } } } },
     { type: "function", function: { name: "updateBookingStatus", description: "Đổi trạng thái Booking.", parameters: { type: "object", properties: { bookingId: { type: "string" }, newStatus: { type: "string", enum: ["confirmed", "completed", "cancelled"] } }, required: ["bookingId", "newStatus"] } } },
     { type: "function", function: { name: "deleteBookingRecord", description: "Xóa vĩnh viễn đơn đặt phòng.", parameters: { type: "object", properties: { bookingId: { type: "string" } }, required: ["bookingId"] } } },
     { type: "function", function: { name: "markPaidAndInvoice", description: "Đánh dấu thu tiền và tạo hóa đơn.", parameters: { type: "object", properties: { bookingId: { type: "string" } }, required: ["bookingId"] } } },
-    
+    // === CẬP NHẬT MÔ TẢ TOOL XUẤT CSV ===
+    { type: "function", function: { name: "exportBookingsToCSV", description: "Tạo link tải file danh sách đặt phòng (Excel/CSV). Gọi tool này khi Sếp muốn xuất file.", parameters: { type: "object", properties: { status: { type: "string", enum: ["all", "pending", "confirmed", "completed", "cancelled"] } } } } },
+
     // Room
     { type: "function", function: { name: "searchRooms", description: "Tìm kiếm danh sách phòng.", parameters: { type: "object", properties: { query: { type: "string" }, status: { type: "string", enum: ["all", "available", "occupied", "maintenance"] } } } } },
     { type: "function", function: { name: "updateRoomStatus", description: "Cập nhật trạng thái của phòng.", parameters: { type: "object", properties: { roomCode: { type: "string" }, newStatus: { type: "string", enum: ["available", "occupied", "maintenance"] } }, required: ["roomCode", "newStatus"] } } },
@@ -341,7 +383,7 @@ const tools = [
             description: "Tìm kiếm hoặc lọc danh sách Khách hàng.",
             parameters: {
                 type: "object",
-                properties: { 
+                properties: {
                     query: { type: "string", description: "Tên, SĐT, hoặc Email khách hàng" },
                     role: { type: "string", enum: ["all", "regular", "vip", "corporate"], description: "Hạng thành viên" }
                 }
@@ -418,12 +460,14 @@ QUY TẮC CỐT LÕI:
    Ví dụ định dạng cho KHÁCH HÀNG:
    <ul style="list-style:none; padding:0; margin:0;">
      <li style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #e2e8f0;">
-        <b>Khách hàng:</b> Nguyễn Văn A (VIP) <br>
-        <b>Liên hệ:</b> 0901234567 | email@gmail.com <br>
+       <b>Khách hàng:</b> Nguyễn Văn A (VIP) <br>
+       <b>Liên hệ:</b> 0901234567 | email@gmail.com <br>
      </li>
    </ul>
-3. VỚI KHÁCH HÀNG (CUSTOMERS): Sếp có thể dùng TÊN, SĐT hoặc EMAIL để yêu cầu Sửa/Xóa. (Ví dụ: "Thăng hạng VIP cho khách hàng Nguyễn Văn A" hoặc "Xóa khách hàng có sđt 090..."). Truyền vào "customerIdentifier".
-4. Tự động gọi Tool phù hợp với ngữ cảnh yêu cầu.
+3. QUAN TRỌNG VỀ XUẤT FILE: NẾU Sếp có các từ khóa như "Xuất", "Tải", "Excel", "CSV" (VD: "Xuất danh sách đơn") -> BẮT BUỘC gọi Tool 'exportBookingsToCSV'. Khi Tool trả về HTML Link, PHẢI IN NGUYÊN DÒNG HTML ĐÓ RA ĐỂ SẾP BẤM VÀO TẢI.
+4. VỚI KHÁCH HÀNG (CUSTOMERS): Sếp có thể dùng TÊN, SĐT hoặc EMAIL để yêu cầu Sửa/Xóa. (Ví dụ: "Thăng hạng VIP cho khách hàng Nguyễn Văn A" hoặc "Xóa khách hàng có sđt 090..."). Truyền vào "customerIdentifier".
+5. VỚI DỊCH VỤ (SERVICES): Sếp có thể dùng TÊN hoặc MÃ để yêu cầu Sửa/Xóa. Truyền vào "serviceIdentifier".
+6. Tự động gọi Tool phù hợp với ngữ cảnh yêu cầu.
 `
             },
             { role: "user", content: userMessage }
@@ -452,12 +496,25 @@ QUY TẮC CỐT LÕI:
                 let result = "";
 
                 try {
-                    // Bookings
+                    // Bookings & Dashboard
                     if (functionName === "getDashboardData") result = await getDashboardData();
                     if (functionName === "searchBookings") result = await searchBookings(args);
                     if (functionName === "updateBookingStatus") result = await updateBookingStatus(args);
                     if (functionName === "deleteBookingRecord") result = await deleteBookingRecord(args);
                     if (functionName === "markPaidAndInvoice") result = await markPaidAndInvoice(args);
+                    
+                    if (functionName === "exportBookingsToCSV") {
+                        const csvResult = await exportBookingsToCSV(args);
+                        const parsedResult = JSON.parse(csvResult);
+                        
+                        if (parsedResult.success) {
+                            // Ép API trả về thẳng kết quả cho giao diện, không qua AI nữa
+                            return Response.json({ 
+                                reply: `<b>Luna đã chuẩn bị xong file cho Sếp rồi đây:</b><br/>${parsedResult.htmlLink}` 
+                            });
+                        }
+                        result = csvResult; // Nếu lỗi thì đưa cho AI xử lý tiếp
+                    }
                     
                     // Rooms
                     if (functionName === "searchRooms") result = await searchRooms(args);
