@@ -183,62 +183,62 @@ export default function AdminCustomers() {
     if (loading) return <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
     return (
-        <div className="fade-in max-w-[1600px] mx-auto pb-12 relative z-0">
+        <div className="fade-in max-w-[1600px] mx-auto pb-12 relative z-0 w-full">
 
             {/* Header & Stats */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-5 border border-slate-200 shadow-sm mb-8 flex flex-col xl:flex-row gap-5 items-start xl:items-center justify-between transition-all">
-                <div>
-                    <h3 className="text-2xl font-playfair font-bold text-slate-800 flex items-center">
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-5 border border-slate-200 shadow-sm mb-6 md:mb-8 flex flex-col xl:flex-row gap-4 md:gap-5 items-start xl:items-center justify-between transition-all w-full">
+                <div className="w-full xl:w-auto">
+                    <h3 className="text-xl md:text-2xl font-playfair font-bold text-slate-800 flex flex-wrap items-center gap-2">
                         Quản lý Khách hàng
-                        <span className="ml-3 bg-blue-100 text-blue-600 text-sm font-sans px-3 py-1 rounded-full font-bold shadow-sm">
+                        <span className="bg-blue-100 text-blue-600 text-xs md:text-sm font-sans px-2.5 md:px-3 py-0.5 md:py-1 rounded-full font-bold shadow-sm whitespace-nowrap mt-1 md:mt-0">
                             {stats.total} Người
                         </span>
                     </h3>
-                    <p className="text-sm text-slate-500 mt-1">Quản lý hồ sơ, phân hạng và lịch sử chi tiêu của khách</p>
+                    <p className="text-xs md:text-sm text-slate-500 mt-1">Quản lý hồ sơ, phân hạng và lịch sử chi tiêu của khách</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
-                    <div className="relative w-full sm:w-64 flex-shrink-0">
-                        <i className="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400"></i>
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full xl:w-auto">
+                    <div className="relative w-full sm:w-56 md:w-64 flex-shrink-0">
+                        <i className="fa-solid fa-magnifying-glass absolute left-4 top-3 md:top-3.5 text-slate-400"></i>
                         <input
                             type="text"
                             placeholder="Tìm tên, email, sđt..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                            className="w-full pl-11 pr-4 py-2 md:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                         />
                     </div>
 
-                    <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
-                        <button onClick={() => setRoleFilter("all")} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${roleFilter === "all" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>Tất cả</button>
-                        <button onClick={() => setRoleFilter("vip")} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${roleFilter === "vip" ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-amber-600"}`}>
+                    <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
+                        <button onClick={() => setRoleFilter("all")} className={`flex-1 sm:flex-none px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${roleFilter === "all" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>Tất cả</button>
+                        <button onClick={() => setRoleFilter("vip")} className={`flex-1 sm:flex-none px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${roleFilter === "vip" ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-amber-600"}`}>
                             <i className="fa-solid fa-crown mr-1"></i>VIP ({stats.vip})
                         </button>
-                        <button onClick={() => setRoleFilter("corporate")} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${roleFilter === "corporate" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-blue-600"}`}>
+                        <button onClick={() => setRoleFilter("corporate")} className={`flex-1 sm:flex-none px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${roleFilter === "corporate" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-blue-600"}`}>
                             <i className="fa-solid fa-building mr-1"></i>Doanh nghiệp ({stats.corporate})
                         </button>
                     </div>
 
-                    <button onClick={() => openModal()} className="bg-slate-900 text-white rounded-xl px-5 py-2.5 shadow-lg shadow-slate-900/20 hover:bg-blue-600 hover:shadow-blue-600/30 flex-shrink-0 whitespace-nowrap transition-all transform hover:-translate-y-0.5">
+                    <button onClick={() => openModal()} className="w-full sm:w-auto justify-center bg-slate-900 text-white rounded-xl px-4 md:px-5 py-2 md:py-2.5 shadow-lg shadow-slate-900/20 hover:bg-blue-600 hover:shadow-blue-600/30 flex-shrink-0 whitespace-nowrap transition-all transform hover:-translate-y-0.5 flex items-center text-sm md:text-base font-bold">
                         <i className="fa-solid fa-user-plus mr-2"></i>Thêm khách
                     </button>
                 </div>
             </div>
 
             {/* Bảng danh sách Khách hàng */}
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <div className="overflow-x-auto">
+            <div className="bg-white rounded-2xl md:rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col w-full max-w-[100vw]">
+                <div className="overflow-x-auto w-full">
                     <table className="w-full text-left border-collapse min-w-[800px]">
-                        <thead className="bg-slate-50/80 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                        <thead className="bg-slate-50/80 text-[10px] md:text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
                             <tr>
-                                <th className="px-6 py-5 font-bold">Khách hàng</th>
-                                <th className="px-6 py-5 font-bold">Liên hệ</th>
-                                <th className="px-6 py-5 font-bold text-center">Hạng TV</th>
-                                <th className="px-6 py-5 font-bold text-right">Tổng chi tiêu</th>
-                                <th className="px-6 py-5 font-bold text-right">Thao tác</th>
+                                <th className="px-4 py-3 md:px-6 md:py-5 font-bold">Khách hàng</th>
+                                <th className="px-4 py-3 md:px-6 md:py-5 font-bold">Liên hệ</th>
+                                <th className="px-4 py-3 md:px-6 md:py-5 font-bold text-center">Hạng TV</th>
+                                <th className="px-4 py-3 md:px-6 md:py-5 font-bold text-right">Tổng chi tiêu</th>
+                                <th className="px-4 py-3 md:px-6 md:py-5 font-bold text-right">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody className="text-sm divide-y divide-slate-100 bg-white">
+                        <tbody className="text-xs md:text-sm divide-y divide-slate-100 bg-white">
                             {paginatedCustomers.length > 0 ? paginatedCustomers.map((c, index) => {
                                 const isVip = c.role === "vip";
                                 const isCorp = c.role === "corporate";
@@ -248,49 +248,49 @@ export default function AdminCustomers() {
 
                                 return (
                                     <tr key={c.id} className="hover:bg-slate-50/50 transition-colors group animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${index * 50}ms` }}>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-3 md:px-6 md:py-4">
                                             <div className="flex items-center">
-                                                <div className="relative mr-4">
-                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700 flex items-center justify-center font-bold text-lg border border-indigo-200 shadow-sm">
+                                                <div className="relative mr-3 md:mr-4 flex-shrink-0">
+                                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700 flex items-center justify-center font-bold text-base md:text-lg border border-indigo-200 shadow-sm">
                                                         {(c.name || c.email || "U").charAt(0).toUpperCase()}
                                                     </div>
-                                                    <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-300"}`}></span>
+                                                    <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 border-2 border-white rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-300"}`}></span>
                                                 </div>
-                                                <div>
-                                                    <div className="font-bold text-slate-800 text-[15px]">{c.name || "Khách chưa cập nhật tên"}</div>
-                                                    <div className="text-[11px] text-slate-400 font-mono mt-0.5 bg-slate-100 px-2 py-0.5 rounded w-fit">ID: {c.id.slice(-8).toUpperCase()}</div>
+                                                <div className="min-w-0">
+                                                    <div className="font-bold text-slate-800 text-sm md:text-[15px] truncate">{c.name || "Khách chưa cập nhật tên"}</div>
+                                                    <div className="text-[10px] md:text-[11px] text-slate-400 font-mono mt-0.5 bg-slate-100 px-1.5 md:px-2 py-0.5 rounded w-fit">ID: {c.id.slice(-8).toUpperCase()}</div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center text-slate-600 mb-1.5 text-[13px]"><i className="fa-regular fa-envelope w-5 text-center text-slate-400 mr-1"></i>{c.email}</div>
+                                        <td className="px-4 py-3 md:px-6 md:py-4">
+                                            <div className="flex items-center text-slate-600 mb-1 md:mb-1.5 text-xs md:text-[13px] truncate"><i className="fa-regular fa-envelope w-4 md:w-5 text-center text-slate-400 mr-1"></i>{c.email}</div>
                                             {c.phone ? (
-                                                <div className="flex items-center text-slate-600 text-[13px]"><i className="fa-solid fa-phone w-5 text-center text-slate-400 mr-1"></i>{c.phone}</div>
+                                                <div className="flex items-center text-slate-600 text-xs md:text-[13px] truncate"><i className="fa-solid fa-phone w-4 md:w-5 text-center text-slate-400 mr-1"></i>{c.phone}</div>
                                             ) : (
-                                                <div className="text-xs text-slate-400 italic ml-6">Chưa cập nhật SĐT</div>
+                                                <div className="text-[10px] md:text-xs text-slate-400 italic ml-5 md:ml-6">Chưa cập nhật SĐT</div>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${isVip ? "bg-amber-50 text-amber-700 border-amber-200" : isCorp ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-slate-50 text-slate-600 border-slate-200"}`}>
-                                                {isVip ? <><i className="fa-solid fa-crown mr-1.5"></i>VIP</> : isCorp ? <><i className="fa-solid fa-building mr-1.5"></i>Doanh nghiệp</> : "Thường"}
+                                        <td className="px-4 py-3 md:px-6 md:py-4 text-center">
+                                            <span className={`inline-flex items-center px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold border ${isVip ? "bg-amber-50 text-amber-700 border-amber-200" : isCorp ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-slate-50 text-slate-600 border-slate-200"} whitespace-nowrap`}>
+                                                {isVip ? <><i className="fa-solid fa-crown mr-1 md:mr-1.5"></i>VIP</> : isCorp ? <><i className="fa-solid fa-building mr-1 md:mr-1.5"></i>Doanh nghiệp</> : "Thường"}
                                             </span>
-                                            <div className="text-[11px] text-slate-500 mt-2 font-medium bg-slate-50 px-2 py-1 rounded-lg inline-block border border-slate-100">
+                                            <div className="text-[9px] md:text-[11px] text-slate-500 mt-1.5 md:mt-2 font-medium bg-slate-50 px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg inline-block border border-slate-100 whitespace-nowrap">
                                                 <i className="fa-solid fa-star text-amber-400 mr-1"></i>{c.points.toLocaleString()} điểm
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="font-mono font-bold text-slate-800 text-[15px]">{formatCurrency(c.totalSpent)}</div>
-                                            <div onClick={() => router.push("/admin/bookings")} className="text-[11px] font-medium text-blue-500 mt-1.5 bg-blue-50 px-2 py-1 rounded-lg inline-block cursor-pointer hover:bg-blue-100 transition-colors">
-                                                {c.bookingCount} Booking đã đặt <i className="fa-solid fa-arrow-right text-[8px] ml-1"></i>
+                                        <td className="px-4 py-3 md:px-6 md:py-4 text-right">
+                                            <div className="font-mono font-bold text-slate-800 text-sm md:text-[15px]">{formatCurrency(c.totalSpent)}</div>
+                                            <div onClick={() => router.push("/admin/bookings")} className="text-[9px] md:text-[11px] font-medium text-blue-500 mt-1 md:mt-1.5 bg-blue-50 px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg inline-block cursor-pointer hover:bg-blue-100 transition-colors whitespace-nowrap">
+                                                {c.bookingCount} Booking <i className="fa-solid fa-arrow-right text-[7px] md:text-[8px] ml-1"></i>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => openModal(c)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shadow-sm border border-transparent hover:border-blue-100" title="Chỉnh sửa">
-                                                    <i className="fa-solid fa-pen-to-square text-sm"></i>
+                                        <td className="px-4 py-3 md:px-6 md:py-4 text-right">
+                                            <div className="flex justify-end space-x-1 md:space-x-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => openModal(c)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shadow-sm border border-transparent hover:border-blue-100" title="Chỉnh sửa">
+                                                    <i className="fa-solid fa-pen-to-square text-xs md:text-sm"></i>
                                                 </button>
-                                                <button onClick={() => handleDeleteCustomer(c.id, c.name || c.email)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shadow-sm border border-transparent hover:border-red-100" title="Xóa khách hàng">
-                                                    <i className="fa-solid fa-trash text-sm"></i>
+                                                <button onClick={() => handleDeleteCustomer(c.id, c.name || c.email)} className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shadow-sm border border-transparent hover:border-red-100" title="Xóa khách hàng">
+                                                    <i className="fa-solid fa-trash text-xs md:text-sm"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -298,11 +298,11 @@ export default function AdminCustomers() {
                                 );
                             }) : (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-20 text-center">
-                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                                            <i className="fa-solid fa-users-slash text-2xl"></i>
+                                    <td colSpan="5" className="px-4 py-16 md:px-6 py-20 text-center">
+                                        <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 text-slate-300">
+                                            <i className="fa-solid fa-users-slash text-xl md:text-2xl"></i>
                                         </div>
-                                        <p className="text-slate-500 font-medium">Không tìm thấy khách hàng nào phù hợp với bộ lọc.</p>
+                                        <p className="text-slate-500 font-medium text-xs md:text-sm">Không tìm thấy khách hàng nào phù hợp với bộ lọc.</p>
                                     </td>
                                 </tr>
                             )}
@@ -315,35 +315,35 @@ export default function AdminCustomers() {
             {paginatedCustomers.length > 0 && totalPages > 1 && (
                 <div className="flex flex-col sm:flex-row justify-between items-center mt-6 p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm gap-4">
                     <div className="flex items-center gap-3">
-                        <p className="text-sm text-slate-500 font-medium">Hiển thị</p>
-                        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(0); }} className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none p-1.5 px-3 font-bold cursor-pointer hover:bg-white transition-colors">
+                        <p className="text-xs md:text-sm text-slate-500 font-medium">Hiển thị</p>
+                        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(0); }} className="bg-slate-50 border border-slate-200 text-slate-700 text-xs md:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none p-1.5 px-3 font-bold cursor-pointer hover:bg-white transition-colors">
                             <option value="5">5</option>
                             <option value="10">10</option>
                             <option value="20">20</option>
                             <option value="50">50</option>
                         </select>
-                        <p className="text-sm text-slate-500">/ {customersData.length} khách hàng</p>
+                        <p className="text-xs md:text-sm text-slate-500">/ {customersData.length} khách hàng</p>
                     </div>
 
                     <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
                         <button onClick={() => setPage(page - 1)} disabled={page === 0} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                            <i className="fa-solid fa-chevron-left text-xs"></i>
+                            <i className="fa-solid fa-chevron-left text-[10px] md:text-xs"></i>
                         </button>
 
                         {Array.from({ length: totalPages }).map((_, i) => {
-                            if (totalPages > 7 && i !== 0 && i !== totalPages - 1 && Math.abs(i - page) > 1) {
-                                if (i === 1 || i === totalPages - 2) return <span key={i} className="px-1 text-slate-400">...</span>;
+                            if (totalPages > 5 && i !== 0 && i !== totalPages - 1 && Math.abs(i - page) > 1) {
+                                if (i === 1 || i === totalPages - 2) return <span key={i} className="px-1 text-slate-400 text-xs">...</span>;
                                 return null;
                             }
                             return (
-                                <button key={i} onClick={() => setPage(i)} className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all duration-300 ${page === i ? "bg-slate-800 text-white shadow-md scale-110" : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm"}`}>
+                                <button key={i} onClick={() => setPage(i)} className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs md:text-sm font-bold transition-all duration-300 ${page === i ? "bg-slate-800 text-white shadow-md scale-110" : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm"}`}>
                                     {i + 1}
                                 </button>
                             );
                         })}
 
                         <button onClick={() => setPage(page + 1)} disabled={page === totalPages - 1} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                            <i className="fa-solid fa-chevron-right text-xs"></i>
+                            <i className="fa-solid fa-chevron-right text-[10px] md:text-xs"></i>
                         </button>
                     </div>
                 </div>
@@ -351,43 +351,43 @@ export default function AdminCustomers() {
 
             {/* Modal Thêm/Sửa Khách hàng */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl animate-in zoom-in duration-300 border border-slate-100">
-                        <div className="p-6 md:p-8">
-                            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                                <h3 className="text-2xl font-playfair font-bold text-slate-900">{formData.id ? "Cập nhật khách hàng" : "Thêm khách hàng mới"}</h3>
-                                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center transition-all"><i className="fa-solid fa-xmark text-xl"></i></button>
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl md:rounded-[2rem] w-full max-w-lg shadow-2xl animate-in zoom-in duration-300 border border-slate-100 my-auto">
+                        <div className="p-5 md:p-8 max-h-[85vh] overflow-y-auto custom-scroll">
+                            <div className="flex justify-between items-center mb-5 md:mb-6 border-b border-slate-100 pb-3 md:pb-4 sticky top-0 bg-white z-10">
+                                <h3 className="text-xl md:text-2xl font-playfair font-bold text-slate-900 truncate pr-2">{formData.id ? "Cập nhật khách hàng" : "Thêm khách hàng mới"}</h3>
+                                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center transition-all flex-shrink-0"><i className="fa-solid fa-xmark text-lg md:text-xl"></i></button>
                             </div>
 
                             <form onSubmit={handleSaveCustomer} className="space-y-4">
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Họ và tên <span className="text-red-500">*</span></label>
-                                    <input type="text" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="VD: Nguyễn Văn A" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Họ và tên <span className="text-red-500">*</span></label>
+                                    <input type="text" required className="w-full p-2.5 md:p-3 text-sm md:text-base bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="VD: Nguyễn Văn A" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                                 </div>
 
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Email <span className="text-red-500">*</span></label>
-                                    <input type="email" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="customer@email.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Email <span className="text-red-500">*</span></label>
+                                    <input type="email" required className="w-full p-2.5 md:p-3 text-sm md:text-base bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="customer@email.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                                 </div>
 
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Số điện thoại</label>
-                                    <input type="tel" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="090 123 4567" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Số điện thoại</label>
+                                    <input type="tel" className="w-full p-2.5 md:p-3 text-sm md:text-base bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="090 123 4567" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                                 </div>
 
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Địa chỉ</label>
-                                    <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="123 Đường ABC, Quận 1" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Địa chỉ</label>
+                                    <input type="text" className="w-full p-2.5 md:p-3 text-sm md:text-base bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="123 Đường ABC, Quận 1" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Ngày sinh</label>
-                                        <input type="date" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
+                                        <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Ngày sinh</label>
+                                        <input type="date" className="w-full p-2.5 md:p-3 text-sm md:text-base bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Phân loại khách</label>
-                                        <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium text-slate-700" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
+                                        <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Phân loại khách</label>
+                                        <select className="w-full p-2.5 md:p-3 text-sm md:text-base bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-medium text-slate-700" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
                                             <option value="regular">Thường (Regular)</option>
                                             <option value="vip">Khách VIP</option>
                                             <option value="corporate">Doanh nghiệp</option>
@@ -396,13 +396,13 @@ export default function AdminCustomers() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Ghi chú đặc biệt</label>
-                                    <textarea rows="2" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="Sở thích ăn uống, lưu ý sức khỏe..." value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}></textarea>
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Ghi chú đặc biệt</label>
+                                    <textarea rows="2" className="w-full p-2.5 md:p-3 text-sm md:text-base bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="Sở thích ăn uống, lưu ý sức khỏe..." value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}></textarea>
                                 </div>
 
-                                <div className="flex justify-end space-x-3 pt-6 border-t border-slate-100 mt-6">
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors">Hủy</button>
-                                    <button type="submit" disabled={isSaving} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all disabled:opacity-50 flex items-center">
+                                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 md:pt-6 border-t border-slate-100 mt-4 md:mt-6">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm md:text-base">Hủy</button>
+                                    <button type="submit" disabled={isSaving} className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all disabled:opacity-50 flex items-center justify-center text-sm md:text-base">
                                         {isSaving ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...</> : "Lưu thông tin"}
                                     </button>
                                 </div>

@@ -29,6 +29,7 @@ export default function AdminLayout({ children }) {
   
   // States Layout & Auth
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Thêm state cho mobile
   const [adminUser, setAdminUser] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -63,12 +64,16 @@ export default function AdminLayout({ children }) {
     };
   }, []);
 
+  // Đóng sidebar mobile khi chuyển trang
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   // 2. Focus input khi mở Modal Tìm kiếm
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
       setTimeout(() => searchInputRef.current.focus(), 100);
     } else {
-      // Reset khi đóng
       setSearchQuery("");
       setSearchType("all");
       setSearchResults([]);
@@ -94,7 +99,6 @@ export default function AdminLayout({ children }) {
       }
     });
 
-    // Lắng nghe dữ liệu
     const unsubs = [];
     if (isAuthorized) {
       unsubs.push(onSnapshot(collection(db, "bookings"), (snap) => {
@@ -185,25 +189,29 @@ export default function AdminLayout({ children }) {
     }
   };
 
-  // Component NavItem hỗ trợ thu gọn mượt mà
+  // Tính toán trạng thái hiển thị nội dung bên trong Menu
+  const isExpanded = isSidebarOpen || isMobileMenuOpen;
+
   const NavItem = ({ href, icon, text, badge }) => {
     const isActive = pathname === href || (href === "/admin" && pathname === "/admin");
     return (
-      <Link href={href} title={!isSidebarOpen ? text : ""} className={`w-full flex items-center py-3 rounded-xl transition-all relative ${isSidebarOpen ? "px-4" : "justify-center"} ${isActive ? "bg-blue-600 text-white shadow-md" : "text-slate-400 hover:bg-slate-700 hover:text-white"}`}>
-        <i className={`fa-solid ${icon} text-center ${!isSidebarOpen ? "text-[18px]" : "w-6"}`}></i>
+      <Link 
+        href={href} 
+        prefetch={false} /* THÊM DÒNG NÀY ĐỂ NGĂN NEXT.JS SPAM KẾT NỐI */
+        title={!isExpanded ? text : ""} 
+        className={`w-full flex items-center py-3 rounded-xl transition-all relative ${isExpanded ? "px-4" : "justify-center"} ${isActive ? "bg-blue-600 text-white shadow-md" : "text-slate-400 hover:bg-slate-700 hover:text-white"}`}
+      >
+        <i className={`fa-solid ${icon} text-center ${!isExpanded ? "text-[18px]" : "w-6"}`}></i>
         
-        {/* Render text chỉ khi sidebar mở */}
-        {isSidebarOpen && (
+        {isExpanded && (
           <span className="font-medium ml-2 whitespace-nowrap">{text}</span>
         )}
 
-        {/* Render Badge số khi mở */}
-        {isSidebarOpen && badge > 0 && (
+        {isExpanded && badge > 0 && (
           <span className="absolute right-4 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{badge}</span>
         )}
         
-        {/* Render dấu chấm đỏ nhỏ xíu khi đóng (nếu có thông báo) */}
-        {!isSidebarOpen && badge > 0 && (
+        {!isExpanded && badge > 0 && (
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-slate-900"></span>
         )}
       </Link>
@@ -217,33 +225,55 @@ export default function AdminLayout({ children }) {
   return (
     <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
       
-      {/* Sidebar */}
-      <aside id="sidebar" className={`${isSidebarOpen ? "w-72" : "w-[85px] sidebar-collapsed"} bg-gradient-to-b from-slate-900 to-slate-800 text-slate-300 flex flex-col border-r border-slate-700 flex-shrink-0 transition-all duration-300 ease-in-out z-50`}>
+      {/* 5. Overlay cho Menu Mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        ></div>
+      )}
+
+      {/* Sidebar - Fix z-index priority issue with !z-[100] */}
+      <aside 
+        id="sidebar" 
+        className={`
+          fixed md:relative top-0 left-0 h-full !z-[100] md:!z-50
+          bg-gradient-to-b from-slate-900 to-slate-800 text-slate-300 flex flex-col border-r border-slate-700 flex-shrink-0 transition-transform duration-300 ease-in-out md:transition-all
+          ${isMobileMenuOpen ? "translate-x-0 w-72" : "-translate-x-full md:translate-x-0"}
+          ${(!isSidebarOpen && !isMobileMenuOpen) ? "md:w-[85px] sidebar-collapsed" : "md:w-72"}
+        `}
+      >
         
+        {/* Nút đóng Sidebar trên Mobile */}
+        <div className="absolute top-6 right-4 md:hidden z-10">
+          <button onClick={() => setIsMobileMenuOpen(false)} className="text-slate-400 hover:text-white p-2">
+            <i className="fa-solid fa-xmark text-2xl"></i>
+          </button>
+        </div>
+
         {/* Header Logo */}
-        <div className={`sidebar-header h-20 flex items-center border-b border-slate-700 bg-slate-900/50 flex-shrink-0 cursor-pointer hover:bg-slate-800/50 transition-colors overflow-hidden ${isSidebarOpen ? "px-6" : "justify-center"}`} onClick={() => window.open('/', '_blank')} title={!isSidebarOpen ? "Xem website" : ""}>
-          <div className={`bg-blue-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0 transition-all ${isSidebarOpen ? "w-10 h-10 mr-3" : "w-12 h-12"}`}>
-            <i className={`fa-solid fa-hotel text-white ${!isSidebarOpen ? "text-[22px]" : ""}`}></i>
+        <div className={`sidebar-header h-20 flex items-center border-b border-slate-700 bg-slate-900/50 flex-shrink-0 cursor-pointer hover:bg-slate-800/50 transition-colors overflow-hidden relative ${isExpanded ? "px-6" : "justify-center"}`} onClick={() => window.open('/', '_blank')} title={!isExpanded ? "Xem website" : ""}>
+          <div className={`bg-blue-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0 transition-all ${isExpanded ? "w-10 h-10 mr-3" : "w-12 h-12"}`}>
+            <i className={`fa-solid fa-hotel text-white ${!isExpanded ? "text-[22px]" : ""}`}></i>
           </div>
-          <div className={`sidebar-logo-text overflow-hidden whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0"}`}>
+          <div className={`sidebar-logo-text overflow-hidden whitespace-nowrap transition-all duration-300 ${isExpanded ? "opacity-100 w-auto pr-8 md:pr-0" : "opacity-0 w-0"}`}>
             <h1 className="text-xl font-playfair font-bold text-white truncate">LUNA ADMIN</h1>
             <p className="text-xs text-slate-400 truncate">Xem website <i className="fa-solid fa-external-link-alt ml-1"></i></p>
           </div>
         </div>
 
         {/* Navigation Menu */}
-        <div className={`flex-1 overflow-y-auto py-6 custom-scroll overflow-x-hidden ${isSidebarOpen ? "px-4" : "px-3"}`}>
-          
-          <p className={`text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 whitespace-nowrap transition-all ${isSidebarOpen ? "px-4 text-left" : "text-center"}`}>
-            {isSidebarOpen ? "Tổng quan" : "---"}
+        <div className={`flex-1 overflow-y-auto py-6 custom-scroll overflow-x-hidden ${isExpanded ? "px-4" : "px-3"}`}>
+          <p className={`text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 whitespace-nowrap transition-all ${isExpanded ? "px-4 text-left" : "text-center"}`}>
+            {isExpanded ? "Tổng quan" : "---"}
           </p>
           <nav className="space-y-1 mb-6">
             <NavItem href="/admin" icon="fa-chart-pie" text="Dashboard" />
             <NavItem href="/admin/bookings" icon="fa-calendar-check" text="Đặt phòng" badge={pendingCount} />
           </nav>
 
-          <p className={`text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 whitespace-nowrap transition-all ${isSidebarOpen ? "px-4 text-left" : "text-center"}`}>
-            {isSidebarOpen ? "Quản lý" : "---"}
+          <p className={`text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 whitespace-nowrap transition-all ${isExpanded ? "px-4 text-left" : "text-center"}`}>
+            {isExpanded ? "Quản lý" : "---"}
           </p>
           <nav className="space-y-1 mb-6">
             <NavItem href="/admin/rooms" icon="fa-door-open" text="Phòng" />
@@ -257,8 +287,8 @@ export default function AdminLayout({ children }) {
             <NavItem href="/admin/reports" icon="fa-chart-simple" text="Báo cáo" />
           </nav>
 
-          <p className={`text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 whitespace-nowrap transition-all ${isSidebarOpen ? "px-4 text-left" : "text-center"}`}>
-            {isSidebarOpen ? "Hệ thống" : "---"}
+          <p className={`text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 whitespace-nowrap transition-all ${isExpanded ? "px-4 text-left" : "text-center"}`}>
+            {isExpanded ? "Hệ thống" : "---"}
           </p>
           <nav className="space-y-1 mb-4">
             <NavItem href="/admin/settings" icon="fa-gear" text="Cài đặt" />
@@ -268,17 +298,17 @@ export default function AdminLayout({ children }) {
         </div>
 
         {/* Footer User Info */}
-        <div className={`admin-footer border-t border-slate-700 bg-slate-900/50 flex-shrink-0 flex items-center overflow-hidden transition-all duration-300 ${isSidebarOpen ? "p-4" : "p-4 justify-center"}`}>
-          <div className={`rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0 transition-all cursor-pointer ${isSidebarOpen ? "w-10 h-10" : "w-11 h-11 text-lg"}`} title={!isSidebarOpen ? "Đăng xuất" : ""} onClick={!isSidebarOpen ? handleLogout : undefined}>
+        <div className={`admin-footer border-t border-slate-700 bg-slate-900/50 flex-shrink-0 flex items-center overflow-hidden transition-all duration-300 ${isExpanded ? "p-4" : "p-4 justify-center"}`}>
+          <div className={`rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0 transition-all cursor-pointer ${isExpanded ? "w-10 h-10" : "w-11 h-11 text-lg"}`} title={!isExpanded ? "Đăng xuất" : ""} onClick={!isExpanded ? handleLogout : undefined}>
             {adminUser?.name?.charAt(0).toUpperCase() || "A"}
           </div>
           
-          <div className={`admin-info-text ml-3 flex-1 overflow-hidden transition-all duration-300 ${isSidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0 hidden"}`}>
+          <div className={`admin-info-text ml-3 flex-1 overflow-hidden transition-all duration-300 ${isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0 hidden"}`}>
             <p className="text-sm font-bold text-white truncate">{adminUser?.name}</p>
             <p className="text-xs text-slate-500 truncate">{adminUser?.email}</p>
           </div>
 
-          {isSidebarOpen && (
+          {isExpanded && (
             <button onClick={handleLogout} className="logout-btn text-slate-400 hover:text-red-400 transition-colors p-2 hover:bg-slate-700 rounded-lg flex-shrink-0 ml-2" title="Đăng xuất">
               <i className="fa-solid fa-right-from-bracket"></i>
             </button>
@@ -287,19 +317,26 @@ export default function AdminLayout({ children }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="h-20 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0 transition-all z-20">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors" title="Thu gọn / Phóng to Menu">
+      <div className="flex-1 flex flex-col overflow-hidden relative w-full">
+        <header className="h-20 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-4 md:px-8 flex-shrink-0 transition-all z-20 w-full">
+          <div className="flex items-center gap-3 md:gap-4">
+            {/* Desktop Toggle Button */}
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="hidden md:flex w-10 h-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors" title="Thu gọn / Phóng to Menu">
               <i className="fa-solid fa-bars-staggered text-xl"></i>
             </button>
-            <h2 className="text-2xl font-playfair font-bold text-slate-900 capitalize hidden sm:block">
+            
+            {/* Mobile Toggle Button */}
+            <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden flex w-10 h-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors">
+              <i className="fa-solid fa-bars text-xl"></i>
+            </button>
+            
+            <h2 className="text-xl md:text-2xl font-playfair font-bold text-slate-900 capitalize block truncate max-w-[150px] sm:max-w-[200px] md:max-w-none">
               {pageTitle}
             </h2>
           </div>
           
-          {/* Thanh tìm kiếm toàn cục Header */}
-          <div className="flex-1 max-w-md mx-4 md:mx-8">
+          {/* Thanh tìm kiếm toàn cục Header - Ẩn trên mobile siêu nhỏ, hiện trên tablet trở lên */}
+          <div className="flex-1 max-w-md mx-2 md:mx-8 hidden sm:block">
             <div className="relative group">
               <i className="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 group-hover:text-blue-500 transition-colors"></i>
               <input 
@@ -309,13 +346,18 @@ export default function AdminLayout({ children }) {
                 onClick={() => setIsSearchOpen(true)}
                 readOnly
               />
-              <div className="absolute right-3 top-2.5 text-xs bg-slate-100 px-2 py-1 rounded-md text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors pointer-events-none">
+              <div className="absolute right-3 top-2.5 text-xs bg-slate-100 px-2 py-1 rounded-md text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors pointer-events-none hidden md:block">
                 Ctrl+K
               </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            {/* Nút search chỉ hiện trên điện thoại thay cho thanh input dài */}
+            <button onClick={() => setIsSearchOpen(true)} className="sm:hidden w-10 h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors">
+              <i className="fa-solid fa-magnifying-glass text-lg"></i>
+            </button>
+
             <div className="hidden md:flex items-center space-x-2 bg-slate-100 px-4 py-2 rounded-full">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
               <span className="text-sm text-slate-600 font-medium">Online</span>
@@ -325,21 +367,21 @@ export default function AdminLayout({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 relative z-10 custom-scroll">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 relative z-10 custom-scroll w-full">
           {children}
         </main>
       </div>
 
       {/* Global Search Modal */}
       {isSearchOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-start justify-center pt-10 sm:pt-20 p-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-start justify-center pt-4 sm:pt-20 p-4">
           <div className="absolute inset-0" onClick={() => setIsSearchOpen(false)}></div>
-          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col relative z-10 animate-in slide-in-from-bottom-4">
+          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative z-10 animate-in slide-in-from-bottom-4">
             
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-200">
+            <div className="p-4 sm:p-6 border-b border-slate-200">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-playfair font-bold text-slate-900">Tìm kiếm toàn hệ thống</h3>
+                <h3 className="text-xl sm:text-2xl font-playfair font-bold text-slate-900">Tìm kiếm hệ thống</h3>
                 <button onClick={() => setIsSearchOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors">
                   <i className="fa-solid fa-xmark text-xl"></i>
                 </button>
@@ -352,8 +394,8 @@ export default function AdminLayout({ children }) {
                   ref={searchInputRef}
                   value={searchQuery}
                   onChange={handleSearchInput}
-                  className="w-full pl-11 pr-12 py-4 text-lg border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" 
-                  placeholder="Tìm kiếm phòng, nhân viên, khách hàng, đặt phòng..." 
+                  className="w-full pl-11 pr-12 py-3 sm:py-4 text-base sm:text-lg border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" 
+                  placeholder="Tìm phòng, nhân viên, khách hàng..." 
                 />
                 {searchQuery && (
                   <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 p-1">
@@ -362,7 +404,7 @@ export default function AdminLayout({ children }) {
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="flex flex-nowrap overflow-x-auto hide-scrollbar gap-2 mt-4 pb-2">
                 {[
                   { id: "all", label: "Tất cả", icon: "" },
                   { id: "rooms", label: "Phòng", icon: "fa-door-open" },
@@ -371,7 +413,7 @@ export default function AdminLayout({ children }) {
                   { id: "bookings", label: "Đặt phòng", icon: "fa-calendar-check" },
                   { id: "services", label: "Dịch vụ", icon: "fa-concierge-bell" }
                 ].map(tab => (
-                  <button key={tab.id} onClick={() => handleTypeChange(tab.id)} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${searchType === tab.id ? "bg-slate-900 text-white" : "bg-white text-slate-600 border border-slate-200 hover:border-slate-900"}`}>
+                  <button key={tab.id} onClick={() => handleTypeChange(tab.id)} className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${searchType === tab.id ? "bg-slate-900 text-white" : "bg-white text-slate-600 border border-slate-200 hover:border-slate-900"}`}>
                     {tab.icon && <i className={`fa-solid ${tab.icon} mr-1.5`}></i>} {tab.label}
                   </button>
                 ))}
@@ -379,23 +421,20 @@ export default function AdminLayout({ children }) {
             </div>
 
             {/* Modal Body: Results */}
-            <div className="overflow-y-auto flex-1 p-6 bg-slate-50 custom-scroll">
+            <div className="overflow-y-auto flex-1 p-4 sm:p-6 bg-slate-50 custom-scroll">
               {(!searchQuery || searchQuery.length < 2) ? (
                 <div className="text-center py-12 text-slate-500">
                   <i className="fa-solid fa-magnifying-glass text-5xl mb-4 opacity-30"></i>
-                  <p className="text-lg">Nhập ít nhất 2 ký tự để bắt đầu tìm kiếm</p>
-                  <p className="text-sm mt-2">Tìm kiếm theo mã phòng, tên nhân viên, email, số điện thoại...</p>
+                  <p className="text-lg">Nhập ít nhất 2 ký tự để tìm kiếm</p>
                 </div>
               ) : searchResults.length === 0 ? (
                 <div className="text-center py-12 text-slate-500">
                   <i className="fa-regular fa-face-frown text-5xl mb-4 opacity-30"></i>
                   <p className="text-lg text-slate-700 font-medium">Không tìm thấy kết quả phù hợp</p>
-                  <p className="text-sm mt-1">Vui lòng thử lại với từ khóa khác</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {searchResults.map((result, index) => {
-                    // Logic xác định header (phân tách nhóm)
                     const prevType = index > 0 ? searchResults[index - 1].type : null;
                     const showHeader = result.type !== prevType;
                     const typeNames = { room: '🏨 PHÒNG NGHỈ', staff: '👤 NHÂN SỰ', customer: '👥 KHÁCH HÀNG', booking: '📅 ĐƠN ĐẶT PHÒNG', service: '⚙️ DỊCH VỤ THÊM' };
@@ -404,27 +443,26 @@ export default function AdminLayout({ children }) {
                       <div key={`${result.type}-${index}`}>
                         {showHeader && (
                           <div className={`mb-3 mt-${index > 0 ? '6' : '0'}`}>
-                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">{typeNames[result.type]}</h4>
+                            <h4 className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider">{typeNames[result.type]}</h4>
                           </div>
                         )}
                         
                         {/* Render Card Room */}
                         {result.type === 'room' && (
-                          <div onClick={() => { router.push('/admin/rooms'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
+                          <div onClick={() => { router.push('/admin/rooms'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-3 sm:p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex items-center">
-                              <div className="w-14 h-14 bg-slate-100 rounded-lg overflow-hidden mr-4">
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-slate-100 rounded-lg overflow-hidden mr-3 sm:mr-4 flex-shrink-0">
                                 <img src={result.data.image || "https://images.unsplash.com/photo-1611892440504-42a792e24d32"} className="w-full h-full object-cover" alt="room" />
                               </div>
-                              <div className="flex-1">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <h5 className="font-bold text-slate-800">Phòng {result.data.code}</h5>
-                                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full">{result.data.type}</span>
+                                  <h5 className="font-bold text-slate-800 text-sm sm:text-base truncate">Phòng {result.data.code}</h5>
+                                  <span className="text-[10px] sm:text-xs bg-slate-100 px-2 py-0.5 rounded-full flex-shrink-0">{result.data.type}</span>
                                 </div>
-                                <p className="text-sm text-slate-500 mt-1 truncate">{result.data.name}</p>
+                                <p className="text-xs sm:text-sm text-slate-500 mt-1 truncate">{result.data.name}</p>
                               </div>
-                              <div className="text-right">
-                                <p className="font-bold text-blue-600">{formatCurrency(result.data.price)}</p>
-                                <p className="text-xs text-slate-400">{result.data.status === 'available' ? 'Còn trống' : 'Đã đặt'}</p>
+                              <div className="text-right ml-2 flex-shrink-0">
+                                <p className="font-bold text-blue-600 text-sm sm:text-base">{formatCurrency(result.data.price)}</p>
                               </div>
                             </div>
                           </div>
@@ -432,17 +470,16 @@ export default function AdminLayout({ children }) {
 
                         {/* Render Card Customer */}
                         {result.type === 'customer' && (
-                          <div onClick={() => { router.push('/admin/customers'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
+                          <div onClick={() => { router.push('/admin/customers'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-3 sm:p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex items-center">
-                              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center font-bold text-purple-600 mr-4 text-lg">
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full flex items-center justify-center font-bold text-purple-600 mr-3 sm:mr-4 text-base sm:text-lg flex-shrink-0">
                                 {(result.data.name || result.data.email || 'U').charAt(0).toUpperCase()}
                               </div>
-                              <div className="flex-1">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <h5 className="font-bold text-slate-800">{result.data.name || 'Không tên'}</h5>
-                                  <span className={`text-xs ${result.data.role === 'vip' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'} px-2 py-0.5 rounded-full`}>{result.data.role === 'vip' ? 'VIP' : 'Thường'}</span>
+                                  <h5 className="font-bold text-slate-800 text-sm sm:text-base truncate">{result.data.name || 'Không tên'}</h5>
                                 </div>
-                                <p className="text-sm text-slate-500 mt-1">{result.data.email} • {result.data.phone || 'Chưa có SĐT'}</p>
+                                <p className="text-xs sm:text-sm text-slate-500 mt-1 truncate">{result.data.email}</p>
                               </div>
                             </div>
                           </div>
@@ -450,14 +487,14 @@ export default function AdminLayout({ children }) {
 
                         {/* Render Card Staff */}
                         {result.type === 'staff' && (
-                          <div onClick={() => { router.push('/admin/staff'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
+                          <div onClick={() => { router.push('/admin/staff'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-3 sm:p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex items-center">
-                              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-600 mr-4 text-lg">
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-600 mr-3 sm:mr-4 text-base sm:text-lg flex-shrink-0">
                                 {(result.data.name || 'S').charAt(0).toUpperCase()}
                               </div>
-                              <div className="flex-1">
-                                <h5 className="font-bold text-slate-800">{result.data.name}</h5>
-                                <p className="text-sm text-slate-500 mt-1">{result.data.position} • {result.data.department}</p>
+                              <div className="flex-1 min-w-0">
+                                <h5 className="font-bold text-slate-800 text-sm sm:text-base truncate">{result.data.name}</h5>
+                                <p className="text-xs sm:text-sm text-slate-500 mt-1 truncate">{result.data.position}</p>
                               </div>
                             </div>
                           </div>
@@ -465,21 +502,19 @@ export default function AdminLayout({ children }) {
 
                         {/* Render Card Booking */}
                         {result.type === 'booking' && (
-                          <div onClick={() => { router.push('/admin/bookings'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
+                          <div onClick={() => { router.push('/admin/bookings'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-3 sm:p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex items-center">
-                              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mr-4 text-xl">
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mr-3 sm:mr-4 text-lg sm:text-xl flex-shrink-0">
                                 <i className="fa-solid fa-calendar-check"></i>
                               </div>
-                              <div className="flex-1">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <h5 className="font-bold text-slate-800">{result.data.userName || result.data.userEmail}</h5>
-                                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-mono">P.{result.data.roomCode}</span>
+                                  <h5 className="font-bold text-slate-800 text-sm sm:text-base truncate">{result.data.userName || result.data.userEmail}</h5>
                                 </div>
-                                <p className="text-sm text-slate-500 mt-1">{formatDate(result.data.checkIn)} <i className="fa-solid fa-arrow-right text-[10px] mx-1"></i> {formatDate(result.data.checkOut)}</p>
+                                <p className="text-[10px] sm:text-xs text-slate-500 mt-1 truncate">{formatDate(result.data.checkIn)} <i className="fa-solid fa-arrow-right mx-1"></i> {formatDate(result.data.checkOut)}</p>
                               </div>
-                              <div className="text-right">
-                                <p className="font-bold text-blue-600">{formatCurrency(result.data.totalPrice)}</p>
-                                <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">{result.data.status}</p>
+                              <div className="text-right ml-2 flex-shrink-0">
+                                <p className="font-bold text-blue-600 text-sm sm:text-base">{formatCurrency(result.data.totalPrice)}</p>
                               </div>
                             </div>
                           </div>
@@ -487,14 +522,14 @@ export default function AdminLayout({ children }) {
 
                         {/* Render Card Service */}
                         {result.type === 'service' && (
-                          <div onClick={() => { router.push('/admin/services'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
+                          <div onClick={() => { router.push('/admin/services'); setIsSearchOpen(false); }} className="bg-white rounded-xl p-3 sm:p-4 mb-3 hover:shadow-md cursor-pointer border border-slate-200 hover:border-blue-300 transition-all animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex items-center">
-                              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600 mr-4 text-xl">
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600 mr-3 sm:mr-4 text-lg sm:text-xl flex-shrink-0">
                                 <i className={`fa-solid fa-${result.data.icon || 'star'}`}></i>
                               </div>
-                              <div className="flex-1">
-                                <h5 className="font-bold text-slate-800">{result.data.name}</h5>
-                                <p className="text-sm text-slate-500 mt-1">{formatCurrency(result.data.price)} / {result.data.unit}</p>
+                              <div className="flex-1 min-w-0">
+                                <h5 className="font-bold text-slate-800 text-sm sm:text-base truncate">{result.data.name}</h5>
+                                <p className="text-xs sm:text-sm text-slate-500 mt-1">{formatCurrency(result.data.price)} / {result.data.unit}</p>
                               </div>
                             </div>
                           </div>
@@ -509,15 +544,15 @@ export default function AdminLayout({ children }) {
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-slate-200 bg-white flex justify-between items-center">
-              <div className="text-sm text-slate-500 font-medium">
+              <div className="text-xs sm:text-sm text-slate-500 font-medium">
                 {searchResults.length} kết quả
               </div>
               <button 
                 onClick={exportSearchResults} 
                 disabled={searchResults.length === 0}
-                className="bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 border border-transparent text-sm py-2 px-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:hover:bg-slate-100 flex items-center"
+                className="bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 border border-transparent text-xs sm:text-sm py-2 px-3 sm:px-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:hover:bg-slate-100 flex items-center"
               >
-                <i className="fa-regular fa-file-excel mr-2"></i>Xuất Excel
+                <i className="fa-regular fa-file-excel mr-2"></i><span className="hidden sm:inline">Xuất Excel</span><span className="sm:hidden">Xuất</span>
               </button>
             </div>
 

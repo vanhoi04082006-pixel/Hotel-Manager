@@ -12,6 +12,7 @@ const firebaseConfig = {
     appId: "1:379010173725:web:20908f11fb0589ca432ff4"
 };
 
+
 // Next.js có thể chạy lại file này nhiều lần trong quá trình dev, 
 // kiểm tra xem app đã khởi tạo chưa để tránh lỗi
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();

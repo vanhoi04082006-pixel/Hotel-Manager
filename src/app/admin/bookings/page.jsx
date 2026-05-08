@@ -218,61 +218,61 @@ export default function AdminBookings() {
         .tab-ult.active::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:3px; background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
       `}} />
 
-            <div className="fade-in max-w-7xl mx-auto pb-12 relative">
+            <div className="fade-in max-w-7xl mx-auto pb-12 relative w-full">
                 {/* Header Hàng trên cùng */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div>
-                        <h2 className="text-3xl font-playfair font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 flex items-center gap-3">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 w-full">
+                    <div className="w-full md:w-auto">
+                        <h2 className="text-2xl md:text-3xl font-playfair font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 flex flex-wrap items-center gap-2 md:gap-3">
                             Quản lý Đặt phòng
-                            <span className="bg-blue-50 text-blue-600 text-xs py-1.5 px-3 rounded-xl font-sans font-bold flex items-center border border-blue-100 shadow-sm">
+                            <span className="bg-blue-50 text-blue-600 text-[10px] md:text-xs py-1.5 px-3 rounded-xl font-sans font-bold flex items-center border border-blue-100 shadow-sm whitespace-nowrap mt-1 md:mt-0">
                                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping mr-2"></span>Cập nhật trực tiếp
                             </span>
                         </h2>
                     </div>
-                    <div className="flex gap-3">
-                        <button onClick={exportToExcel} className="bg-white text-slate-700 border border-slate-200 rounded-xl px-5 py-2.5 flex items-center gap-2 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all font-bold text-sm shadow-sm">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <button onClick={exportToExcel} className="w-full sm:w-auto justify-center bg-white text-slate-700 border border-slate-200 rounded-xl px-5 py-2.5 flex items-center gap-2 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all font-bold text-sm shadow-sm">
                             <i className="fa-solid fa-file-excel"></i> Xuất Excel
                         </button>
-                        <Link href="/admin/rooms" className="bg-slate-900 text-white rounded-xl px-5 py-2.5 shadow-lg shadow-blue-500/30 flex items-center gap-2 hover:-translate-y-0.5 transition-all font-bold text-sm">
+                        <Link href="/admin/rooms" className="w-full sm:w-auto justify-center bg-slate-900 text-white rounded-xl px-5 py-2.5 shadow-lg shadow-blue-500/30 flex items-center gap-2 hover:-translate-y-0.5 transition-all font-bold text-sm">
                             <i className="fa-solid fa-plus"></i> Tạo Booking
                         </Link>
                     </div>
                 </div>
 
                 {/* Thanh Lọc & Tìm kiếm */}
-                <div className="bg-white/80 backdrop-blur-xl p-2 rounded-2xl border border-slate-200/60 shadow-sm mb-8 flex flex-col xl:flex-row justify-between gap-4 transition-all">
-                    <div className="flex overflow-x-auto gap-2 custom-scroll hide-scrollbar">
-                        <button onClick={() => setFilter("all")} className={`tab-ult px-5 py-2.5 rounded-xl font-bold text-sm transition-all border border-slate-200 whitespace-nowrap ${filter === 'all' ? 'active' : 'text-slate-600 hover:bg-slate-50'}`}>
-                            Tất cả <span className={`ml-2 px-2 py-0.5 rounded-md text-[10px] ${filter === 'all' ? 'bg-white/20' : 'bg-slate-100'}`}>{stats.total}</span>
+                <div className="bg-white/80 backdrop-blur-xl p-2 rounded-2xl border border-slate-200/60 shadow-sm mb-6 md:mb-8 flex flex-col xl:flex-row justify-between gap-3 md:gap-4 transition-all w-full">
+                    <div className="flex overflow-x-auto gap-2 custom-scroll hide-scrollbar pb-1 xl:pb-0">
+                        <button onClick={() => setFilter("all")} className={`tab-ult px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all border border-slate-200 whitespace-nowrap flex-shrink-0 ${filter === 'all' ? 'active' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            Tất cả <span className={`ml-1.5 md:ml-2 px-1.5 md:px-2 py-0.5 rounded-md text-[9px] md:text-[10px] ${filter === 'all' ? 'bg-white/20' : 'bg-slate-100'}`}>{stats.total}</span>
                         </button>
-                        <button onClick={() => setFilter("pending")} className={`tab-ult px-5 py-2.5 rounded-xl font-bold text-sm transition-all border border-slate-200 whitespace-nowrap ${filter === 'pending' ? 'active' : 'text-amber-600 hover:bg-amber-50'}`}>
-                            <i className="fa-regular fa-clock mr-1"></i> Chờ duyệt <span className={`ml-2 px-2 py-0.5 rounded-md text-[10px] ${filter === 'pending' ? 'bg-white/20' : 'bg-amber-100'}`}>{stats.pending}</span>
+                        <button onClick={() => setFilter("pending")} className={`tab-ult px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all border border-slate-200 whitespace-nowrap flex-shrink-0 ${filter === 'pending' ? 'active' : 'text-amber-600 hover:bg-amber-50'}`}>
+                            <i className="fa-regular fa-clock mr-1"></i> Chờ duyệt <span className={`ml-1.5 md:ml-2 px-1.5 md:px-2 py-0.5 rounded-md text-[9px] md:text-[10px] ${filter === 'pending' ? 'bg-white/20' : 'bg-amber-100'}`}>{stats.pending}</span>
                         </button>
-                        <button onClick={() => setFilter("confirmed")} className={`tab-ult px-5 py-2.5 rounded-xl font-bold text-sm transition-all border border-slate-200 whitespace-nowrap ${filter === 'confirmed' ? 'active' : 'text-blue-600 hover:bg-blue-50'}`}>
-                            <i className="fa-solid fa-check mr-1"></i> Đã xác nhận <span className={`ml-2 px-2 py-0.5 rounded-md text-[10px] ${filter === 'confirmed' ? 'bg-white/20' : 'bg-blue-100'}`}>{stats.confirmed}</span>
+                        <button onClick={() => setFilter("confirmed")} className={`tab-ult px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all border border-slate-200 whitespace-nowrap flex-shrink-0 ${filter === 'confirmed' ? 'active' : 'text-blue-600 hover:bg-blue-50'}`}>
+                            <i className="fa-solid fa-check mr-1"></i> Đã xác nhận <span className={`ml-1.5 md:ml-2 px-1.5 md:px-2 py-0.5 rounded-md text-[9px] md:text-[10px] ${filter === 'confirmed' ? 'bg-white/20' : 'bg-blue-100'}`}>{stats.confirmed}</span>
                         </button>
-                        <button onClick={() => setFilter("completed")} className={`tab-ult px-5 py-2.5 rounded-xl font-bold text-sm transition-all border border-slate-200 whitespace-nowrap ${filter === 'completed' ? 'active' : 'text-emerald-600 hover:bg-emerald-50'}`}>
-                            <i className="fa-solid fa-check-double mr-1"></i> Hoàn tất <span className={`ml-2 px-2 py-0.5 rounded-md text-[10px] ${filter === 'completed' ? 'bg-white/20' : 'bg-emerald-100'}`}>{stats.completed}</span>
+                        <button onClick={() => setFilter("completed")} className={`tab-ult px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all border border-slate-200 whitespace-nowrap flex-shrink-0 ${filter === 'completed' ? 'active' : 'text-emerald-600 hover:bg-emerald-50'}`}>
+                            <i className="fa-solid fa-check-double mr-1"></i> Hoàn tất <span className={`ml-1.5 md:ml-2 px-1.5 md:px-2 py-0.5 rounded-md text-[9px] md:text-[10px] ${filter === 'completed' ? 'bg-white/20' : 'bg-emerald-100'}`}>{stats.completed}</span>
                         </button>
-                        <button onClick={() => setFilter("cancelled")} className={`tab-ult px-5 py-2.5 rounded-xl font-bold text-sm transition-all border border-slate-200 whitespace-nowrap ${filter === 'cancelled' ? 'active' : 'text-rose-600 hover:bg-rose-50'}`}>
-                            <i className="fa-solid fa-xmark mr-1"></i> Đã hủy <span className={`ml-2 px-2 py-0.5 rounded-md text-[10px] ${filter === 'cancelled' ? 'bg-white/20' : 'bg-rose-100'}`}>{stats.cancelled}</span>
+                        <button onClick={() => setFilter("cancelled")} className={`tab-ult px-4 md:px-5 py-2 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all border border-slate-200 whitespace-nowrap flex-shrink-0 ${filter === 'cancelled' ? 'active' : 'text-rose-600 hover:bg-rose-50'}`}>
+                            <i className="fa-solid fa-xmark mr-1"></i> Đã hủy <span className={`ml-1.5 md:ml-2 px-1.5 md:px-2 py-0.5 rounded-md text-[9px] md:text-[10px] ${filter === 'cancelled' ? 'bg-white/20' : 'bg-rose-100'}`}>{stats.cancelled}</span>
                         </button>
                     </div>
 
-                    <div className="relative w-full xl:w-72">
+                    <div className="relative w-full xl:w-72 flex-shrink-0">
                         <i className="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400"></i>
                         <input
                             type="text"
                             placeholder="Tìm tên, mã phòng, ID..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none font-medium text-sm"
+                            className="w-full pl-10 pr-4 py-2 md:py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none font-medium text-sm"
                         />
                     </div>
                 </div>
 
                 {/* Danh sách Booking */}
-                <div className="space-y-5">
+                <div className="space-y-4 md:space-y-5">
                     {paginatedBookings.length > 0 ? paginatedBookings.map((b, index) => {
                         const isPaid = b.paymentStatus === "paid";
 
@@ -290,62 +290,73 @@ export default function AdminBookings() {
                                 <div className={`absolute left-0 top-0 bottom-0 w-2 bg-${st.color}-500 rounded-l-2xl z-10`}></div>
 
                                 {/* Phần thẻ tóm tắt (Luôn hiển thị) */}
-                                <div className="p-5 pl-7 flex flex-col lg:flex-row lg:items-center gap-6 relative z-20 bg-white rounded-2xl cursor-pointer" onClick={() => toggleExpand(b.id)}>
+                                <div className="p-4 sm:p-5 sm:pl-7 flex flex-col lg:flex-row lg:items-center gap-4 md:gap-6 relative z-20 bg-white rounded-2xl cursor-pointer" onClick={() => toggleExpand(b.id)}>
 
-                                    <div className="flex items-center gap-4 lg:w-4/12">
-                                        <div className="relative">
-                                            <div className="w-12 h-12 rounded-full shadow-sm ring-2 ring-slate-100 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center font-bold text-slate-600 text-lg">
-                                                {(b.userName || b.userEmail || "U").charAt(0).toUpperCase()}
-                                            </div>
-                                            {isPaid && (
-                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center text-white" title="Đã thanh toán">
-                                                    <i className="fa-solid fa-check text-[8px]"></i>
+                                    {/* Nhóm Thông tin Khách hàng */}
+                                    <div className="flex justify-between items-start lg:items-center lg:w-4/12 w-full">
+                                        <div className="flex items-center gap-3 sm:gap-4 pl-3 sm:pl-0">
+                                            <div className="relative flex-shrink-0">
+                                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full shadow-sm ring-2 ring-slate-100 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center font-bold text-slate-600 text-base md:text-lg">
+                                                    {(b.userName || b.userEmail || "U").charAt(0).toUpperCase()}
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="mb-1.5">
-                                                <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 font-mono text-[11px] px-2.5 py-0.5 rounded-md font-bold border border-slate-200 shadow-sm" title="Mã đặt phòng">
-                                                    <i className="fa-solid fa-hashtag text-[9px] text-slate-400"></i>{(b.id || "").slice(-8).toUpperCase()}
-                                                </span>
+                                                {isPaid && (
+                                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center text-white" title="Đã thanh toán">
+                                                        <i className="fa-solid fa-check text-[7px] md:text-[8px]"></i>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <h4 className="font-bold text-slate-800 truncate text-sm" title={b.userName || b.userEmail}>{b.userName || b.userEmail || "Khách hàng"}</h4>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="mb-1">
+                                                    <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 font-mono text-[9px] md:text-[11px] px-2 py-0.5 rounded-md font-bold border border-slate-200 shadow-sm" title="Mã đặt phòng">
+                                                        <i className="fa-solid fa-hashtag text-[8px] md:text-[9px] text-slate-400"></i>{(b.id || "").slice(-8).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                                <h4 className="font-bold text-slate-800 truncate text-xs sm:text-sm" title={b.userName || b.userEmail}>{b.userName || b.userEmail || "Khách hàng"}</h4>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Nút Chevron trên Mobile (Ẩn trên Desktop) */}
+                                        <div className="lg:hidden flex items-center h-full">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm ${isExpanded ? "bg-blue-600 text-white" : "bg-slate-50 border border-slate-100 text-slate-400"}`}>
+                                                <i className={`fa-solid fa-chevron-down text-xs transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}></i>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="lg:w-4/12 flex items-center justify-between bg-slate-50 rounded-xl p-2.5 border border-slate-100">
-                                        <div className="text-center px-4 border-r border-slate-200">
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Phòng</p>
-                                            <p className="font-bold text-blue-600 text-lg font-mono leading-none">{b.roomCode}</p>
+                                    {/* Nhóm Ngày giờ & Phòng */}
+                                    <div className="lg:w-4/12 flex items-center justify-between bg-slate-50 rounded-xl p-2 md:p-2.5 border border-slate-100 w-full ml-3 sm:ml-0 w-[calc(100%-12px)] sm:w-full">
+                                        <div className="text-center px-3 md:px-4 border-r border-slate-200 flex-shrink-0">
+                                            <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase mb-0.5">Phòng</p>
+                                            <p className="font-bold text-blue-600 text-base md:text-lg font-mono leading-none">{b.roomCode}</p>
                                         </div>
-                                        <div className="flex-1 px-4 flex items-center justify-between">
+                                        <div className="flex-1 px-3 md:px-4 flex items-center justify-between min-w-0">
                                             <div className="text-left">
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Check-in</p>
-                                                <p className="font-bold text-slate-800 text-sm">{formatDate(b.checkIn).slice(0, 5)}</p>
+                                                <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase truncate">Check-in</p>
+                                                <p className="font-bold text-slate-800 text-xs md:text-sm">{formatDate(b.checkIn).slice(0, 5)}</p>
                                             </div>
-                                            <div className="flex flex-col items-center px-2">
-                                                <i className="fa-solid fa-arrow-right-long text-slate-300"></i>
-                                                <span className="text-[10px] font-bold text-indigo-500 mt-0.5 bg-indigo-50 px-1.5 rounded">{b.nights} đêm</span>
+                                            <div className="flex flex-col items-center px-1 md:px-2 flex-shrink-0">
+                                                <i className="fa-solid fa-arrow-right-long text-slate-300 text-[10px] md:text-xs"></i>
+                                                <span className="text-[9px] md:text-[10px] font-bold text-indigo-500 mt-0.5 bg-indigo-50 px-1 md:px-1.5 rounded whitespace-nowrap">{b.nights} đêm</span>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Check-out</p>
-                                                <p className="font-bold text-slate-800 text-sm">{formatDate(b.checkOut).slice(0, 5)}</p>
+                                                <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase truncate">Check-out</p>
+                                                <p className="font-bold text-slate-800 text-xs md:text-sm">{formatDate(b.checkOut).slice(0, 5)}</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="lg:w-3/12 flex items-center justify-between lg:justify-end gap-6">
-                                        <div className="text-right">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-${st.color}-50 text-${st.color}-700 border border-${st.color}-200 shadow-sm`}>
-                                                <i className={`fa-solid ${st.icon}`}></i> {st.text}
-                                            </span>
-                                            <p className={`font-bold font-mono text-lg mt-1.5 leading-none ${isPaid ? "text-emerald-600" : "text-slate-800"}`}>
-                                                {formatCurrency(b.finalPaidAmount || b.totalPrice)}
-                                            </p>
-                                        </div>
+                                    {/* Nhóm Giá & Trạng thái */}
+                                    <div className="lg:w-3/12 flex flex-row lg:flex-col items-center lg:items-end justify-between w-full ml-3 sm:ml-0 w-[calc(100%-12px)] sm:w-full">
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] md:text-[11px] font-bold bg-${st.color}-50 text-${st.color}-700 border border-${st.color}-200 shadow-sm`}>
+                                            <i className={`fa-solid ${st.icon}`}></i> {st.text}
+                                        </span>
+                                        <p className={`font-bold font-mono text-base md:text-lg lg:mt-1.5 leading-none ${isPaid ? "text-emerald-600" : "text-slate-800"}`}>
+                                            {formatCurrency(b.finalPaidAmount || b.totalPrice)}
+                                        </p>
                                     </div>
 
-                                    <div className="lg:w-1/12 flex justify-end">
+                                    {/* Nút Chevron trên Desktop */}
+                                    <div className="hidden lg:flex lg:w-1/12 justify-end">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm ${isExpanded ? "bg-blue-600 text-white" : "bg-slate-50 border border-slate-100 text-slate-400"}`}>
                                             <i className={`fa-solid fa-chevron-down transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}></i>
                                         </div>
@@ -355,17 +366,17 @@ export default function AdminBookings() {
                                 {/* Phần Chi tiết xổ xuống (Accordion Content) */}
                                 <div className={`accordion-content grid ${isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"} bg-slate-50/50 border-t border-slate-100 rounded-b-2xl`}>
                                     <div className="accordion-inner">
-                                        <div className="p-6 pl-7 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        <div className="p-4 sm:p-6 sm:pl-7 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                                             {/* Cột 1: Tiến trình Timeline */}
-                                            <div className="col-span-1">
-                                                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4"><i className="fa-solid fa-route mr-2"></i>Tiến trình</h5>
+                                            <div className="col-span-1 ml-3 sm:ml-0">
+                                                <h5 className="text-[11px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-4"><i className="fa-solid fa-route mr-2"></i>Tiến trình</h5>
                                                 <div className="relative pl-3 space-y-5">
                                                     <div className="timeline-step relative">
                                                         <div className="timeline-line absolute w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm left-0 top-1"></div>
                                                         <div className="pl-6">
-                                                            <p className="text-sm font-bold text-slate-800">Khách đặt phòng</p>
-                                                            <p className="text-[10px] text-slate-500 mt-0.5">{formatDateTime(b.createdAt)}</p>
+                                                            <p className="text-xs md:text-sm font-bold text-slate-800">Khách đặt phòng</p>
+                                                            <p className="text-[9px] md:text-[10px] text-slate-500 mt-0.5">{formatDateTime(b.createdAt)}</p>
                                                         </div>
                                                     </div>
 
@@ -373,8 +384,8 @@ export default function AdminBookings() {
                                                         <div className="timeline-step relative">
                                                             <div className="timeline-line absolute w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm left-0 top-1"></div>
                                                             <div className="pl-6">
-                                                                <p className="text-sm font-bold text-slate-800">Đã xác nhận</p>
-                                                                <p className="text-[10px] text-slate-500 mt-0.5">Bởi Hệ thống</p>
+                                                                <p className="text-xs md:text-sm font-bold text-slate-800">Đã xác nhận</p>
+                                                                <p className="text-[9px] md:text-[10px] text-slate-500 mt-0.5">Bởi Hệ thống</p>
                                                             </div>
                                                         </div>
                                                     )}
@@ -383,8 +394,8 @@ export default function AdminBookings() {
                                                         <div className="timeline-step relative">
                                                             <div className="timeline-line absolute w-3 h-3 rounded-full bg-purple-500 border-2 border-white shadow-sm left-0 top-1"></div>
                                                             <div className="pl-6">
-                                                                <p className="text-sm font-bold text-slate-800">Đã thanh toán</p>
-                                                                <p className="text-[10px] text-slate-500 mt-0.5">Thành công</p>
+                                                                <p className="text-xs md:text-sm font-bold text-slate-800">Đã thanh toán</p>
+                                                                <p className="text-[9px] md:text-[10px] text-slate-500 mt-0.5">Thành công</p>
                                                             </div>
                                                         </div>
                                                     )}
@@ -393,7 +404,7 @@ export default function AdminBookings() {
                                                         <div className="timeline-step relative">
                                                             <div className="timeline-line absolute w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm left-0 top-1"></div>
                                                             <div className="pl-6">
-                                                                <p className="text-sm font-bold text-slate-800">Hoàn tất Check-out</p>
+                                                                <p className="text-xs md:text-sm font-bold text-slate-800">Hoàn tất Check-out</p>
                                                             </div>
                                                         </div>
                                                     )}
@@ -402,8 +413,8 @@ export default function AdminBookings() {
                                                         <div className="timeline-step relative">
                                                             <div className="absolute w-3 h-3 rounded-full bg-rose-500 border-2 border-white shadow-sm left-0 top-1"></div>
                                                             <div className="pl-6">
-                                                                <p className="text-sm font-bold text-rose-600">Đã hủy</p>
-                                                                <p className="text-[10px] text-slate-500 mt-0.5">{b.cancelReason || "Khách yêu cầu"}</p>
+                                                                <p className="text-xs md:text-sm font-bold text-rose-600">Đã hủy</p>
+                                                                <p className="text-[9px] md:text-[10px] text-slate-500 mt-0.5">{b.cancelReason || "Khách yêu cầu"}</p>
                                                             </div>
                                                         </div>
                                                     )}
@@ -411,46 +422,46 @@ export default function AdminBookings() {
                                             </div>
 
                                             {/* Cột 2: Chi phí */}
-                                            <div className="col-span-1">
-                                                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4"><i className="fa-solid fa-file-invoice-dollar mr-2"></i>Chi phí</h5>
+                                            <div className="col-span-1 ml-3 sm:ml-0">
+                                                <h5 className="text-[11px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-4"><i className="fa-solid fa-file-invoice-dollar mr-2"></i>Chi phí</h5>
                                                 <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-3">
-                                                    <div className="flex justify-between items-center text-sm">
+                                                    <div className="flex justify-between items-center text-xs md:text-sm">
                                                         <span className="text-slate-600">Tiền phòng ({b.nights} đêm)</span>
-                                                        <span className="font-medium">{formatCurrency(b.roomTotal || (b.roomPrice * b.nights))}</span>
+                                                        <span className="font-medium text-slate-800">{formatCurrency(b.roomTotal || (b.roomPrice * b.nights))}</span>
                                                     </div>
 
                                                     {(b.services && b.services.length > 0) && (
-                                                        <div className="flex justify-between items-start text-sm">
+                                                        <div className="flex justify-between items-start text-xs md:text-sm">
                                                             <span className="text-slate-600">Dịch vụ thêm</span>
                                                             <div className="text-right">
-                                                                <span className="font-medium">{formatCurrency(b.serviceTotal || 0)}</span>
-                                                                <p className="text-[10px] text-slate-400 mt-1">{b.services.map(s => s.name).join(", ")}</p>
+                                                                <span className="font-medium text-slate-800">{formatCurrency(b.serviceTotal || 0)}</span>
+                                                                <p className="text-[9px] md:text-[10px] text-slate-400 mt-1 max-w-[120px] md:max-w-none">{b.services.map(s => s.name).join(", ")}</p>
                                                             </div>
                                                         </div>
                                                     )}
 
                                                     {b.discountApplied > 0 && (
-                                                        <div className="flex justify-between items-center text-sm text-rose-500">
+                                                        <div className="flex justify-between items-center text-xs md:text-sm text-rose-500">
                                                             <span>Giảm giá/KM</span>
                                                             <span className="font-medium">-{formatCurrency(b.discountApplied)}</span>
                                                         </div>
                                                     )}
 
                                                     <div className="border-t border-slate-100 border-dashed pt-3 mt-3 flex justify-between items-center">
-                                                        <span className="font-bold text-slate-800">TỔNG CỘNG</span>
-                                                        <span className="font-bold text-xl font-mono text-blue-600">{formatCurrency(b.finalPaidAmount || b.totalPrice)}</span>
+                                                        <span className="font-bold text-slate-800 text-xs md:text-sm">TỔNG CỘNG</span>
+                                                        <span className="font-bold text-lg md:text-xl font-mono text-blue-600">{formatCurrency(b.finalPaidAmount || b.totalPrice)}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Cột 3: Liên hệ & Thao tác */}
-                                            <div className="col-span-1 flex flex-col">
-                                                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4"><i className="fa-solid fa-address-book mr-2"></i>Liên hệ & Ghi chú</h5>
+                                            <div className="col-span-1 flex flex-col ml-3 sm:ml-0">
+                                                <h5 className="text-[11px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-4"><i className="fa-solid fa-address-book mr-2"></i>Liên hệ & Ghi chú</h5>
                                                 <div className="space-y-2 mb-6">
-                                                    <p className="text-sm text-slate-700 flex items-center gap-2"><i className="fa-solid fa-phone w-4 text-slate-400"></i> {b.userPhone || "Trống"}</p>
-                                                    <p className="text-sm text-slate-700 flex items-center gap-2"><i className="fa-solid fa-envelope w-4 text-slate-400"></i> {b.userEmail || "Trống"}</p>
+                                                    <p className="text-xs md:text-sm text-slate-700 flex items-center gap-2"><i className="fa-solid fa-phone w-4 text-slate-400"></i> {b.userPhone || "Trống"}</p>
+                                                    <p className="text-xs md:text-sm text-slate-700 flex items-center gap-2 truncate"><i className="fa-solid fa-envelope w-4 text-slate-400"></i> {b.userEmail || "Trống"}</p>
                                                     {b.specialRequests && (
-                                                        <div className="mt-2 p-3 bg-amber-50 rounded-lg border border-amber-100 text-xs text-amber-800">
+                                                        <div className="mt-2 p-2.5 md:p-3 bg-amber-50 rounded-lg border border-amber-100 text-[10px] md:text-xs text-amber-800">
                                                             <span className="font-bold">Yêu cầu:</span> {b.specialRequests}
                                                         </div>
                                                     )}
@@ -460,27 +471,27 @@ export default function AdminBookings() {
                                                 <div className="mt-auto grid grid-cols-2 gap-2">
                                                     {b.status === "pending" && (
                                                         <>
-                                                            <button onClick={(e) => { e.stopPropagation(); updateBookingStatus(b.id, "confirmed", b.roomId); }} className="py-2 text-sm w-full bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors">Xác nhận</button>
-                                                            <button onClick={(e) => { e.stopPropagation(); updateBookingStatus(b.id, "cancelled", b.roomId); }} className="py-2 text-sm w-full bg-white border border-rose-200 text-rose-600 font-bold rounded-lg hover:bg-rose-50 transition-colors">Từ chối</button>
+                                                            <button onClick={(e) => { e.stopPropagation(); updateBookingStatus(b.id, "confirmed", b.roomId); }} className="py-2.5 text-xs md:text-sm w-full bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Xác nhận</button>
+                                                            <button onClick={(e) => { e.stopPropagation(); updateBookingStatus(b.id, "cancelled", b.roomId); }} className="py-2.5 text-xs md:text-sm w-full bg-white border border-rose-200 text-rose-600 font-bold rounded-lg hover:bg-rose-50 transition-colors shadow-sm">Từ chối</button>
                                                         </>
                                                     )}
 
                                                     {b.status === "confirmed" && (
                                                         <>
-                                                            <button onClick={(e) => { e.stopPropagation(); updateBookingStatus(b.id, "completed", b.roomId); }} className="py-2 text-sm w-full bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors">Check-out</button>
+                                                            <button onClick={(e) => { e.stopPropagation(); updateBookingStatus(b.id, "completed", b.roomId); }} className="py-2.5 text-xs md:text-sm w-full bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">Check-out</button>
                                                             {!isPaid && (
-                                                                <button onClick={(e) => { e.stopPropagation(); handlePayment(b.id); }} className="py-2 text-sm w-full bg-white border border-amber-200 text-amber-700 font-bold rounded-lg hover:bg-amber-50 transition-colors">Thu tiền</button>
+                                                                <button onClick={(e) => { e.stopPropagation(); handlePayment(b.id); }} className="py-2.5 text-xs md:text-sm w-full bg-white border border-amber-200 text-amber-700 font-bold rounded-lg hover:bg-amber-50 transition-colors shadow-sm">Thu tiền</button>
                                                             )}
                                                         </>
                                                     )}
 
                                                     {b.status === "completed" && isPaid && (
-                                                        <button onClick={(e) => { e.stopPropagation(); generateInvoice(b.id); }} className="col-span-2 py-2 text-sm w-full bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors">
+                                                        <button onClick={(e) => { e.stopPropagation(); generateInvoice(b.id); }} className="col-span-2 py-2.5 text-xs md:text-sm w-full bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors shadow-sm">
                                                             <i className="fa-solid fa-print mr-2"></i>In hóa đơn
                                                         </button>
                                                     )}
 
-                                                    <button onClick={(e) => { e.stopPropagation(); deleteBooking(b.id); }} className="col-span-2 py-2 text-sm font-medium text-slate-400 hover:text-rose-600 transition-colors mt-2 underline">
+                                                    <button onClick={(e) => { e.stopPropagation(); deleteBooking(b.id); }} className="col-span-2 py-2 text-[10px] md:text-xs font-medium text-slate-400 hover:text-rose-600 transition-colors mt-1 underline">
                                                         Xóa bản ghi này
                                                     </button>
                                                 </div>
@@ -493,16 +504,16 @@ export default function AdminBookings() {
                             </div>
                         );
                     }) : (
-                        <div className="bg-white/50 backdrop-blur-sm rounded-3xl border border-dashed border-slate-300 p-20 text-center shadow-inner">
-                            <div className="relative w-24 h-24 mx-auto mb-6">
+                        <div className="bg-white/50 backdrop-blur-sm rounded-3xl border border-dashed border-slate-300 p-10 md:p-20 text-center shadow-inner">
+                            <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-6">
                                 <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-50"></div>
                                 <div className="relative w-full h-full bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-100">
-                                    <i className="fa-solid fa-box-open text-4xl text-blue-400"></i>
+                                    <i className="fa-solid fa-box-open text-3xl md:text-4xl text-blue-400"></i>
                                 </div>
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-800 mb-2">Chưa có dữ liệu phù hợp</h3>
-                            <p className="text-slate-500 max-w-md mx-auto mb-8">Không tìm thấy đơn đặt phòng nào trong trạng thái <span className="font-bold text-slate-700">"{filter}"</span> hoặc khớp với từ khóa tìm kiếm.</p>
-                            <button onClick={() => { setFilter("all"); setSearchQuery(""); setPage(0); }} className="bg-white border border-slate-200 text-slate-700 px-6 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-colors shadow-sm">
+                            <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-2">Chưa có dữ liệu phù hợp</h3>
+                            <p className="text-xs md:text-sm text-slate-500 max-w-md mx-auto mb-6 md:mb-8">Không tìm thấy đơn đặt phòng nào trong trạng thái <span className="font-bold text-slate-700">"{filter}"</span> hoặc khớp với từ khóa tìm kiếm.</p>
+                            <button onClick={() => { setFilter("all"); setSearchQuery(""); setPage(0); }} className="bg-white border border-slate-200 text-slate-700 px-5 md:px-6 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-colors shadow-sm text-sm">
                                 Xóa bộ lọc & Tải lại
                             </button>
                         </div>
@@ -511,37 +522,37 @@ export default function AdminBookings() {
 
                 {/* Phân trang */}
                 {paginatedBookings.length > 0 && totalPages > 1 && (
-                    <div className="flex flex-col sm:flex-row justify-between items-center mt-8 p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm gap-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-center mt-6 md:mt-8 p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm gap-4">
                         <div className="flex items-center gap-3">
-                            <p className="text-sm text-slate-500 font-medium">Hiển thị</p>
-                            <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(0); }} className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none p-1.5 px-3 font-bold cursor-pointer hover:bg-white transition-colors">
+                            <p className="text-xs md:text-sm text-slate-500 font-medium">Hiển thị</p>
+                            <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(0); }} className="bg-slate-50 border border-slate-200 text-slate-700 text-xs md:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none p-1.5 px-3 font-bold cursor-pointer hover:bg-white transition-colors shadow-sm">
                                 <option value="5">5</option>
                                 <option value="10">10</option>
                                 <option value="20">20</option>
                                 <option value="50">50</option>
                             </select>
-                            <p className="text-sm text-slate-500">/ {filteredBookings.length} đơn</p>
+                            <p className="text-xs md:text-sm text-slate-500">/ {filteredBookings.length} đơn</p>
                         </div>
 
-                        <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-100 shadow-sm">
                             <button onClick={() => setPage(page - 1)} disabled={page === 0} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                                <i className="fa-solid fa-chevron-left text-xs"></i>
+                                <i className="fa-solid fa-chevron-left text-[10px] md:text-xs"></i>
                             </button>
 
                             {Array.from({ length: totalPages }).map((_, i) => {
-                                if (totalPages > 7 && i !== 0 && i !== totalPages - 1 && Math.abs(i - page) > 1) {
-                                    if (i === 1 || i === totalPages - 2) return <span key={i} className="px-1 text-slate-400">...</span>;
+                                if (totalPages > 5 && i !== 0 && i !== totalPages - 1 && Math.abs(i - page) > 1) {
+                                    if (i === 1 || i === totalPages - 2) return <span key={i} className="px-1 text-slate-400 text-xs">...</span>;
                                     return null;
                                 }
                                 return (
-                                    <button key={i} onClick={() => setPage(i)} className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all duration-300 ${page === i ? "bg-slate-800 text-white shadow-md scale-110" : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm"}`}>
+                                    <button key={i} onClick={() => setPage(i)} className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs md:text-sm font-bold transition-all duration-300 ${page === i ? "bg-slate-800 text-white shadow-md scale-110" : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm"}`}>
                                         {i + 1}
                                     </button>
                                 );
                             })}
 
                             <button onClick={() => setPage(page + 1)} disabled={page === totalPages - 1} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                                <i className="fa-solid fa-chevron-right text-xs"></i>
+                                <i className="fa-solid fa-chevron-right text-[10px] md:text-xs"></i>
                             </button>
                         </div>
                     </div>

@@ -164,47 +164,49 @@ export default function AdminGallery() {
 
     if (loading) return <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
+    const formInputClass = "w-full p-2.5 md:p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all text-sm md:text-base";
+
     return (
-        <div className="fade-in max-w-[1600px] mx-auto pb-12 relative z-0">
+        <div className="fade-in max-w-[1600px] mx-auto pb-12 relative z-0 w-full">
 
             {/* Header & Công cụ tìm kiếm */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-5 border border-slate-200 shadow-sm mb-8 flex flex-col xl:flex-row gap-5 items-start xl:items-center justify-between transition-all">
-                <div>
-                    <h3 className="text-2xl font-playfair font-bold text-slate-800 flex items-center">
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-5 border border-slate-200 shadow-sm mb-6 md:mb-8 flex flex-col xl:flex-row gap-4 md:gap-5 items-start xl:items-center justify-between transition-all w-full">
+                <div className="w-full xl:w-auto">
+                    <h3 className="text-xl md:text-2xl font-playfair font-bold text-slate-800 flex items-center flex-wrap gap-2">
                         Thư viện Hình ảnh
-                        <span className="ml-3 bg-blue-100 text-blue-600 text-sm font-sans px-3 py-1 rounded-full font-bold shadow-sm">
+                        <span className="bg-blue-100 text-blue-600 text-xs md:text-sm font-sans px-2.5 md:px-3 py-0.5 md:py-1 rounded-full font-bold shadow-sm whitespace-nowrap mt-1 md:mt-0">
                             {filteredImages.length} Hình
                         </span>
                     </h3>
-                    <p className="text-sm text-slate-500 mt-1">Quản lý kho ảnh truyền thông cho Phòng nghỉ và Dịch vụ</p>
+                    <p className="text-xs md:text-sm text-slate-500 mt-1">Quản lý kho ảnh truyền thông cho Phòng nghỉ và Dịch vụ</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
-                    <div className="relative w-full sm:w-64 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full xl:w-auto">
+                    <div className="relative w-full sm:w-56 md:w-64 flex-shrink-0">
                         <i className="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400"></i>
                         <input
                             type="text"
                             placeholder="Tìm tên, mô tả ảnh..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                            className="w-full pl-10 md:pl-11 pr-4 py-2 md:py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                         />
                     </div>
 
-                    <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
-                        <button onClick={() => setCatFilter("all")} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${catFilter === "all" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>Tất cả</button>
-                        <button onClick={() => setCatFilter("rooms")} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${catFilter === "rooms" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-blue-600"}`}>
-                            <i className="fa-solid fa-bed mr-1"></i>Phòng
+                    <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar pb-1 sm:pb-1">
+                        <button onClick={() => setCatFilter("all")} className={`flex-1 sm:flex-none px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${catFilter === "all" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>Tất cả</button>
+                        <button onClick={() => setCatFilter("rooms")} className={`flex-1 sm:flex-none px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${catFilter === "rooms" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-blue-600"}`}>
+                            <i className="fa-solid fa-bed mr-1.5"></i>Phòng
                         </button>
-                        <button onClick={() => setCatFilter("facilities")} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${catFilter === "facilities" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-emerald-600"}`}>
-                            <i className="fa-solid fa-swimming-pool mr-1"></i>Cơ sở vật chất
+                        <button onClick={() => setCatFilter("facilities")} className={`flex-1 sm:flex-none px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${catFilter === "facilities" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-emerald-600"}`}>
+                            <i className="fa-solid fa-swimming-pool mr-1.5"></i>Tiện ích
                         </button>
-                        <button onClick={() => setCatFilter("events")} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${catFilter === "events" ? "bg-white text-purple-600 shadow-sm" : "text-slate-500 hover:text-purple-600"}`}>
-                            <i className="fa-solid fa-champagne-glasses mr-1"></i>Sự kiện
+                        <button onClick={() => setCatFilter("events")} className={`flex-1 sm:flex-none px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${catFilter === "events" ? "bg-white text-purple-600 shadow-sm" : "text-slate-500 hover:text-purple-600"}`}>
+                            <i className="fa-solid fa-champagne-glasses mr-1.5"></i>Sự kiện
                         </button>
                     </div>
 
-                    <button onClick={() => openModal()} className="bg-slate-900 text-white rounded-xl px-5 py-2.5 shadow-lg hover:bg-blue-600 flex-shrink-0 whitespace-nowrap transition-all transform hover:-translate-y-0.5">
+                    <button onClick={() => openModal()} className="w-full sm:w-auto justify-center bg-slate-900 text-white rounded-xl px-4 md:px-5 py-2 md:py-2.5 shadow-lg hover:bg-blue-600 flex-shrink-0 whitespace-nowrap transition-all transform hover:-translate-y-0.5 flex items-center text-sm md:text-base font-bold">
                         <i className="fa-solid fa-cloud-arrow-up mr-2"></i>Thêm ảnh mới
                     </button>
                 </div>
@@ -214,7 +216,7 @@ export default function AdminGallery() {
 
             {/* Lưới Hình Ảnh */}
             {paginatedImages.length > 0 ? (
-                <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-6 space-y-6">
+                <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-4 md:gap-6 space-y-4 md:space-y-6">
                     {paginatedImages.map((img, index) => {
                         let catColor = "bg-slate-500";
                         if (img.category === "rooms") catColor = "bg-blue-500";
@@ -222,38 +224,38 @@ export default function AdminGallery() {
                         if (img.category === "events") catColor = "bg-purple-500";
 
                         return (
-                            <div key={img.id} className="break-inside-avoid relative group bg-slate-100 rounded-3xl overflow-hidden border border-slate-200/50 shadow-sm hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${(index % 10) * 50}ms` }}>
+                            <div key={img.id} className="break-inside-avoid relative group bg-slate-100 rounded-2xl md:rounded-3xl overflow-hidden border border-slate-200/50 shadow-sm hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${(index % 10) * 50}ms` }}>
 
                                 {/* Ảnh chính */}
                                 <div className="relative w-full overflow-hidden cursor-zoom-in" style={{ minHeight: "150px" }} onClick={() => setFullImageUrl(img.url || img.image)}>
-                                    <img src={img.url || img.image} alt={img.title} className="w-full h-auto object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out bg-slate-200" loading="lazy" />
+                                    <img src={img.url || img.image} alt={img.title} className="w-full h-auto object-cover transform lg:group-hover:scale-110 transition-transform duration-700 ease-in-out bg-slate-200" loading="lazy" />
 
-                                    {/* Overlay khi Hover */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    {/* Overlay khi Hover (Luôn hiện mờ trên mobile để chữ dễ đọc) */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent sm:opacity-0 sm:group-hover:opacity-100 opacity-100 transition-opacity duration-300"></div>
 
                                     {/* Nút đánh dấu Nổi bật */}
-                                    <button onClick={(e) => toggleFeatured(e, img.id, img.featured)} className={`absolute top-4 left-4 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border ${img.featured ? "bg-amber-400 text-white border-amber-300 opacity-100 scale-100" : "bg-white/80 backdrop-blur-sm text-slate-400 border-white/20 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 hover:bg-amber-400 hover:text-white"}`} title="Đánh dấu nổi bật">
-                                        <i className={`fa-solid fa-star ${img.featured ? "" : "fa-regular"}`}></i>
+                                    <button onClick={(e) => toggleFeatured(e, img.id, img.featured)} className={`absolute top-3 md:top-4 left-3 md:left-4 w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border ${img.featured ? "bg-amber-400 text-white border-amber-300 opacity-100 scale-100" : "bg-white/80 backdrop-blur-sm text-slate-400 border-white/20 sm:opacity-0 sm:scale-75 opacity-80 scale-100 sm:group-hover:opacity-100 sm:group-hover:scale-100 hover:bg-amber-400 hover:text-white"}`} title="Đánh dấu nổi bật">
+                                        <i className={`fa-solid fa-star text-xs md:text-sm ${img.featured ? "" : "fa-regular"}`}></i>
                                     </button>
 
-                                    {/* Nút Sửa/Xóa (Luôn hiển thị nhưng nhạt mờ, hover sẽ rõ) */}
-                                    <div className="absolute top-4 right-4 flex flex-col space-y-2 opacity-50 group-hover:opacity-100 transition-opacity duration-300">
-                                        <button onClick={(e) => { e.stopPropagation(); openModal(img); }} className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white shadow-lg transition-colors border border-white/20">
-                                            <i className="fa-solid fa-pen text-sm"></i>
+                                    {/* Nút Sửa/Xóa (Luôn hiển thị nhưng nhạt mờ trên Mobile, hover sẽ rõ trên Desktop) */}
+                                    <div className="absolute top-3 md:top-4 right-3 md:right-4 flex flex-col space-y-1.5 md:space-y-2 sm:opacity-50 sm:group-hover:opacity-100 opacity-80 transition-opacity duration-300">
+                                        <button onClick={(e) => { e.stopPropagation(); openModal(img); }} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white shadow-lg transition-colors border border-white/20">
+                                            <i className="fa-solid fa-pen text-xs md:text-sm"></i>
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteImage(img.id, img.title); }} className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-red-600 hover:bg-red-600 hover:text-white shadow-lg transition-colors border border-white/20">
-                                            <i className="fa-solid fa-trash text-sm"></i>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteImage(img.id, img.title); }} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-red-600 hover:bg-red-600 hover:text-white shadow-lg transition-colors border border-white/20">
+                                            <i className="fa-solid fa-trash text-xs md:text-sm"></i>
                                         </button>
                                     </div>
 
                                     {/* Nội dung text (Góc dưới) */}
-                                    <div className="absolute bottom-0 left-0 right-0 p-5 transform translate-y-4 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className={`w-2 h-2 rounded-full ${catColor}`}></span>
-                                            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{img.category === "rooms" ? "Phòng" : img.category === "facilities" ? "Tiện ích" : img.category === "events" ? "Sự kiện" : "Khác"}</span>
+                                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 sm:transform sm:translate-y-4 sm:opacity-0 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 opacity-100 translate-y-0 transition-all duration-300 pointer-events-none">
+                                        <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2">
+                                            <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${catColor}`}></span>
+                                            <span className="text-[9px] md:text-[10px] font-bold text-slate-300 uppercase tracking-widest">{img.category === "rooms" ? "Phòng" : img.category === "facilities" ? "Tiện ích" : img.category === "events" ? "Sự kiện" : "Khác"}</span>
                                         </div>
-                                        <h4 className="text-lg font-playfair font-bold text-white mb-1 leading-tight line-clamp-1">{img.title || "Chưa có tên ảnh"}</h4>
-                                        <p className="text-xs text-slate-300 line-clamp-2">{img.description || "Tải lên vào " + formatDate(img.createdAt)}</p>
+                                        <h4 className="text-base md:text-lg font-playfair font-bold text-white mb-0.5 md:mb-1 leading-tight line-clamp-1">{img.title || "Chưa có tên ảnh"}</h4>
+                                        <p className="text-[10px] md:text-xs text-slate-300 line-clamp-2">{img.description || "Tải lên vào " + formatDate(img.createdAt)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -261,13 +263,13 @@ export default function AdminGallery() {
                     })}
                 </div>
             ) : (
-                <div className="bg-white rounded-[3rem] border-2 border-dashed border-slate-300 p-24 text-center shadow-inner mt-8">
-                    <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300 border border-slate-100">
-                        <i className="fa-regular fa-images text-4xl"></i>
+                <div className="bg-white rounded-2xl md:rounded-[3rem] border-2 border-dashed border-slate-300 p-10 md:p-24 text-center shadow-inner mt-6 md:mt-8">
+                    <div className="w-16 h-16 md:w-24 md:h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 text-slate-300 border border-slate-100">
+                        <i className="fa-regular fa-images text-3xl md:text-4xl"></i>
                     </div>
-                    <h3 className="text-2xl font-playfair font-bold text-slate-800 mb-3">Thư viện trống!</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto mb-8 text-sm">Không có hình ảnh nào khớp với bộ lọc hiện tại của bạn.</p>
-                    <button onClick={() => { setCatFilter("all"); setSearchQuery(""); setPage(0); }} className="bg-blue-600 text-white px-8 py-3 rounded-xl shadow-lg hover:bg-blue-700 transition-colors font-bold">
+                    <h3 className="text-xl md:text-2xl font-playfair font-bold text-slate-800 mb-2 md:mb-3">Thư viện trống!</h3>
+                    <p className="text-slate-500 max-w-sm mx-auto mb-6 md:mb-8 text-xs md:text-sm">Không có hình ảnh nào khớp với bộ lọc hiện tại của bạn.</p>
+                    <button onClick={() => { setCatFilter("all"); setSearchQuery(""); setPage(0); }} className="bg-blue-600 text-white px-6 py-2.5 md:px-8 md:py-3 rounded-xl shadow-lg hover:bg-blue-700 transition-colors font-bold text-sm md:text-base">
                         Hiển thị tất cả
                     </button>
                 </div>
@@ -275,36 +277,36 @@ export default function AdminGallery() {
 
             {/* Phân trang */}
             {paginatedImages.length > 0 && totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center mt-10 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center mt-6 md:mt-10 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm gap-4">
                     <div className="flex items-center gap-3">
-                        <p className="text-sm text-slate-500 font-medium">Hiển thị</p>
-                        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(0); }} className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none p-1.5 px-3 font-bold cursor-pointer hover:bg-white transition-colors">
+                        <p className="text-xs md:text-sm text-slate-500 font-medium">Hiển thị</p>
+                        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(0); }} className="bg-slate-50 border border-slate-200 text-slate-700 text-xs md:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none p-1.5 px-3 font-bold cursor-pointer hover:bg-white transition-colors">
                             <option value="12">12</option>
                             <option value="24">24</option>
                             <option value="48">48</option>
                         </select>
-                        <p className="text-sm text-slate-500">/ {filteredImages.length} ảnh</p>
+                        <p className="text-xs md:text-sm text-slate-500">/ {filteredImages.length} ảnh</p>
                     </div>
 
                     <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
                         <button onClick={() => handlePageChange(page - 1)} disabled={page === 0} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                            <i className="fa-solid fa-chevron-left text-xs"></i>
+                            <i className="fa-solid fa-chevron-left text-[10px] md:text-xs"></i>
                         </button>
 
                         {Array.from({ length: totalPages }).map((_, i) => {
-                            if (totalPages > 7 && i !== 0 && i !== totalPages - 1 && Math.abs(i - page) > 1) {
-                                if (i === 1 || i === totalPages - 2) return <span key={i} className="px-1 text-slate-400">...</span>;
+                            if (totalPages > 5 && i !== 0 && i !== totalPages - 1 && Math.abs(i - page) > 1) {
+                                if (i === 1 || i === totalPages - 2) return <span key={i} className="px-1 text-slate-400 text-xs">...</span>;
                                 return null;
                             }
                             return (
-                                <button key={i} onClick={() => handlePageChange(i)} className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all duration-300 ${page === i ? "bg-slate-800 text-white shadow-md scale-110" : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm"}`}>
+                                <button key={i} onClick={() => handlePageChange(i)} className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs md:text-sm font-bold transition-all duration-300 ${page === i ? "bg-slate-800 text-white shadow-md scale-110" : "text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-sm"}`}>
                                     {i + 1}
                                 </button>
                             );
                         })}
 
                         <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages - 1} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                            <i className="fa-solid fa-chevron-right text-xs"></i>
+                            <i className="fa-solid fa-chevron-right text-[10px] md:text-xs"></i>
                         </button>
                     </div>
                 </div>
@@ -312,42 +314,42 @@ export default function AdminGallery() {
 
             {/* Modal Thêm/Sửa Ảnh */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl animate-in zoom-in duration-300 border border-slate-100">
-                        <div className="p-6 md:p-8">
-                            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                                <h3 className="text-2xl font-playfair font-bold text-slate-900">{formData.id ? "Cập nhật ảnh" : "Thêm ảnh mới"}</h3>
-                                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center transition-all"><i className="fa-solid fa-xmark text-xl"></i></button>
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 md:p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl md:rounded-[2rem] w-full max-w-lg shadow-2xl animate-in zoom-in duration-300 border border-slate-100 my-auto">
+                        <div className="p-5 md:p-8 max-h-[90vh] overflow-y-auto custom-scroll">
+                            <div className="flex justify-between items-center mb-5 md:mb-6 border-b border-slate-100 pb-3 md:pb-4 sticky top-0 bg-white z-10">
+                                <h3 className="text-xl md:text-2xl font-playfair font-bold text-slate-900">{formData.id ? "Cập nhật ảnh" : "Thêm ảnh mới"}</h3>
+                                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center transition-all flex-shrink-0"><i className="fa-solid fa-xmark text-lg md:text-xl"></i></button>
                             </div>
 
                             <form onSubmit={handleSaveImage} className="space-y-4">
 
                                 {/* Image Preview */}
-                                <div className="w-full h-40 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden mb-2">
+                                <div className="w-full h-32 md:h-40 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden mb-2">
                                     {formData.url ? (
                                         <img src={formData.url} alt="Preview" className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="text-center text-slate-400">
-                                            <i className="fa-regular fa-image text-3xl mb-2 block"></i>
-                                            <span className="text-xs font-medium">Xem trước hình ảnh</span>
+                                            <i className="fa-regular fa-image text-2xl md:text-3xl mb-2 block"></i>
+                                            <span className="text-[10px] md:text-xs font-medium">Xem trước hình ảnh</span>
                                         </div>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Đường dẫn ảnh (URL) <span className="text-red-500">*</span></label>
-                                    <input type="url" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all font-mono text-sm" placeholder="https://example.com/image.jpg" value={formData.url} onChange={e => setFormData({ ...formData, url: e.target.value })} />
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Đường dẫn ảnh (URL) <span className="text-red-500">*</span></label>
+                                    <input type="url" required className={formInputClass + " font-mono"} placeholder="https://example.com/image.jpg" value={formData.url} onChange={e => setFormData({ ...formData, url: e.target.value })} />
                                 </div>
 
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Tên / Tiêu đề ảnh <span className="text-red-500">*</span></label>
-                                    <input type="text" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all" placeholder="Phòng Deluxe hướng biển" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Tên / Tiêu đề ảnh <span className="text-red-500">*</span></label>
+                                    <input type="text" required className={formInputClass} placeholder="Phòng Deluxe hướng biển" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Phân loại</label>
-                                        <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all text-sm font-medium text-slate-700" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
+                                        <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Phân loại</label>
+                                        <select className={`${formInputClass} font-medium text-slate-700 cursor-pointer`} value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
                                             <option value="rooms">Nội thất Phòng</option>
                                             <option value="facilities">Cơ sở vật chất</option>
                                             <option value="events">Hoạt động Sự kiện</option>
@@ -355,22 +357,22 @@ export default function AdminGallery() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Trạng thái</label>
-                                        <label className="flex items-center space-x-2 mt-3 cursor-pointer bg-amber-50 px-3 py-2.5 rounded-xl border border-amber-100 hover:bg-amber-100 transition-colors">
+                                        <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5 hidden sm:block">Trạng thái</label>
+                                        <label className="flex items-center space-x-2 mt-0 sm:mt-1 cursor-pointer bg-amber-50 px-3 py-2.5 rounded-xl border border-amber-100 hover:bg-amber-100 transition-colors">
                                             <input type="checkbox" className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 cursor-pointer" checked={formData.featured} onChange={e => setFormData({ ...formData, featured: e.target.checked })} />
-                                            <span className="text-[13px] font-bold text-amber-700">Đánh dấu Nổi bật</span>
+                                            <span className="text-[12px] md:text-[13px] font-bold text-amber-700">Đánh dấu Nổi bật</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Mô tả ngắn</label>
-                                    <textarea rows="2" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-blue-500 transition-all text-sm" placeholder="Góc chụp từ ban công..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Mô tả ngắn</label>
+                                    <textarea rows="2" className={formInputClass} placeholder="Góc chụp từ ban công..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
                                 </div>
 
-                                <div className="flex justify-end space-x-3 pt-6 border-t border-slate-100 mt-6">
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors">Hủy</button>
-                                    <button type="submit" disabled={isSaving} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all disabled:opacity-50 flex items-center">
+                                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 md:pt-6 border-t border-slate-100 mt-4 md:mt-6">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm md:text-base">Hủy</button>
+                                    <button type="submit" disabled={isSaving} className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-all disabled:opacity-50 flex items-center justify-center text-sm md:text-base">
                                         {isSaving ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Đang lưu...</> : "Lưu hình ảnh"}
                                     </button>
                                 </div>
@@ -382,12 +384,13 @@ export default function AdminGallery() {
 
             {/* Modal Ảnh Full màn hình */}
             {fullImageUrl && (
-                <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setFullImageUrl("")}>
-                    <div className="relative max-w-5xl w-full flex flex-col items-center">
-                        <button onClick={() => setFullImageUrl("")} className="absolute -top-12 right-0 text-white hover:text-slate-300 bg-black/50 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[120] flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200" onClick={() => setFullImageUrl("")}>
+                    <div className="relative w-full max-w-5xl flex flex-col items-center justify-center h-full">
+                        {/* Nút đóng được dời vào góc trong của màn hình để mobile không bị che */}
+                        <button onClick={() => setFullImageUrl("")} className="absolute top-4 right-4 sm:-top-12 sm:right-0 text-white hover:text-slate-300 bg-black/60 w-10 h-10 rounded-full flex items-center justify-center transition-colors z-[130]">
                             <i className="fa-solid fa-xmark text-xl"></i>
                         </button>
-                        <img src={fullImageUrl} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-300" alt="Gallery Full" onClick={(e) => e.stopPropagation()} />
+                        <img src={fullImageUrl} className="max-w-full max-h-[85vh] sm:max-h-[90vh] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-300" alt="Gallery Full" onClick={(e) => e.stopPropagation()} />
                     </div>
                 </div>
             )}

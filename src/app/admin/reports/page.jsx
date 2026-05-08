@@ -400,115 +400,115 @@ export default function AdminReports() {
     if (loading) return <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
     return (
-        <div className="fade-in max-w-[1600px] mx-auto pb-12 relative animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="fade-in max-w-[1600px] mx-auto pb-12 relative animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
 
             {/* Header & Thanh Công Cụ Lọc */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-slate-200 shadow-sm">
-                <div>
-                    <h2 className="text-3xl font-playfair font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-indigo-600 flex items-center gap-3">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 bg-white/80 backdrop-blur-xl p-4 md:p-5 rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm w-full">
+                <div className="w-full md:w-auto">
+                    <h2 className="text-2xl md:text-3xl font-playfair font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-indigo-600 flex flex-wrap items-center gap-2 md:gap-3">
                         Báo cáo Kế toán
-                        <span className="bg-indigo-50 text-indigo-600 text-xs py-1.5 px-3 rounded-xl font-sans font-bold flex items-center border border-indigo-100 shadow-sm">
-                            <i className="fa-solid fa-chart-pie mr-2"></i> Analytics Pro
+                        <span className="bg-indigo-50 text-indigo-600 text-[10px] md:text-xs py-1 md:py-1.5 px-2 md:px-3 rounded-lg md:rounded-xl font-sans font-bold flex items-center border border-indigo-100 shadow-sm whitespace-nowrap">
+                            <i className="fa-solid fa-chart-pie mr-1.5 md:mr-2"></i> Analytics Pro
                         </span>
                     </h2>
-                    <p className="text-sm text-slate-500 mt-1">Tổng hợp và phân tích dữ liệu hiệu suất kinh doanh đa chiều.</p>
+                    <p className="text-xs md:text-sm text-slate-500 mt-1 md:mt-2">Tổng hợp và phân tích dữ liệu hiệu suất kinh doanh đa chiều.</p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
                     {/* Bộ lọc thời gian */}
-                    <div className="flex items-center bg-slate-100 p-1.5 rounded-2xl shadow-inner border border-slate-200/60 hide-scrollbar overflow-x-auto max-w-[200px] sm:max-w-none">
-                        <button onClick={() => setTimeRange("thisMonth")} className={`px-4 py-2.5 whitespace-nowrap rounded-xl text-sm font-bold transition-all ${timeRange === "thisMonth" ? "bg-white text-indigo-600 shadow-md" : "text-slate-500 hover:text-slate-800"}`}>Tháng này</button>
-                        <button onClick={() => setTimeRange("thisYear")} className={`px-4 py-2.5 whitespace-nowrap rounded-xl text-sm font-bold transition-all ${timeRange === "thisYear" ? "bg-white text-indigo-600 shadow-md" : "text-slate-500 hover:text-slate-800"}`}>Năm nay</button>
-                        <button onClick={() => setTimeRange("all")} className={`px-4 py-2.5 whitespace-nowrap rounded-xl text-sm font-bold transition-all ${timeRange === "all" ? "bg-white text-indigo-600 shadow-md" : "text-slate-500 hover:text-slate-800"}`}>Tất cả</button>
+                    <div className="flex items-center bg-slate-100 p-1 md:p-1.5 rounded-xl md:rounded-2xl shadow-inner border border-slate-200/60 hide-scrollbar overflow-x-auto w-full sm:w-auto">
+                        <button onClick={() => setTimeRange("thisMonth")} className={`flex-1 sm:flex-none px-3 md:px-4 py-2 md:py-2.5 whitespace-nowrap rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all ${timeRange === "thisMonth" ? "bg-white text-indigo-600 shadow-md" : "text-slate-500 hover:text-slate-800"}`}>Tháng này</button>
+                        <button onClick={() => setTimeRange("thisYear")} className={`flex-1 sm:flex-none px-3 md:px-4 py-2 md:py-2.5 whitespace-nowrap rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all ${timeRange === "thisYear" ? "bg-white text-indigo-600 shadow-md" : "text-slate-500 hover:text-slate-800"}`}>Năm nay</button>
+                        <button onClick={() => setTimeRange("all")} className={`flex-1 sm:flex-none px-3 md:px-4 py-2 md:py-2.5 whitespace-nowrap rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all ${timeRange === "all" ? "bg-white text-indigo-600 shadow-md" : "text-slate-500 hover:text-slate-800"}`}>Tất cả</button>
                     </div>
 
                     {/* Các nút Hành động xuất File */}
-                    <div className="flex gap-2">
-                        <button onClick={() => setIsReportModalOpen(true)} className="px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm hidden md:block" title="Bộ lọc xuất báo cáo chuyên sâu">
-                            <i className="fa-solid fa-file-export md:mr-2"></i><span className="hidden md:inline">Chi tiết</span>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <button onClick={() => setIsReportModalOpen(true)} className="flex-1 sm:flex-none justify-center px-4 py-2.5 md:py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs md:text-sm font-bold hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm flex items-center" title="Bộ lọc xuất báo cáo chuyên sâu">
+                            <i className="fa-solid fa-file-export mr-2"></i>Chi tiết
                         </button>
-                        <button onClick={quickExportRevenue} className="px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl text-sm font-bold hover:bg-emerald-500 hover:text-white transition-all shadow-sm flex items-center">
-                            <i className="fa-solid fa-file-excel md:mr-2"></i><span className="hidden md:inline">Doanh thu tháng</span>
+                        <button onClick={quickExportRevenue} className="flex-1 sm:flex-none justify-center px-4 py-2.5 md:py-3 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl text-xs md:text-sm font-bold hover:bg-emerald-500 hover:text-white transition-all shadow-sm flex items-center">
+                            <i className="fa-solid fa-file-excel mr-2"></i>Doanh thu
                         </button>
                     </div>
                 </div>
             </div>
 
             {/* 4 Thẻ Chỉ Số KPI Mới */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
 
                 {/* Doanh thu */}
-                <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                    <div className="absolute -right-6 -top-6 text-blue-50 opacity-50 group-hover:scale-150 transition-transform duration-500"><i className="fa-solid fa-wallet text-9xl"></i></div>
-                    <div className="relative z-10 flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-lg"><i className="fa-solid fa-sack-dollar"></i></div>
-                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 uppercase">Thực thu</span>
+                <div className="bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute -right-4 -top-4 md:-right-6 md:-top-6 text-blue-50 opacity-50 group-hover:scale-150 transition-transform duration-500"><i className="fa-solid fa-wallet text-7xl md:text-9xl"></i></div>
+                    <div className="relative z-10 flex justify-between items-start mb-3 md:mb-4">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center text-lg md:text-xl shadow-lg"><i className="fa-solid fa-sack-dollar"></i></div>
+                        <span className="text-[9px] md:text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 md:px-2.5 md:py-1 rounded-lg border border-blue-100 uppercase">Thực thu</span>
                     </div>
                     <div className="relative z-10">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tổng Doanh Thu</p>
-                        <h3 className="text-3xl font-bold text-slate-800 font-mono tracking-tight">{formatCurrency(stats.revenue).replace("₫", "")}<span className="text-sm ml-1 font-sans text-slate-500">đ</span></h3>
+                        <p className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tổng Doanh Thu</p>
+                        <h3 className="text-2xl md:text-3xl font-bold text-slate-800 font-mono tracking-tight break-all">{formatCurrency(stats.revenue).replace("₫", "")}<span className="text-xs md:text-sm ml-1 font-sans text-slate-500">đ</span></h3>
                     </div>
                 </div>
 
                 {/* Khuyến mãi */}
-                <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                    <div className="absolute -right-6 -top-6 text-rose-50 opacity-50 group-hover:scale-150 transition-transform duration-500"><i className="fa-solid fa-tags text-9xl"></i></div>
-                    <div className="relative z-10 flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-rose-400 to-rose-600 text-white rounded-xl flex items-center justify-center text-xl shadow-lg"><i className="fa-solid fa-ticket"></i></div>
-                        <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100 uppercase">Chi phí</span>
+                <div className="bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute -right-4 -top-4 md:-right-6 md:-top-6 text-rose-50 opacity-50 group-hover:scale-150 transition-transform duration-500"><i className="fa-solid fa-tags text-7xl md:text-9xl"></i></div>
+                    <div className="relative z-10 flex justify-between items-start mb-3 md:mb-4">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-rose-400 to-rose-600 text-white rounded-xl flex items-center justify-center text-lg md:text-xl shadow-lg"><i className="fa-solid fa-ticket"></i></div>
+                        <span className="text-[9px] md:text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-1 md:px-2.5 md:py-1 rounded-lg border border-rose-100 uppercase">Chi phí</span>
                     </div>
                     <div className="relative z-10">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Đã Khuyến Mãi</p>
-                        <h3 className="text-3xl font-bold text-rose-600 font-mono tracking-tight">{formatCurrency(stats.discounts).replace("₫", "")}<span className="text-sm ml-1 font-sans text-rose-400">đ</span></h3>
+                        <p className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Đã Khuyến Mãi</p>
+                        <h3 className="text-2xl md:text-3xl font-bold text-rose-600 font-mono tracking-tight break-all">{formatCurrency(stats.discounts).replace("₫", "")}<span className="text-xs md:text-sm ml-1 font-sans text-rose-400">đ</span></h3>
                     </div>
                 </div>
 
                 {/* AOV - Average Order Value */}
-                <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                    <div className="absolute -right-6 -top-6 text-emerald-50 opacity-50 group-hover:scale-150 transition-transform duration-500"><i className="fa-solid fa-chart-line text-9xl"></i></div>
-                    <div className="relative z-10 flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-xl flex items-center justify-center text-xl shadow-lg"><i className="fa-solid fa-receipt"></i></div>
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 uppercase">{stats.validBookings} Đơn</span>
+                <div className="bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute -right-4 -top-4 md:-right-6 md:-top-6 text-emerald-50 opacity-50 group-hover:scale-150 transition-transform duration-500"><i className="fa-solid fa-chart-line text-7xl md:text-9xl"></i></div>
+                    <div className="relative z-10 flex justify-between items-start mb-3 md:mb-4">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-xl flex items-center justify-center text-lg md:text-xl shadow-lg"><i className="fa-solid fa-receipt"></i></div>
+                        <span className="text-[9px] md:text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 md:px-2.5 md:py-1 rounded-lg border border-emerald-100 uppercase">{stats.validBookings} Đơn</span>
                     </div>
                     <div className="relative z-10">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Giá trị Đơn T.Bình (AOV)</p>
-                        <h3 className="text-3xl font-bold text-emerald-600 font-mono tracking-tight">{formatCurrency(stats.aov).replace("₫", "")}<span className="text-sm ml-1 font-sans text-emerald-500">đ</span></h3>
+                        <p className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Giá trị Đơn T.Bình (AOV)</p>
+                        <h3 className="text-2xl md:text-3xl font-bold text-emerald-600 font-mono tracking-tight break-all">{formatCurrency(stats.aov).replace("₫", "")}<span className="text-xs md:text-sm ml-1 font-sans text-emerald-500">đ</span></h3>
                     </div>
                 </div>
 
                 {/* Hủy phòng */}
-                <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                    <div className="absolute -right-6 -top-6 text-amber-50 opacity-50 group-hover:scale-150 transition-transform duration-500"><i className="fa-solid fa-triangle-exclamation text-9xl"></i></div>
-                    <div className="relative z-10 flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 text-white rounded-xl flex items-center justify-center text-xl shadow-lg"><i className="fa-solid fa-ban"></i></div>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border uppercase ${stats.cancelRate > 15 ? "text-rose-600 bg-rose-50 border-rose-200" : "text-amber-600 bg-amber-50 border-amber-100"}`}>Cảnh báo</span>
+                <div className="bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute -right-4 -top-4 md:-right-6 md:-top-6 text-amber-50 opacity-50 group-hover:scale-150 transition-transform duration-500"><i className="fa-solid fa-triangle-exclamation text-7xl md:text-9xl"></i></div>
+                    <div className="relative z-10 flex justify-between items-start mb-3 md:mb-4">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-amber-600 text-white rounded-xl flex items-center justify-center text-lg md:text-xl shadow-lg"><i className="fa-solid fa-ban"></i></div>
+                        <span className={`text-[9px] md:text-[10px] font-bold px-2 py-1 md:px-2.5 md:py-1 rounded-lg border uppercase ${stats.cancelRate > 15 ? "text-rose-600 bg-rose-50 border-rose-200" : "text-amber-600 bg-amber-50 border-amber-100"}`}>Cảnh báo</span>
                     </div>
                     <div className="relative z-10">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tỷ lệ hủy (Cancel Rate)</p>
-                        <h3 className="text-3xl font-bold text-amber-500 font-mono tracking-tight">{stats.cancelRate}<span className="text-xl ml-1 font-sans">%</span></h3>
+                        <p className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tỷ lệ hủy (Cancel Rate)</p>
+                        <h3 className="text-2xl md:text-3xl font-bold text-amber-500 font-mono tracking-tight">{stats.cancelRate}<span className="text-lg md:text-xl ml-1 font-sans">%</span></h3>
                     </div>
                 </div>
 
             </div>
 
             {/* Khu vực Biểu Đồ */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
 
                 {/* Biểu đồ Doanh thu (Line + Bar Chart) - 2 Cột */}
-                <div className="xl:col-span-2 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm flex flex-col h-[480px]">
-                    <div className="flex justify-between items-center mb-6">
+                <div className="xl:col-span-2 bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-8 border border-slate-100 shadow-sm flex flex-col h-[350px] md:h-[480px]">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-2">
                         <div>
-                            <h3 className="text-xl font-bold text-slate-800">Biểu đồ Tăng trưởng Doanh thu</h3>
-                            <p className="text-xs text-slate-500 mt-1">So sánh lượng Booking và Doanh thu thực tế theo tháng</p>
+                            <h3 className="text-lg md:text-xl font-bold text-slate-800">Biểu đồ Tăng trưởng Doanh thu</h3>
+                            <p className="text-[10px] md:text-xs text-slate-500 mt-1">So sánh lượng Booking và Doanh thu thực tế theo tháng</p>
                         </div>
-                        <div className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-[11px] font-bold border border-blue-100">Cập nhật lúc: {new Date().toLocaleTimeString("vi-VN")}</div>
+                        <div className="bg-blue-50 text-blue-600 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg text-[10px] md:text-[11px] font-bold border border-blue-100 shrink-0">Cập nhật: {new Date().toLocaleTimeString("vi-VN").slice(0, 5)}</div>
                     </div>
                     <div className="flex-1 w-full relative">
                         {timeRange === "thisMonth" ? (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                                <i className="fa-solid fa-chart-column text-5xl mb-4 opacity-40"></i>
-                                <p className="font-bold text-slate-600 mb-1">Dữ liệu theo tháng không đủ vẽ biểu đồ</p>
-                                <p className="text-sm">Chuyển sang "Năm nay" hoặc "Tất cả" để xem phân tích xu hướng.</p>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-4 text-center">
+                                <i className="fa-solid fa-chart-column text-3xl md:text-5xl mb-3 md:mb-4 opacity-40"></i>
+                                <p className="font-bold text-slate-600 mb-1 text-xs md:text-base">Dữ liệu theo tháng không đủ vẽ biểu đồ</p>
+                                <p className="text-[10px] md:text-sm">Chuyển sang "Năm nay" hoặc "Tất cả" để xem phân tích xu hướng.</p>
                             </div>
                         ) : (
                             <canvas ref={revenueChartRef}></canvas>
@@ -517,24 +517,24 @@ export default function AdminReports() {
                 </div>
 
                 {/* Cột phải: 2 Doughnut Charts xếp dọc */}
-                <div className="xl:col-span-1 flex flex-col gap-6 h-[480px]">
+                <div className="xl:col-span-1 flex flex-col gap-4 md:gap-6 h-[auto] xl:h-[480px]">
 
                     {/* Phân bổ Hạng phòng */}
-                    <div className="flex-1 bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex flex-col relative overflow-hidden">
-                        <h3 className="text-base font-bold text-slate-800 mb-4 z-10 relative">Phân bổ Hạng phòng</h3>
+                    <div className="flex-1 bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-6 border border-slate-100 shadow-sm flex flex-col relative overflow-hidden min-h-[250px] xl:min-h-[120px]">
+                        <h3 className="text-sm md:text-base font-bold text-slate-800 mb-2 md:mb-4 z-10 relative">Phân bổ Hạng phòng</h3>
                         <div className="flex-1 relative z-10 min-h-[120px]">
                             <canvas ref={roomChartRef}></canvas>
                             {/* Chữ ở giữa biểu đồ */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pr-[30%]">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase">Tổng</span>
-                                <span className="text-2xl font-bold text-slate-800 font-mono leading-none">{stats.validBookings}</span>
+                                <span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase">Tổng</span>
+                                <span className="text-xl md:text-2xl font-bold text-slate-800 font-mono leading-none">{stats.validBookings}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Phân bổ Trạng thái */}
-                    <div className="flex-1 bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex flex-col relative overflow-hidden">
-                        <h3 className="text-base font-bold text-slate-800 mb-4 z-10 relative">Trạng thái Đặt phòng</h3>
+                    <div className="flex-1 bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-6 border border-slate-100 shadow-sm flex flex-col relative overflow-hidden min-h-[250px] xl:min-h-[120px]">
+                        <h3 className="text-sm md:text-base font-bold text-slate-800 mb-2 md:mb-4 z-10 relative">Trạng thái Đặt phòng</h3>
                         <div className="flex-1 relative z-10 min-h-[120px]">
                             <canvas ref={statusChartRef}></canvas>
                         </div>
@@ -544,69 +544,69 @@ export default function AdminReports() {
             </div>
 
             {/* Khu vực Bảng (Tables) & Biểu đồ thanh ngang */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6">
 
                 {/* Top 5 Dịch vụ */}
-                <div className="xl:col-span-1 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm flex flex-col h-[400px]">
-                    <h3 className="text-xl font-bold text-slate-800 mb-1">Top Dịch Vụ Phụ Thu</h3>
-                    <p className="text-xs text-slate-500 mb-6">Xếp hạng dịch vụ được sử dụng nhiều nhất</p>
+                <div className="xl:col-span-1 bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-8 border border-slate-100 shadow-sm flex flex-col h-[300px] md:h-[400px]">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-1">Top Dịch Vụ Phụ Thu</h3>
+                    <p className="text-[10px] md:text-xs text-slate-500 mb-4 md:mb-6">Xếp hạng dịch vụ được sử dụng nhiều nhất</p>
 
                     <div className="flex-1 relative">
                         <canvas ref={serviceChartRef}></canvas>
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-slate-100">
-                        <div className="flex justify-between items-center text-sm">
+                        <div className="flex justify-between items-center text-xs md:text-sm">
                             <span className="font-semibold text-slate-500">Tổng thu Dịch vụ</span>
-                            <span className="font-bold text-purple-600 font-mono text-lg">{formatCurrency(stats.servicesRev)}</span>
+                            <span className="font-bold text-purple-600 font-mono text-base md:text-lg">{formatCurrency(stats.servicesRev)}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Bảng Hóa đơn mới nhất */}
-                <div className="xl:col-span-2 bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[400px]">
-                    <div className="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center shrink-0">
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-1">Giao dịch Gần đây</h3>
-                            <p className="text-xs text-slate-500">5 hóa đơn thanh toán thành công mới nhất</p>
+                <div className="xl:col-span-2 bg-white rounded-2xl md:rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-[auto] md:h-[400px]">
+                    <div className="p-5 md:p-8 border-b border-slate-100 flex justify-between items-center shrink-0 gap-2">
+                        <div className="min-w-0">
+                            <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-1 truncate">Giao dịch Gần đây</h3>
+                            <p className="text-[10px] md:text-xs text-slate-500 truncate">5 hóa đơn thanh toán thành công mới nhất</p>
                         </div>
-                        <button onClick={() => window.location.href = '/admin/invoices'} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">
+                        <button onClick={() => window.location.href = '/admin/invoices'} className="text-[10px] md:text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline shrink-0 whitespace-nowrap">
                             Xem tất cả
                         </button>
                     </div>
 
                     <div className="flex-1 overflow-x-auto p-1">
-                        <table className="w-full text-left border-collapse min-w-[700px]">
-                            <thead className="bg-slate-50/50 text-[11px] uppercase tracking-wider text-slate-500 border-y border-slate-100">
+                        <table className="w-full text-left border-collapse min-w-[600px] md:min-w-[700px]">
+                            <thead className="bg-slate-50/50 text-[10px] md:text-[11px] uppercase tracking-wider text-slate-500 border-y border-slate-100">
                                 <tr>
-                                    <th className="px-6 py-3 font-bold">Khách hàng</th>
-                                    <th className="px-6 py-3 font-bold">Mã Hóa Đơn</th>
-                                    <th className="px-6 py-3 font-bold">Ngày Lập</th>
-                                    <th className="px-6 py-3 font-bold text-right">Tổng Tiền</th>
+                                    <th className="px-4 py-2 md:px-6 md:py-3 font-bold">Khách hàng</th>
+                                    <th className="px-4 py-2 md:px-6 md:py-3 font-bold">Mã Hóa Đơn</th>
+                                    <th className="px-4 py-2 md:px-6 md:py-3 font-bold">Ngày Lập</th>
+                                    <th className="px-4 py-2 md:px-6 md:py-3 font-bold text-right">Tổng Tiền</th>
                                 </tr>
                             </thead>
-                            <tbody className="text-sm divide-y divide-slate-100 bg-white">
+                            <tbody className="text-xs md:text-sm divide-y divide-slate-100 bg-white">
                                 {recentInvoices.length > 0 ? recentInvoices.map((inv) => (
                                     <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="font-bold text-slate-800 text-[14px]">{inv.customerName || "Khách hàng"}</div>
-                                            <div className="text-[11px] text-slate-500 mt-0.5">Phòng {inv.roomCode}</div>
+                                        <td className="px-4 py-3 md:px-6 md:py-4">
+                                            <div className="font-bold text-slate-800 text-[12px] md:text-[14px] truncate max-w-[150px] md:max-w-none">{inv.customerName || "Khách hàng"}</div>
+                                            <div className="text-[10px] md:text-[11px] text-slate-500 mt-0.5">Phòng {inv.roomCode}</div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className="font-mono font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                                        <td className="px-4 py-3 md:px-6 md:py-4">
+                                            <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 md:px-2 py-0.5 md:py-1 rounded border border-slate-200 text-[10px] md:text-xs">
                                                 #{inv.id.slice(-8).toUpperCase()}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-slate-600 font-medium">
+                                        <td className="px-4 py-3 md:px-6 md:py-4 text-slate-600 font-medium text-[10px] md:text-xs">
                                             {formatDate(inv.createdAt)}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <span className="font-mono font-bold text-emerald-600 text-base">{formatCurrency(inv.total)}</span>
+                                        <td className="px-4 py-3 md:px-6 md:py-4 text-right">
+                                            <span className="font-mono font-bold text-emerald-600 text-sm md:text-base">{formatCurrency(inv.total)}</span>
                                         </td>
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan="4" className="px-6 py-12 text-center text-slate-500">Chưa có giao dịch nào được ghi nhận.</td>
+                                        <td colSpan="4" className="px-4 py-8 md:px-6 md:py-12 text-center text-slate-500 text-xs md:text-sm">Chưa có giao dịch nào được ghi nhận.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -618,23 +618,23 @@ export default function AdminReports() {
 
             {/* Modal Xuất Báo Cáo Chi Tiết */}
             {isReportModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl animate-in zoom-in duration-300 border border-slate-100">
-                        <div className="p-6 md:p-8">
-                            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                                <h3 className="text-2xl font-playfair font-bold text-slate-900 flex items-center gap-2">
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl md:rounded-[2rem] w-full max-w-lg shadow-2xl animate-in zoom-in duration-300 border border-slate-100 my-auto">
+                        <div className="p-5 md:p-8 max-h-[90vh] overflow-y-auto custom-scroll">
+                            <div className="flex justify-between items-center mb-5 md:mb-6 border-b border-slate-100 pb-3 md:pb-4 sticky top-0 bg-white z-10">
+                                <h3 className="text-xl md:text-2xl font-playfair font-bold text-slate-900 flex items-center gap-2">
                                     <i className="fa-solid fa-file-export text-indigo-600"></i> Xuất Báo Cáo
                                 </h3>
-                                <button onClick={() => setIsReportModalOpen(false)} className="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-full w-10 h-10 flex items-center justify-center transition-all"><i className="fa-solid fa-xmark text-xl"></i></button>
+                                <button onClick={() => setIsReportModalOpen(false)} className="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center transition-all flex-shrink-0"><i className="fa-solid fa-xmark text-lg md:text-xl"></i></button>
                             </div>
 
-                            <div className="space-y-5">
+                            <div className="space-y-4 md:space-y-5">
                                 <div>
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Chuyên mục cần xuất</label>
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Chuyên mục cần xuất</label>
                                     <select
                                         value={reportConfig.type}
                                         onChange={e => setReportConfig({ ...reportConfig, type: e.target.value })}
-                                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-700 cursor-pointer"
+                                        className="w-full p-2.5 md:p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-700 cursor-pointer text-sm md:text-base"
                                     >
                                         <option value="revenue">Báo cáo Doanh thu (Kế toán)</option>
                                         <option value="bookings">Danh sách Đặt phòng (Lễ tân)</option>
@@ -644,40 +644,40 @@ export default function AdminReports() {
                                     </select>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Từ ngày</label>
-                                        <input type="date" value={reportConfig.from} onChange={e => setReportConfig({ ...reportConfig, from: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-700" />
+                                        <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Từ ngày</label>
+                                        <input type="date" value={reportConfig.from} onChange={e => setReportConfig({ ...reportConfig, from: e.target.value })} className="w-full p-2.5 md:p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-700 text-sm md:text-base" />
                                     </div>
                                     <div>
-                                        <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Đến ngày</label>
-                                        <input type="date" value={reportConfig.to} onChange={e => setReportConfig({ ...reportConfig, to: e.target.value })} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-700" />
+                                        <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5">Đến ngày</label>
+                                        <input type="date" value={reportConfig.to} onChange={e => setReportConfig({ ...reportConfig, to: e.target.value })} className="w-full p-2.5 md:p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-700 text-sm md:text-base" />
                                     </div>
                                 </div>
 
-                                <div className="pt-2">
-                                    <label className="block text-[13px] font-semibold text-slate-600 mb-2">Định dạng File</label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <label className={`flex items-center space-x-3 p-3 border rounded-xl cursor-pointer transition-all ${reportConfig.format === 'excel' ? 'bg-emerald-50 border-emerald-500' : 'bg-white hover:bg-slate-50 border-slate-200'}`}>
+                                <div className="pt-1 md:pt-2">
+                                    <label className="block text-[12px] md:text-[13px] font-semibold text-slate-600 mb-1.5 md:mb-2">Định dạng File</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <label className={`flex items-center space-x-3 p-2.5 md:p-3 border rounded-xl cursor-pointer transition-all ${reportConfig.format === 'excel' ? 'bg-emerald-50 border-emerald-500' : 'bg-white hover:bg-slate-50 border-slate-200'}`}>
                                             <input type="radio" name="format" value="excel" checked={reportConfig.format === 'excel'} onChange={() => setReportConfig({ ...reportConfig, format: 'excel' })} className="hidden" />
-                                            <i className={`fa-solid fa-file-excel text-2xl ${reportConfig.format === 'excel' ? 'text-emerald-600' : 'text-slate-400'}`}></i>
+                                            <i className={`fa-solid fa-file-excel text-xl md:text-2xl ${reportConfig.format === 'excel' ? 'text-emerald-600' : 'text-slate-400'}`}></i>
                                             <div>
-                                                <p className={`font-bold text-sm ${reportConfig.format === 'excel' ? 'text-emerald-700' : 'text-slate-700'}`}>Excel (XLSX)</p>
+                                                <p className={`font-bold text-xs md:text-sm ${reportConfig.format === 'excel' ? 'text-emerald-700' : 'text-slate-700'}`}>Excel (XLSX)</p>
                                             </div>
                                         </label>
-                                        <label className={`flex items-center space-x-3 p-3 border rounded-xl cursor-pointer transition-all ${reportConfig.format === 'csv' ? 'bg-blue-50 border-blue-500' : 'bg-white hover:bg-slate-50 border-slate-200'}`}>
+                                        <label className={`flex items-center space-x-3 p-2.5 md:p-3 border rounded-xl cursor-pointer transition-all ${reportConfig.format === 'csv' ? 'bg-blue-50 border-blue-500' : 'bg-white hover:bg-slate-50 border-slate-200'}`}>
                                             <input type="radio" name="format" value="csv" checked={reportConfig.format === 'csv'} onChange={() => setReportConfig({ ...reportConfig, format: 'csv' })} className="hidden" />
-                                            <i className={`fa-solid fa-file-csv text-2xl ${reportConfig.format === 'csv' ? 'text-blue-600' : 'text-slate-400'}`}></i>
+                                            <i className={`fa-solid fa-file-csv text-xl md:text-2xl ${reportConfig.format === 'csv' ? 'text-blue-600' : 'text-slate-400'}`}></i>
                                             <div>
-                                                <p className={`font-bold text-sm ${reportConfig.format === 'csv' ? 'text-blue-700' : 'text-slate-700'}`}>Data (CSV)</p>
+                                                <p className={`font-bold text-xs md:text-sm ${reportConfig.format === 'csv' ? 'text-blue-700' : 'text-slate-700'}`}>Data (CSV)</p>
                                             </div>
                                         </label>
                                     </div>
                                 </div>
 
-                                <div className="flex justify-end space-x-3 pt-6 border-t border-slate-100 mt-6">
-                                    <button type="button" onClick={() => setIsReportModalOpen(false)} className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors">Hủy</button>
-                                    <button onClick={handleExportReportDetail} className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-600/30 transition-all flex items-center">
+                                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 md:pt-6 border-t border-slate-100 mt-4 md:mt-6">
+                                    <button type="button" onClick={() => setIsReportModalOpen(false)} className="w-full sm:w-auto px-6 py-2.5 md:py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm md:text-base">Hủy</button>
+                                    <button onClick={handleExportReportDetail} className="w-full sm:w-auto px-6 py-2.5 md:py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center text-sm md:text-base">
                                         <i className="fa-solid fa-download mr-2"></i>Tải xuống
                                     </button>
                                 </div>
