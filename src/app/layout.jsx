@@ -1,5 +1,6 @@
+// src/app/layout.jsx
 import "./globals.css";
-import AIChatbot from "@/components/AIChatbot";
+import ChatbotWrapper from "@/components/ChatbotWrapper";
 
 export const metadata = {
   title: "Luna Hotel - Tuyệt Tác Nghỉ Dưỡng",
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
         />
 
+        {/* Toast */}
         <div
           id="toast-container"
           className="fixed top-5 right-5 z-[9998] space-y-3"
@@ -32,7 +34,8 @@ export default function RootLayout({ children }) {
 
         {children}
 
-        <AIChatbot />
+        {/* Chatbot */}
+        <ChatbotWrapper />
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 // src/app/admin/layout.jsx
 "use client";
 
+import AdminAIChatbot from "@/components/AdminAIChatbot";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -523,6 +524,7 @@ export default function AdminLayout({ children }) {
           </div>
         </div>
       )}
+      <AdminAIChatbot />
     </div>
   );
 }
