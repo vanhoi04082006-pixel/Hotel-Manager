@@ -74,7 +74,7 @@ export default function AdminAIChatbot() {
 
     const defaultMessage = {
         role: "ai",
-        text: "Xin chào Xayda! Trợ lý Rồng Thần đã sẵn sàng. Sếp cần tra cứu doanh thu, xem danh sách phòng hay kiểm tra đơn hàng nào ạ?"
+        text: "Xin chào Đấng Toàn Năng! Rồng Thần đã sẵn sàng. Sếp cần tra cứu doanh thu, xem danh sách phòng hay kiểm tra đơn hàng nào ạ?"
     };
 
     const [messages, setMessages] = useState([]);
