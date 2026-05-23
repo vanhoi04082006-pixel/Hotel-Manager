@@ -54,13 +54,13 @@ const OrbitChatButton = ({ onClick }) => {
             
             <div className="orbit-ring-btn group-hover:border-[rgba(255,109,0,0.6)] transition-colors"></div>
             <img className="center-gif-btn" src="https://nro1999.online/img/v0.gif" alt="Dragon Ball" />
-            <img className="orbit-icon" src="https://nro1999.online/img/v1.png" alt="icon1" />
-            <img className="orbit-icon" src="https://nro1999.online/img/v2.png" alt="icon2" />
-            <img className="orbit-icon" src="https://nro1999.online/img/v3.png" alt="icon3" />
-            <img className="orbit-icon" src="https://nro1999.online/img/v4.png" alt="icon4" />
-            <img className="orbit-icon" src="https://nro1999.online/img/v5.png" alt="icon5" />
-            <img className="orbit-icon" src="https://nro1999.online/img/v6.png" alt="icon6" />
-            <img className="orbit-icon" src="https://nro1999.online/img/v7.png" alt="icon7" />
+            <img className="orbit-icon" src="https://nro1999.online/img/112.png" alt="icon1" />
+            <img className="orbit-icon" src="https://nro1999.online/img/113.png" alt="icon2" />
+            <img className="orbit-icon" src="https://nro1999.online/img/114.png" alt="icon3" />
+            <img className="orbit-icon" src="https://nro1999.online/img/115.png" alt="icon4" />
+            <img className="orbit-icon" src="https://nro1999.online/img/116.png" alt="icon5" />
+            <img className="orbit-icon" src="https://nro1999.online/img/117.png" alt="icon6" />
+            <img className="orbit-icon" src="https://nro1999.online/img/118.png" alt="icon7" />
             
         </button>
     );
